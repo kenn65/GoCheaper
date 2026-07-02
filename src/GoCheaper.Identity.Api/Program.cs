@@ -4,9 +4,12 @@ using GoCheaper.Identity.Api.Data;
 using GoCheaper.Identity.Api.Endpoints;
 using GoCheaper.Identity.Api.Features.DeleteUser;
 using GoCheaper.Identity.Api.Features.ForgotPassword;
+using GoCheaper.Identity.Api.Features.Login;
+using GoCheaper.Identity.Api.Features.RefreshToken;
 using GoCheaper.Identity.Api.Features.Register;
 using GoCheaper.Identity.Api.Features.ResetPassword;
 using GoCheaper.Identity.Api.Features.UpdateUser;
+using GoCheaper.Identity.Api.Features.VerifyAuthCode;
 using GoCheaper.Identity.Api.Features.VerifyEmail;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -64,6 +67,9 @@ builder.Services.AddScoped<UpdateUserHandler>();
 builder.Services.AddScoped<DeleteUserHandler>();
 builder.Services.AddScoped<ForgotPasswordHandler>();
 builder.Services.AddScoped<ResetPasswordHandler>();
+builder.Services.AddScoped<LoginHandler>();
+builder.Services.AddScoped<VerifyAuthCodeHandler>();
+builder.Services.AddScoped<RefreshTokenHandler>();
 
 builder.Services.AddOpenApi(options =>
 {
