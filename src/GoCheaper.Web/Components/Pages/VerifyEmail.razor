@@ -1,9 +1,9 @@
-@page "/verify-email"
+﻿@page "/verify-email"
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @using GoCheaper.Web.Services
 @inject IdentityApiClient IdentityApi
 
-<PageTitle>Verify Email - Go Cheaper</PageTitle>
+<PageTitle>Verify Email - GoCheaper</PageTitle>
 
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -23,7 +23,7 @@
                         <p class="text-muted">
                             @if (result.FirstName is not null)
                             {
-                                <span>Hi <strong>@result.FirstName</strong> — your </span>
+                                <span>Hi <strong>@result.FirstName</strong> â€” your </span>
                             }
                             else
                             {
@@ -68,7 +68,7 @@
     private bool linkInvalid;
 
     // OnAfterRenderAsync(firstRender=true) is never called during SSR prerendering,
-    // only once when the interactive SignalR circuit fires — preventing the double-call bug.
+    // only once when the interactive SignalR circuit fires â€” preventing the double-call bug.
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;

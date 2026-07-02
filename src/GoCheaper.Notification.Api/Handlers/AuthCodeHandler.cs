@@ -1,4 +1,4 @@
-using GoCheaper.Contracts.Events;
+﻿using GoCheaper.Contracts.Events;
 using GoCheaper.Notification.Api.Services;
 
 namespace GoCheaper.Notification.Api.Handlers;
@@ -18,7 +18,7 @@ public class AuthCodeHandler(
         await emailSender.SendAsync(
             toEmail:     @event.Email,
             toName:      $"{@event.FirstName} {@event.LastName}",
-            subject:     "Your Go Cheaper login code",
+            subject:     "Your GoCheaper login code",
             htmlContent: html);
     }
 }

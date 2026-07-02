@@ -1,4 +1,4 @@
-using MailKit.Net.Smtp;
+﻿using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 
@@ -11,7 +11,7 @@ public class EmailSender(IConfiguration configuration, ILogger<EmailSender> logg
     private readonly string _username  = configuration["Smtp:Username"]  ?? throw new InvalidOperationException("Smtp:Username is not configured.");
     private readonly string _password  = configuration["Smtp:Password"]  ?? throw new InvalidOperationException("Smtp:Password is not configured.");
     private readonly string _fromEmail = configuration["Smtp:FromEmail"] ?? throw new InvalidOperationException("Smtp:FromEmail is not configured.");
-    private readonly string _fromName  = configuration["Smtp:FromName"]  ?? "Go Cheaper";
+    private readonly string _fromName  = configuration["Smtp:FromName"]  ?? "GoCheaper";
 
     public async Task SendAsync(string toEmail, string toName, string subject, string htmlContent)
     {
@@ -27,6 +27,6 @@ public class EmailSender(IConfiguration configuration, ILogger<EmailSender> logg
         await client.SendAsync(message);
         await client.DisconnectAsync(true);
 
-        logger.LogInformation("Email sent to {Email} — {Subject}", toEmail, subject);
+        logger.LogInformation("Email sent to {Email} â€” {Subject}", toEmail, subject);
     }
 }

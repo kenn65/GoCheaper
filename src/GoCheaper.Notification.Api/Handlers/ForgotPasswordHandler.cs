@@ -1,4 +1,4 @@
-using GoCheaper.Contracts.Events;
+﻿using GoCheaper.Contracts.Events;
 using GoCheaper.Notification.Api.Services;
 
 namespace GoCheaper.Notification.Api.Handlers;
@@ -22,7 +22,7 @@ public class ForgotPasswordHandler(
         await emailSender.SendAsync(
             toEmail:     @event.Email,
             toName:      $"{@event.FirstName} {@event.LastName}",
-            subject:     "Reset your Go Cheaper password",
+            subject:     "Reset your GoCheaper password",
             htmlContent: html);
     }
 }

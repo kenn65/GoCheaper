@@ -1,4 +1,4 @@
-using GoCheaper.Contracts.Events;
+﻿using GoCheaper.Contracts.Events;
 using GoCheaper.Notification.Api.Services;
 
 namespace GoCheaper.Notification.Api.Handlers;
@@ -22,7 +22,7 @@ public class UserRegisteredHandler(
         await emailSender.SendAsync(
             toEmail:     @event.Email,
             toName:      $"{@event.FirstName} {@event.LastName}",
-            subject:     "Confirm your Go Cheaper account",
+            subject:     "Confirm your GoCheaper account",
             htmlContent: html);
     }
 }
