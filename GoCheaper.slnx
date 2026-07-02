@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="src/GoCheaper.AppHost/GoCheaper.AppHost.csproj" />
+  <Project Path="src/GoCheaper.Contracts/GoCheaper.Contracts.csproj" />
+  <Project Path="src/GoCheaper.Identity.Api/GoCheaper.Identity.Api.csproj" />
+  <Project Path="src/GoCheaper.Notification.Api/GoCheaper.Notification.Api.csproj" />
+  <Project Path="src/GoCheaper.ServiceDefaults/GoCheaper.ServiceDefaults.csproj" />
+  <Project Path="src/GoCheaper.Web/GoCheaper.Web.csproj" />
+</Solution>

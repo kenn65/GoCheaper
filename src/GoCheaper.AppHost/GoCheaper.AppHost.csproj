@@ -1,0 +1,22 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.4.6">
+
+  <ItemGroup>
+    <ProjectReference Include="..\GoCheaper.Identity.Api\GoCheaper.Identity.Api.csproj" />
+    <ProjectReference Include="..\GoCheaper.Web\GoCheaper.Web.csproj" />
+    <ProjectReference Include="..\GoCheaper.Notification.Api\GoCheaper.Notification.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Kafka" Version="13.4.6" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.4.6" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>42f038f9-5f58-4a72-9356-2743183d7bbb</UserSecretsId>
+  </PropertyGroup>
+
+</Project>

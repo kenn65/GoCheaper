@@ -1,0 +1,88 @@
+@page "/verify-email"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using GoCheaper.Web.Services
+@inject IdentityApiClient IdentityApi
+
+<PageTitle>Verify Email - Go Cheaper</PageTitle>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm text-center">
+                <div class="card-body py-5 px-4">
+
+                    @if (isLoading)
+                    {
+                        <div class="spinner-border text-primary mb-3" role="status"></div>
+                        <p class="text-muted">Verifying your email address&hellip;</p>
+                    }
+                    else if (result is not null && result.Success)
+                    {
+                        <div class="mb-3 text-success" style="font-size: 3rem;">&#10003;</div>
+                        <h4 class="text-success">Email Verified!</h4>
+                        <p class="text-muted">
+                            @if (result.FirstName is not null)
+                            {
+                                <span>Hi <strong>@result.FirstName</strong> — your </span>
+                            }
+                            else
+                            {
+                                <span>Your </span>
+                            }
+                            email address has been confirmed and your account is now active.
+                        </p>
+                        <a href="/" class="btn btn-primary mt-2">Go to Home</a>
+                    }
+                    else if (result is not null && !result.Success)
+                    {
+                        <div class="mb-3 text-danger" style="font-size: 3rem;">&#x26A0;</div>
+                        <h4 class="text-danger">Verification Failed</h4>
+                        <p class="text-muted">@result.Error</p>
+                        <p class="small text-muted">
+                            The link may have already been used or has expired.
+                            Please contact support if you need a new verification email.
+                        </p>
+                    }
+                    else if (linkInvalid)
+                    {
+                        <div class="mb-3 text-warning" style="font-size: 3rem;">&#x26A0;</div>
+                        <h4>Invalid Link</h4>
+                        <p class="text-muted">
+                            This verification link is missing required information.
+                            Please use the link from your verification email.
+                        </p>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "userId")] public string? UserId { get; set; }
+    [SupplyParameterFromQuery(Name = "token")]  public string? Token  { get; set; }
+
+    private VerifyEmailResult? result;
+    private bool isLoading = true;   // show spinner until the circuit is live
+    private bool linkInvalid;
+
+    // OnAfterRenderAsync(firstRender=true) is never called during SSR prerendering,
+    // only once when the interactive SignalR circuit fires — preventing the double-call bug.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        if (!Guid.TryParse(UserId, out var userId) || string.IsNullOrWhiteSpace(Token))
+        {
+            linkInvalid = true;
+            isLoading = false;
+            StateHasChanged();
+            return;
+        }
+
+        result = await IdentityApi.VerifyEmailAsync(userId, Token);
+        isLoading = false;
+        StateHasChanged();
+    }
+}
