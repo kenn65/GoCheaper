@@ -47,6 +47,22 @@ public class AuthCookieService(IJSRuntime js, UserSession session) : IAsyncDispo
             refreshToken,  refreshTokenExpiry.ToString("O"));
     }
 
+    public async Task UpdateRolesAsync(bool isDriver, bool isPassenger)
+    {
+        if (session.UserId is null || session.Email is null ||
+            session.AccessToken is null || session.RefreshToken is null) return;
+
+        session.UpdateRoles(isDriver, isPassenger);
+
+        var module = await GetModuleAsync();
+        await module.InvokeVoidAsync("signIn",
+            session.UserId.Value.ToString(), session.Email,
+            isDriver.ToString().ToLowerInvariant(),
+            isPassenger.ToString().ToLowerInvariant(),
+            session.AccessToken,  session.AccessTokenExpiry?.ToString("O")  ?? "",
+            session.RefreshToken, session.RefreshTokenExpiry?.ToString("O") ?? "");
+    }
+
     public async Task SignOutAsync()
     {
         session.Clear();

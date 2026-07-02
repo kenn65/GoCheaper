@@ -1,7 +1,248 @@
 @page "/my-profile"
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@using GoCheaper.Web.Models
+@using GoCheaper.Web.Services
+@inject IdentityApiClient IdentityApi
+@inject AuthCookieService AuthCookies
+@inject UserSession UserSession
+@inject NavigationManager Nav
 
 <PageTitle>My Profile - GoCheaper</PageTitle>
 
-<h1>My Profile</h1>
-<p class="text-muted">Coming soon.</p>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+
+            @if (isLoading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            }
+            else if (apiError is not null)
+            {
+                <div class="alert alert-danger">@apiError</div>
+            }
+            else if (user is not null)
+            {
+                @if (saveSuccess)
+                {
+                    <div class="alert alert-success alert-dismissible">
+                        Profile updated successfully.
+                        <button type="button" class="btn-close" @onclick="() => saveSuccess = false"></button>
+                    </div>
+                }
+                @if (saveError is not null)
+                {
+                    <div class="alert alert-danger alert-dismissible">
+                        @saveError
+                        <button type="button" class="btn-close" @onclick="() => saveError = null"></button>
+                    </div>
+                }
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h4 class="mb-0">My Profile</h4>
+                    </div>
+                    <div class="card-body p-4">
+
+                        <h6 class="text-muted mb-3">Personal Information</h6>
+                        <dl class="row mb-4">
+                            <dt class="col-sm-4">Name</dt>
+                            <dd class="col-sm-8">@user.FirstName @user.LastName</dd>
+
+                            <dt class="col-sm-4">Email</dt>
+                            <dd class="col-sm-8">
+                                @user.Email
+                                @if (user.IsEmailVerified)
+                                {
+                                    <span class="badge bg-success ms-2">Verified</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark ms-2">Unverified</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Member since</dt>
+                            <dd class="col-sm-8">@user.CreatedAt.ToString("d MMMM yyyy")</dd>
+                        </dl>
+
+                        <hr />
+                        <h6 class="text-muted mb-3">Edit Profile</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mobile Phone</label>
+                            <input @bind="model.MobilePhone" class="form-control"
+                                   placeholder="Mobile phone" type="tel" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label d-block">Account Type</label>
+                            <div class="d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="chkDriver"
+                                           checked="@model.IsDriver" @onchange="e => model.IsDriver = (bool)e.Value!" />
+                                    <label class="form-check-label" for="chkDriver">
+                                        <strong>Driver</strong> — I want to offer rides
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="chkPassenger"
+                                           checked="@model.IsPassenger" @onchange="e => model.IsPassenger = (bool)e.Value!" />
+                                    <label class="form-check-label" for="chkPassenger">
+                                        <strong>Passenger</strong> — I want to book rides
+                                    </label>
+                                </div>
+                            </div>
+                            @if (roleError is not null)
+                            {
+                                <div class="text-danger small mt-1">@roleError</div>
+                            }
+                        </div>
+
+                        @if (model.IsDriver == true)
+                        {
+                            <div class="mb-4">
+                                <label class="form-label">Profile Picture</label>
+                                @if (!string.IsNullOrEmpty(user.DriverPictureBase64))
+                                {
+                                    <div class="mb-2">
+                                        <img src="data:image/*;base64,@user.DriverPictureBase64"
+                                             class="rounded" style="max-height:120px;" alt="Profile picture" />
+                                    </div>
+                                }
+                                <InputFile OnChange="HandleImageUpload" accept="image/*" class="form-control" />
+                                @if (!string.IsNullOrEmpty(pictureFileName))
+                                {
+                                    <div class="text-success small mt-1">&#10003; @pictureFileName selected</div>
+                                }
+                                @if (pictureError is not null)
+                                {
+                                    <div class="text-danger small mt-1">@pictureError</div>
+                                }
+                                <div class="form-text">JPEG or PNG, max 5 MB. Leave blank to keep current picture.</div>
+                            </div>
+                        }
+
+                        <button class="btn btn-primary" @onclick="HandleSave" disabled="@isSaving">
+                            @if (isSaving)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Saving&hellip;</span>
+                            }
+                            else
+                            {
+                                <span>Save Changes</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterResponse? user;
+    private UpdateProfileModel model = new();
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool saveSuccess;
+    private string? apiError;
+    private string? saveError;
+    private string? roleError;
+    private string? pictureError;
+    private string pictureFileName = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        if (!UserSession.IsLoggedIn)
+        {
+            Nav.NavigateTo("/login?returnUrl=/my-profile", forceLoad: false);
+            return;
+        }
+
+        var result = await IdentityApi.GetUserAsync(UserSession.UserId!.Value);
+        if (result.Success && result.User is not null)
+        {
+            user = result.User;
+            model = new UpdateProfileModel
+            {
+                MobilePhone = user.MobilePhone,
+                IsDriver    = user.IsDriver,
+                IsPassenger = user.IsPassenger
+            };
+        }
+        else
+        {
+            apiError = result.Error ?? "Failed to load profile.";
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        pictureError    = null;
+        pictureFileName = string.Empty;
+        model.DriverPictureBase64 = null;
+
+        if (e.File.Size > 5 * 1024 * 1024)
+        {
+            pictureError = "Image must be smaller than 5 MB.";
+            return;
+        }
+
+        try
+        {
+            using var stream = e.File.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            using var ms     = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            model.DriverPictureBase64 = Convert.ToBase64String(ms.ToArray());
+            pictureFileName = e.File.Name;
+        }
+        catch
+        {
+            pictureError = "Failed to read the image. Please try a different file.";
+        }
+    }
+
+    private async Task HandleSave()
+    {
+        roleError  = null;
+        saveError  = null;
+        saveSuccess = false;
+
+        if (model.IsDriver == false && model.IsPassenger == false)
+        {
+            roleError = "At least one of Driver or Passenger must remain selected.";
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            var result = await IdentityApi.UpdateProfileAsync(UserSession.UserId!.Value, model);
+            if (result.Success && result.User is not null)
+            {
+                user        = result.User;
+                saveSuccess = true;
+                pictureFileName = string.Empty;
+                // Update cookie + NavMenu live if driver/passenger roles changed
+                await AuthCookies.UpdateRolesAsync(result.User.IsDriver, result.User.IsPassenger);
+            }
+            else
+            {
+                saveError = result.Error ?? "Update failed. Please try again.";
+            }
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+}

@@ -12,6 +12,7 @@ public record UserResponse(
     string? MobilePhone,
     bool IsEmailVerified,
     string? EmailVerificationToken,
+    string? DriverPictureBase64,
     DateTime CreatedAt);
 
 public static class UserMapper
@@ -26,5 +27,6 @@ public static class UserMapper
         user.MobilePhone,
         user.IsEmailVerified,
         user.EmailVerificationToken,
+        user.DriverPictureBase64,
         user.CreatedAt);
 }

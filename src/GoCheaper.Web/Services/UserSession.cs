@@ -61,6 +61,13 @@ public class UserSession
         NotifyChange();
     }
 
+    public void UpdateRoles(bool isDriver, bool isPassenger)
+    {
+        IsDriver    = isDriver;
+        IsPassenger = isPassenger;
+        NotifyChange();
+    }
+
     public event Action? OnChange;
     public void NotifyChange() => OnChange?.Invoke();
 }

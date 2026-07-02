@@ -1,6 +1,7 @@
 using GoCheaper.Identity.Api.Features.Common;
 using GoCheaper.Identity.Api.Features.DeleteUser;
 using GoCheaper.Identity.Api.Features.ForgotPassword;
+using GoCheaper.Identity.Api.Features.GetUser;
 using GoCheaper.Identity.Api.Features.Login;
 using GoCheaper.Identity.Api.Features.RefreshToken;
 using GoCheaper.Identity.Api.Features.Register;
@@ -26,6 +27,15 @@ public static class AuthEndpoints
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status409Conflict);
+
+        group.MapGet("/users/{id:guid}",
+            (Guid id, GetUserHandler h, CancellationToken ct) => h.HandleAsync(id, ct))
+            .RequireAuthorization("ApiKeyAndJwt")
+            .WithName("GetUser")
+            .WithSummary("Get a user's profile (API Key + JWT required)")
+            .Produces<UserResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status404NotFound);
 
         group.MapPatch("/users/{id:guid}",
             (Guid id, UpdateUserRequest req, UpdateUserHandler h, CancellationToken ct) => h.HandleAsync(id, req, ct))

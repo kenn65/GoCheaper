@@ -4,6 +4,7 @@ using GoCheaper.Identity.Api.Data;
 using GoCheaper.Identity.Api.Endpoints;
 using GoCheaper.Identity.Api.Features.DeleteUser;
 using GoCheaper.Identity.Api.Features.ForgotPassword;
+using GoCheaper.Identity.Api.Features.GetUser;
 using GoCheaper.Identity.Api.Features.Login;
 using GoCheaper.Identity.Api.Features.RefreshToken;
 using GoCheaper.Identity.Api.Features.Register;
@@ -61,6 +62,7 @@ builder.Services.AddAuthorization(options =>
               .AddRequirements(new BothSchemesRequirement()));
 });
 
+builder.Services.AddScoped<GetUserHandler>();
 builder.Services.AddScoped<RegisterHandler>();
 builder.Services.AddScoped<VerifyEmailHandler>();
 builder.Services.AddScoped<UpdateUserHandler>();

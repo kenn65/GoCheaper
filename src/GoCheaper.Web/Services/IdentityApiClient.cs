@@ -10,7 +10,8 @@ namespace GoCheaper.Web.Services;
 public record RegisterResponse(
     Guid Id, string FirstName, string LastName, string Email,
     bool IsDriver, bool IsPassenger, string? MobilePhone,
-    bool IsEmailVerified, string? EmailVerificationToken, DateTime CreatedAt);
+    bool IsEmailVerified, string? EmailVerificationToken,
+    string? DriverPictureBase64, DateTime CreatedAt);
 
 public record AuthTokenResponse(
     string AccessToken, string RefreshToken, int ExpiresIn,
@@ -23,6 +24,8 @@ public record VerifyEmailResult(string? FirstName, string? Error, bool Success);
 public record LoginResult(string? Error, bool Success);
 public record VerifyAuthCodeResult(AuthTokenResponse? Tokens, string? Error, bool Success);
 public record RefreshResult(AuthTokenResponse? Tokens, string? Error, bool Success);
+public record GetUserResult(RegisterResponse? User, string? Error, bool Success);
+public record UpdateProfileResult(RegisterResponse? User, string? Error, bool Success);
 
 // ── Client ──────────────────────────────────────────────────────────────────
 
@@ -140,6 +143,55 @@ public class IdentityApiClient(
 
         var error = await response.Content.ReadAsStringAsync();
         return new VerifyAuthCodeResult(null, string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
+    }
+
+    // ── Get profile ──────────────────────────────────────────────────────────
+
+    public async Task<GetUserResult> GetUserAsync(Guid userId)
+    {
+        using var request = BuildRequest(HttpMethod.Get, $"/api/auth/users/{userId}");
+
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return new GetUserResult(null, $"Could not reach the identity service: {ex.Message}", false); }
+
+        if (response.IsSuccessStatusCode)
+        {
+            var user = await response.Content.ReadFromJsonAsync<RegisterResponse>();
+            return new GetUserResult(user, null, true);
+        }
+
+        var error = await response.Content.ReadAsStringAsync();
+        return new GetUserResult(null, string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
+    }
+
+    // ── Update profile ────────────────────────────────────────────────────────
+
+    public async Task<UpdateProfileResult> UpdateProfileAsync(Guid userId, UpdateProfileModel model)
+    {
+        using var request = BuildRequest(HttpMethod.Patch, $"/api/auth/users/{userId}");
+        request.Content = JsonContent.Create(new
+        {
+            model.MobilePhone,
+            model.IsDriver,
+            model.IsPassenger,
+            model.DriverPictureBase64
+        });
+
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return new UpdateProfileResult(null, $"Could not reach the identity service: {ex.Message}", false); }
+
+        if (response.IsSuccessStatusCode)
+        {
+            var user = await response.Content.ReadFromJsonAsync<RegisterResponse>();
+            return new UpdateProfileResult(user, null, true);
+        }
+
+        var error = await response.Content.ReadAsStringAsync();
+        return new UpdateProfileResult(null, string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
     }
 
     // ── Refresh JWT ──────────────────────────────────────────────────────────
