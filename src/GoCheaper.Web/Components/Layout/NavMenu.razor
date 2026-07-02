@@ -15,20 +15,12 @@
 
     <div class="collapse navbar-collapse" id="navContent">
         <ul class="navbar-nav me-auto">
-            @if (!UserSession.IsLoggedIn)
-            {
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="register" Match="NavLinkMatch.Prefix">
-                        Sign Up
-                    </NavLink>
-                </li>
-            }
         </ul>
 
-        <ul class="navbar-nav ms-auto">
+        <ul class="navbar-nav ms-auto align-items-center gap-2">
             @if (UserSession.IsLoggedIn)
             {
-                <li class="nav-item d-flex align-items-center me-2">
+                <li class="nav-item">
                     <span class="text-white opacity-75 small">@UserSession.Email</span>
                 </li>
                 <li class="nav-item">
@@ -40,7 +32,12 @@
             else
             {
                 <li class="nav-item">
-                    <NavLink class="nav-link" href="login" Match="NavLinkMatch.Prefix">
+                    <NavLink class="nav-link" href="register" Match="NavLinkMatch.Prefix">
+                        Sign Up
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="btn btn-outline-light btn-sm" href="login" Match="NavLinkMatch.Prefix">
                         Sign In
                     </NavLink>
                 </li>
