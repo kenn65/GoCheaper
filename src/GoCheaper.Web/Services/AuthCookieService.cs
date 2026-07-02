@@ -1,0 +1,56 @@
+using Microsoft.JSInterop;
+
+namespace GoCheaper.Web.Services;
+
+public class AuthCookieService(IJSRuntime js, UserSession session) : IAsyncDisposable
+{
+    private IJSObjectReference? _module;
+
+    private async Task<IJSObjectReference> GetModuleAsync()
+        => _module ??= await js.InvokeAsync<IJSObjectReference>("import", "/js/auth.js");
+
+    public async Task SignInAsync(Guid userId, string email, string accessToken,
+                                  string refreshToken)
+    {
+        var accessTokenExpiry  = DateTime.UtcNow.AddMinutes(10);
+        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        session.Update(userId, email, accessToken, accessTokenExpiry, refreshToken, refreshTokenExpiry);
+
+        var module = await GetModuleAsync();
+        await module.InvokeVoidAsync("signIn",
+            userId.ToString(), email,
+            accessToken,   accessTokenExpiry.ToString("O"),
+            refreshToken,  refreshTokenExpiry.ToString("O"));
+    }
+
+    public async Task UpdateTokensAsync(string accessToken, string refreshToken)
+    {
+        if (session.UserId is null || session.Email is null) return;
+
+        var accessTokenExpiry  = DateTime.UtcNow.AddMinutes(10);
+        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        session.Update(session.UserId.Value, session.Email, accessToken,
+            accessTokenExpiry, refreshToken, refreshTokenExpiry);
+
+        var module = await GetModuleAsync();
+        await module.InvokeVoidAsync("signIn",
+            session.UserId.Value.ToString(), session.Email,
+            accessToken,   accessTokenExpiry.ToString("O"),
+            refreshToken,  refreshTokenExpiry.ToString("O"));
+    }
+
+    public async Task SignOutAsync()
+    {
+        session.Clear();
+        var module = await GetModuleAsync();
+        await module.InvokeVoidAsync("signOut");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+            await _module.DisposeAsync();
+    }
+}

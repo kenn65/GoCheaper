@@ -1,4 +1,10 @@
-﻿<nav class="navbar navbar-expand-sm navbar-dark bg-primary px-3 shadow-sm">
+@using GoCheaper.Web.Services
+@inject UserSession UserSession
+@inject AuthCookieService AuthCookies
+@inject NavigationManager Nav
+@implements IDisposable
+
+<nav class="navbar navbar-expand-sm navbar-dark bg-primary px-3 shadow-sm">
     <a class="navbar-brand fw-bold" href="/">GoCheaper</a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -8,12 +14,54 @@
     </button>
 
     <div class="collapse navbar-collapse" id="navContent">
-        <ul class="navbar-nav">
-            <li class="nav-item">
-                <NavLink class="nav-link" href="register" Match="NavLinkMatch.Prefix">
-                    Sign Up
-                </NavLink>
-            </li>
+        <ul class="navbar-nav me-auto">
+            @if (!UserSession.IsLoggedIn)
+            {
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="register" Match="NavLinkMatch.Prefix">
+                        Sign Up
+                    </NavLink>
+                </li>
+            }
+        </ul>
+
+        <ul class="navbar-nav ms-auto">
+            @if (UserSession.IsLoggedIn)
+            {
+                <li class="nav-item d-flex align-items-center me-2">
+                    <span class="text-white opacity-75 small">@UserSession.Email</span>
+                </li>
+                <li class="nav-item">
+                    <button class="btn btn-outline-light btn-sm" @onclick="HandleSignOut">
+                        Sign Out
+                    </button>
+                </li>
+            }
+            else
+            {
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="login" Match="NavLinkMatch.Prefix">
+                        Sign In
+                    </NavLink>
+                </li>
+            }
         </ul>
     </div>
 </nav>
+
+@code {
+    protected override void OnInitialized()
+        => UserSession.OnChange += OnSessionChanged;
+
+    private void OnSessionChanged()
+        => InvokeAsync(StateHasChanged);
+
+    private async Task HandleSignOut()
+    {
+        await AuthCookies.SignOutAsync();
+        Nav.NavigateTo("/", forceLoad: true);
+    }
+
+    public void Dispose()
+        => UserSession.OnChange -= OnSessionChanged;
+}

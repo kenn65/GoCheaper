@@ -1,0 +1,101 @@
+@page "/verify-code"
+@rendermode InteractiveServer
+@using GoCheaper.Web.Services
+@inject IdentityApiClient IdentityApi
+@inject AuthCookieService AuthCookies
+@inject NavigationManager Nav
+
+<PageTitle>Verify Code - GoCheaper</PageTitle>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0">Check your email</h4>
+                    <small class="opacity-75">
+                        We sent a 6-digit code to <strong>@Email</strong>
+                    </small>
+                </div>
+                <div class="card-body p-4">
+
+                    @if (!string.IsNullOrEmpty(apiError))
+                    {
+                        <div class="alert alert-danger">@apiError</div>
+                    }
+
+                    <p class="text-muted small">Enter the code below. It expires in 5 minutes.</p>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">6-digit code</label>
+                        <input @bind="code" @bind:event="oninput"
+                               class="form-control form-control-lg text-center fw-bold fs-4 letter-spacing-wide"
+                               type="text" inputmode="numeric" pattern="[0-9]*"
+                               maxlength="6" placeholder="000000"
+                               autocomplete="one-time-code" />
+                    </div>
+
+                    <button class="btn btn-primary btn-lg w-100"
+                            @onclick="HandleVerify"
+                            disabled="@(isLoading || code.Length != 6)">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Verifying&hellip;</span>
+                        }
+                        else
+                        {
+                            <span>Verify &amp; Sign In</span>
+                        }
+                    </button>
+
+                    <hr class="my-4" />
+                    <p class="text-center text-muted small mb-0">
+                        Didn't receive it?
+                        <a href="/login">Request a new code</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "email")]     public string? Email     { get; set; }
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+
+    private string code     = string.Empty;
+    private string? apiError;
+    private bool isLoading;
+
+    private async Task HandleVerify()
+    {
+        if (string.IsNullOrWhiteSpace(Email) || code.Length != 6) return;
+
+        apiError  = null;
+        isLoading = true;
+        try
+        {
+            var result = await IdentityApi.VerifyAuthCodeAsync(Email, code);
+            if (result.Success && result.Tokens is not null)
+            {
+                await AuthCookies.SignInAsync(
+                    result.Tokens.UserId,
+                    result.Tokens.Email,
+                    result.Tokens.AccessToken,
+                    result.Tokens.RefreshToken);
+
+                var destination = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
+                Nav.NavigateTo(destination, forceLoad: true);
+            }
+            else
+            {
+                apiError = result.Error ?? "Invalid or expired code.";
+            }
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

@@ -1,0 +1,93 @@
+@page "/login"
+@rendermode InteractiveServer
+@using GoCheaper.Web.Models
+@using GoCheaper.Web.Services
+@inject IdentityApiClient IdentityApi
+@inject NavigationManager Nav
+
+<PageTitle>Login - GoCheaper</PageTitle>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0">Sign in to GoCheaper</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    @if (!string.IsNullOrEmpty(apiError))
+                    {
+                        <div class="alert alert-danger">@apiError</div>
+                    }
+
+                    <EditForm Model="model" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+
+                        <div class="mb-3">
+                            <label class="form-label">Email Address</label>
+                            <InputText @bind-Value="model.Email" class="form-control"
+                                       placeholder="Email address" autocomplete="email" />
+                            <ValidationMessage For="() => model.Email" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Password</label>
+                            <InputText @bind-Value="model.Password" type="password"
+                                       class="form-control" placeholder="Password"
+                                       autocomplete="current-password" />
+                            <ValidationMessage For="() => model.Password" class="text-danger small" />
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Sending code&hellip;</span>
+                            }
+                            else
+                            {
+                                <span>Continue</span>
+                            }
+                        </button>
+                    </EditForm>
+
+                    <hr class="my-4" />
+                    <p class="text-center text-muted small mb-0">
+                        Don't have an account? <a href="/register">Sign up</a>
+                    </p>
+                    <p class="text-center text-muted small mb-0 mt-1">
+                        <a href="/forgot-password">Forgot your password?</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
+
+    private readonly LoginModel model = new();
+    private string? apiError;
+    private bool isLoading;
+
+    private async Task HandleSubmit()
+    {
+        apiError  = null;
+        isLoading = true;
+        try
+        {
+            var result = await IdentityApi.LoginAsync(model.Email, model.Password);
+            if (result.Success)
+                Nav.NavigateTo($"/verify-code?email={Uri.EscapeDataString(model.Email)}" +
+                               (string.IsNullOrEmpty(ReturnUrl) ? "" : $"&returnUrl={Uri.EscapeDataString(ReturnUrl)}"));
+            else
+                apiError = result.Error ?? "Login failed. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}
