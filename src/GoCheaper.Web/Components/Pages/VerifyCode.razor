@@ -87,7 +87,7 @@
                     result.Tokens.AccessToken,
                     result.Tokens.RefreshToken);
 
-                var destination = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
+                var destination = string.IsNullOrEmpty(ReturnUrl) ? "/my-profile" : ReturnUrl;
                 Nav.NavigateTo(destination, forceLoad: true);
             }
             else
