@@ -1,8 +1,9 @@
 @page "/verify-code"
 @rendermode InteractiveServer
 @using GoCheaper.Web.Services
+@using Microsoft.Extensions.Caching.Memory
 @inject IdentityApiClient IdentityApi
-@inject AuthCookieService AuthCookies
+@inject IMemoryCache Cache
 @inject NavigationManager Nav
 
 <PageTitle>Verify Code - GoCheaper</PageTitle>
@@ -79,16 +80,15 @@
             var result = await IdentityApi.VerifyAuthCodeAsync(Email, code);
             if (result.Success && result.Tokens is not null)
             {
-                await AuthCookies.SignInAsync(
-                    result.Tokens.UserId,
-                    result.Tokens.Email,
-                    result.Tokens.IsDriver,
-                    result.Tokens.IsPassenger,
-                    result.Tokens.AccessToken,
-                    result.Tokens.RefreshToken);
+                // Store tokens server-side for 30 s; /auth/complete reads them and sets the
+                // HttpOnly cookie — avoids JS interop across a forceLoad navigation.
+                var key = Guid.NewGuid().ToString("N");
+                Cache.Set(key, result.Tokens, TimeSpan.FromSeconds(30));
 
                 var destination = string.IsNullOrEmpty(ReturnUrl) ? "/my-profile" : ReturnUrl;
-                Nav.NavigateTo(destination, forceLoad: true);
+                Nav.NavigateTo(
+                    $"/auth/complete?key={key}&returnUrl={Uri.EscapeDataString(destination)}",
+                    forceLoad: true);
             }
             else
             {

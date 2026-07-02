@@ -15,7 +15,8 @@ public record RegisterResponse(
 
 public record AuthTokenResponse(
     string AccessToken, string RefreshToken, int ExpiresIn,
-    Guid UserId, string Email, bool IsDriver, bool IsPassenger);
+    Guid UserId, string Email, string FirstName, string LastName,
+    bool IsDriver, bool IsPassenger);
 
 // ── Result wrappers ─────────────────────────────────────────────────────────
 
@@ -32,15 +33,12 @@ public record UpdateProfileResult(RegisterResponse? User, string? Error, bool Su
 public class IdentityApiClient(
     IHttpClientFactory httpClientFactory,
     IConfiguration configuration,
-    UserSession userSession)
+    UserSession userSession,
+    AuthCookieService authCookieService)
 {
     private readonly string _apiKey = configuration["ApiKey:Value"] ?? "";
 
-    private HttpClient CreateClient()
-    {
-        var client = httpClientFactory.CreateClient("identity-api");
-        return client;
-    }
+    private HttpClient CreateClient() => httpClientFactory.CreateClient("identity-api");
 
     private HttpRequestMessage BuildRequest(HttpMethod method, string url)
     {
@@ -49,6 +47,22 @@ public class IdentityApiClient(
         if (!string.IsNullOrEmpty(userSession.AccessToken))
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", userSession.AccessToken);
         return request;
+    }
+
+    // Refreshes the JWT silently when it is expired or within 30 s of expiry.
+    // Called before every request that requires Bearer auth.
+    // If the refresh token itself has expired, the session is cleared and the
+    // next page render will redirect to /login via AuthorizeRouteView.
+    private async Task EnsureFreshTokenAsync()
+    {
+        if (!userSession.IsAccessTokenExpired) return;
+        if (userSession.UserId is null || userSession.RefreshToken is null) return;
+
+        var result = await RefreshTokenAsync(userSession.UserId.Value, userSession.RefreshToken);
+        if (result.Success && result.Tokens is not null)
+            await authCookieService.UpdateTokensAsync(result.Tokens.AccessToken, result.Tokens.RefreshToken);
+        else
+            userSession.Clear(); // refresh token expired — next render forces re-login
     }
 
     // ── Register ─────────────────────────────────────────────────────────────
@@ -145,10 +159,11 @@ public class IdentityApiClient(
         return new VerifyAuthCodeResult(null, string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
     }
 
-    // ── Get profile ──────────────────────────────────────────────────────────
+    // ── Get profile ── (JWT required) ────────────────────────────────────────
 
     public async Task<GetUserResult> GetUserAsync(Guid userId)
     {
+        await EnsureFreshTokenAsync();
         using var request = BuildRequest(HttpMethod.Get, $"/api/auth/users/{userId}");
 
         HttpResponseMessage response;
@@ -166,10 +181,11 @@ public class IdentityApiClient(
         return new GetUserResult(null, string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
     }
 
-    // ── Update profile ────────────────────────────────────────────────────────
+    // ── Update profile ── (JWT required) ─────────────────────────────────────
 
     public async Task<UpdateProfileResult> UpdateProfileAsync(Guid userId, UpdateProfileModel model)
     {
+        await EnsureFreshTokenAsync();
         using var request = BuildRequest(HttpMethod.Patch, $"/api/auth/users/{userId}");
         request.Content = JsonContent.Create(new
         {

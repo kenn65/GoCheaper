@@ -34,7 +34,7 @@ public class VerifyAuthCodeHandler(IdentityDbContext db, IConfiguration configur
 
         var refreshToken         = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         user.RefreshToken        = refreshToken;
-        user.RefreshTokenExpiry  = DateTime.UtcNow.AddDays(7);
+        user.RefreshTokenExpiry  = DateTime.UtcNow.AddDays(90);
         await db.SaveChangesAsync(ct);
 
         var accessToken = JwtHelper.GenerateToken(user.Id, user.Email, configuration);
@@ -45,6 +45,8 @@ public class VerifyAuthCodeHandler(IdentityDbContext db, IConfiguration configur
             ExpiresIn:    600,
             UserId:       user.Id,
             Email:        user.Email,
+            FirstName:    user.FirstName,
+            LastName:     user.LastName,
             IsDriver:     user.IsDriver,
             IsPassenger:  user.IsPassenger));
     }

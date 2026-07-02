@@ -8,6 +8,7 @@ public class UserSession
     public bool   IsLoggedIn        => UserId.HasValue;
     public Guid?  UserId            { get; private set; }
     public string? Email            { get; private set; }
+    public string? FullName         { get; private set; }
     public bool   IsDriver          { get; private set; }
     public bool   IsPassenger       { get; private set; }
     public string? AccessToken      { get; private set; }
@@ -24,6 +25,7 @@ public class UserSession
 
         UserId      = Guid.TryParse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : null;
         Email       = principal.FindFirst(ClaimTypes.Email)?.Value;
+        FullName    = principal.FindFirst(ClaimTypes.Name)?.Value;
         IsDriver    = principal.FindFirst("is_driver")?.Value  == "true";
         IsPassenger = principal.FindFirst("is_passenger")?.Value == "true";
         AccessToken   = principal.FindFirst("access_token")?.Value;
@@ -38,12 +40,13 @@ public class UserSession
             RefreshTokenExpiry = rexp;
     }
 
-    public void Update(Guid userId, string email, bool isDriver, bool isPassenger,
+    public void Update(Guid userId, string email, string? fullName, bool isDriver, bool isPassenger,
                        string accessToken, DateTime accessTokenExpiry,
                        string refreshToken, DateTime refreshTokenExpiry)
     {
         UserId      = userId;
         Email       = email;
+        FullName    = fullName;
         IsDriver    = isDriver;
         IsPassenger = isPassenger;
         AccessToken = accessToken;
@@ -55,7 +58,7 @@ public class UserSession
 
     public void Clear()
     {
-        UserId = null; Email = null; IsDriver = false; IsPassenger = false;
+        UserId = null; Email = null; FullName = null; IsDriver = false; IsPassenger = false;
         AccessToken = null; RefreshToken = null;
         AccessTokenExpiry = null; RefreshTokenExpiry = null;
         NotifyChange();

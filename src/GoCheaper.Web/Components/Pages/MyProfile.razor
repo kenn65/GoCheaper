@@ -1,11 +1,11 @@
 @page "/my-profile"
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [Authorize]
 @using GoCheaper.Web.Models
 @using GoCheaper.Web.Services
 @inject IdentityApiClient IdentityApi
 @inject AuthCookieService AuthCookies
 @inject UserSession UserSession
-@inject NavigationManager Nav
 
 <PageTitle>My Profile - GoCheaper</PageTitle>
 
@@ -46,35 +46,64 @@
                     </div>
                     <div class="card-body p-4">
 
-                        <h6 class="text-muted mb-3">Personal Information</h6>
-                        <dl class="row mb-4">
-                            <dt class="col-sm-4">Name</dt>
-                            <dd class="col-sm-8">@user.FirstName @user.LastName</dd>
-
-                            <dt class="col-sm-4">Email</dt>
-                            <dd class="col-sm-8">
-                                @user.Email
-                                @if (user.IsEmailVerified)
+                                                <div class="d-flex gap-4 align-items-center mb-4">
+                            <div class="flex-shrink-0">
+                                @if (!string.IsNullOrEmpty(user.DriverPictureBase64))
                                 {
-                                    <span class="badge bg-success ms-2">Verified</span>
+                                    <img src="@ImageDataUrl(user.DriverPictureBase64)"
+                                         class="rounded-circle border"
+                                         style="width:88px;height:88px;object-fit:cover;"
+                                         alt="Profile picture" />
                                 }
                                 else
                                 {
-                                    <span class="badge bg-warning text-dark ms-2">Unverified</span>
+                                    <div class="rounded-circle border bg-secondary d-flex align-items-center
+                                                justify-content-center text-white fw-bold fs-2"
+                                         style="width:88px;height:88px;">
+                                        @user.FirstName[0]
+                                    </div>
                                 }
+                            </div>
+                            <div>
+                                <h5 class="mb-1 fw-semibold">@user.FirstName @user.LastName</h5>
+                                <div class="mb-1">
+                                    @user.Email
+                                    @if (user.IsEmailVerified)
+                                    {
+                                        <span class="badge bg-success ms-2">Verified</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark ms-2">Unverified</span>
+                                    }
+                                </div>
+                                <div class="text-muted small">Member since @user.CreatedAt.ToString("d MMMM yyyy")</div>
+                            </div>
+                        </div>
+
+                                                <h6 class="text-muted text-uppercase small fw-semibold mb-2">Account Information</h6>
+                        <dl class="row mb-4">
+                            <dt class="col-sm-4">Mobile Phone</dt>
+                            <dd class="col-sm-8">
+                                @(string.IsNullOrEmpty(user.MobilePhone) ? "—" : user.MobilePhone)
                             </dd>
 
-                            <dt class="col-sm-4">Member since</dt>
-                            <dd class="col-sm-8">@user.CreatedAt.ToString("d MMMM yyyy")</dd>
+                            <dt class="col-sm-4">Account Type</dt>
+                            <dd class="col-sm-8">
+                                @if (user.IsDriver && user.IsPassenger)       { <span>Driver &amp; Passenger</span> }
+                                else if (user.IsDriver)                        { <span>Driver</span> }
+                                else if (user.IsPassenger)                     { <span>Passenger</span> }
+                            </dd>
                         </dl>
 
                         <hr />
-                        <h6 class="text-muted mb-3">Edit Profile</h6>
+
+                                                <h6 class="text-muted text-uppercase small fw-semibold mb-3">Edit Profile</h6>
 
                         <div class="mb-3">
                             <label class="form-label">Mobile Phone</label>
                             <input @bind="model.MobilePhone" class="form-control"
-                                   placeholder="Mobile phone" type="tel" />
+                                   placeholder="+45 12 34 56 78" type="tel" />
                         </div>
 
                         <div class="mb-4">
@@ -82,14 +111,16 @@
                             <div class="d-flex gap-4">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="chkDriver"
-                                           checked="@model.IsDriver" @onchange="e => model.IsDriver = (bool)e.Value!" />
+                                           checked="@model.IsDriver"
+                                           @onchange="e => model.IsDriver = (bool)e.Value!" />
                                     <label class="form-check-label" for="chkDriver">
                                         <strong>Driver</strong> — I want to offer rides
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="chkPassenger"
-                                           checked="@model.IsPassenger" @onchange="e => model.IsPassenger = (bool)e.Value!" />
+                                           checked="@model.IsPassenger"
+                                           @onchange="e => model.IsPassenger = (bool)e.Value!" />
                                     <label class="form-check-label" for="chkPassenger">
                                         <strong>Passenger</strong> — I want to book rides
                                     </label>
@@ -105,13 +136,21 @@
                         {
                             <div class="mb-4">
                                 <label class="form-label">Profile Picture</label>
-                                @if (!string.IsNullOrEmpty(user.DriverPictureBase64))
+
+                                @{
+                                    // Show preview of newly selected image, or the saved one
+                                    var previewBase64 = model.DriverPictureBase64 ?? user.DriverPictureBase64;
+                                }
+                                @if (!string.IsNullOrEmpty(previewBase64))
                                 {
                                     <div class="mb-2">
-                                        <img src="data:image/*;base64,@user.DriverPictureBase64"
-                                             class="rounded" style="max-height:120px;" alt="Profile picture" />
+                                        <img src="@ImageDataUrl(previewBase64)"
+                                             class="rounded border"
+                                             style="max-height:140px;max-width:100%;object-fit:contain;"
+                                             alt="Profile picture" />
                                     </div>
                                 }
+
                                 <InputFile OnChange="HandleImageUpload" accept="image/*" class="form-control" />
                                 @if (!string.IsNullOrEmpty(pictureFileName))
                                 {
@@ -159,16 +198,10 @@
     {
         if (!firstRender) return;
 
-        if (!UserSession.IsLoggedIn)
-        {
-            Nav.NavigateTo("/login?returnUrl=/my-profile", forceLoad: false);
-            return;
-        }
-
         var result = await IdentityApi.GetUserAsync(UserSession.UserId!.Value);
         if (result.Success && result.User is not null)
         {
-            user = result.User;
+            user  = result.User;
             model = new UpdateProfileModel
             {
                 MobilePhone = user.MobilePhone,
@@ -187,8 +220,8 @@
 
     private async Task HandleImageUpload(InputFileChangeEventArgs e)
     {
-        pictureError    = null;
-        pictureFileName = string.Empty;
+        pictureError              = null;
+        pictureFileName           = string.Empty;
         model.DriverPictureBase64 = null;
 
         if (e.File.Size > 5 * 1024 * 1024)
@@ -203,7 +236,7 @@
             using var ms     = new MemoryStream();
             await stream.CopyToAsync(ms);
             model.DriverPictureBase64 = Convert.ToBase64String(ms.ToArray());
-            pictureFileName = e.File.Name;
+            pictureFileName           = e.File.Name;
         }
         catch
         {
@@ -213,8 +246,8 @@
 
     private async Task HandleSave()
     {
-        roleError  = null;
-        saveError  = null;
+        roleError   = null;
+        saveError   = null;
         saveSuccess = false;
 
         if (model.IsDriver == false && model.IsPassenger == false)
@@ -229,10 +262,10 @@
             var result = await IdentityApi.UpdateProfileAsync(UserSession.UserId!.Value, model);
             if (result.Success && result.User is not null)
             {
-                user        = result.User;
-                saveSuccess = true;
+                user            = result.User;
+                saveSuccess     = true;
                 pictureFileName = string.Empty;
-                // Update cookie + NavMenu live if driver/passenger roles changed
+                // Sync updated roles into the auth cookie and live NavMenu
                 await AuthCookies.UpdateRolesAsync(result.User.IsDriver, result.User.IsPassenger);
             }
             else
@@ -244,5 +277,15 @@
         {
             isSaving = false;
         }
+    }
+
+    // Detects JPEG, PNG or GIF from the base64 binary signature so the data URI renders correctly
+    private static string ImageDataUrl(string base64)
+    {
+        var mime = base64.StartsWith("/9j/")   ? "image/jpeg"
+                 : base64.StartsWith("iVBOR")  ? "image/png"
+                 : base64.StartsWith("R0lGOD") ? "image/gif"
+                 : "image/jpeg";
+        return $"data:{mime};base64,{base64}";
     }
 }

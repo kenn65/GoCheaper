@@ -6,5 +6,7 @@ public record AuthTokenResponse(
     int    ExpiresIn,
     Guid   UserId,
     string Email,
+    string FirstName,
+    string LastName,
     bool   IsDriver,
     bool   IsPassenger);
