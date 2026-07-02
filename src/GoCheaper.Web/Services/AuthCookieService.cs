@@ -9,17 +9,20 @@ public class AuthCookieService(IJSRuntime js, UserSession session) : IAsyncDispo
     private async Task<IJSObjectReference> GetModuleAsync()
         => _module ??= await js.InvokeAsync<IJSObjectReference>("import", "/js/auth.js");
 
-    public async Task SignInAsync(Guid userId, string email, string accessToken,
-                                  string refreshToken)
+    public async Task SignInAsync(Guid userId, string email, bool isDriver, bool isPassenger,
+                                  string accessToken, string refreshToken)
     {
         var accessTokenExpiry  = DateTime.UtcNow.AddMinutes(10);
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
 
-        session.Update(userId, email, accessToken, accessTokenExpiry, refreshToken, refreshTokenExpiry);
+        session.Update(userId, email, isDriver, isPassenger,
+            accessToken, accessTokenExpiry, refreshToken, refreshTokenExpiry);
 
         var module = await GetModuleAsync();
         await module.InvokeVoidAsync("signIn",
             userId.ToString(), email,
+            isDriver.ToString().ToLowerInvariant(),
+            isPassenger.ToString().ToLowerInvariant(),
             accessToken,   accessTokenExpiry.ToString("O"),
             refreshToken,  refreshTokenExpiry.ToString("O"));
     }
@@ -31,12 +34,15 @@ public class AuthCookieService(IJSRuntime js, UserSession session) : IAsyncDispo
         var accessTokenExpiry  = DateTime.UtcNow.AddMinutes(10);
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
 
-        session.Update(session.UserId.Value, session.Email, accessToken,
-            accessTokenExpiry, refreshToken, refreshTokenExpiry);
+        session.Update(session.UserId.Value, session.Email,
+            session.IsDriver, session.IsPassenger,
+            accessToken, accessTokenExpiry, refreshToken, refreshTokenExpiry);
 
         var module = await GetModuleAsync();
         await module.InvokeVoidAsync("signIn",
             session.UserId.Value.ToString(), session.Email,
+            session.IsDriver.ToString().ToLowerInvariant(),
+            session.IsPassenger.ToString().ToLowerInvariant(),
             accessToken,   accessTokenExpiry.ToString("O"),
             refreshToken,  refreshTokenExpiry.ToString("O"));
     }

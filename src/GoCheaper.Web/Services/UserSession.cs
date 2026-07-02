@@ -8,6 +8,8 @@ public class UserSession
     public bool   IsLoggedIn        => UserId.HasValue;
     public Guid?  UserId            { get; private set; }
     public string? Email            { get; private set; }
+    public bool   IsDriver          { get; private set; }
+    public bool   IsPassenger       { get; private set; }
     public string? AccessToken      { get; private set; }
     public DateTime? AccessTokenExpiry   { get; private set; }
     public string? RefreshToken     { get; private set; }
@@ -20,8 +22,10 @@ public class UserSession
     {
         if (principal.Identity?.IsAuthenticated != true) { Clear(); return; }
 
-        UserId        = Guid.TryParse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : null;
-        Email         = principal.FindFirst(ClaimTypes.Email)?.Value;
+        UserId      = Guid.TryParse(principal.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var id) ? id : null;
+        Email       = principal.FindFirst(ClaimTypes.Email)?.Value;
+        IsDriver    = principal.FindFirst("is_driver")?.Value  == "true";
+        IsPassenger = principal.FindFirst("is_passenger")?.Value == "true";
         AccessToken   = principal.FindFirst("access_token")?.Value;
         RefreshToken  = principal.FindFirst("refresh_token")?.Value;
 
@@ -34,12 +38,15 @@ public class UserSession
             RefreshTokenExpiry = rexp;
     }
 
-    public void Update(Guid userId, string email, string accessToken, DateTime accessTokenExpiry,
+    public void Update(Guid userId, string email, bool isDriver, bool isPassenger,
+                       string accessToken, DateTime accessTokenExpiry,
                        string refreshToken, DateTime refreshTokenExpiry)
     {
-        UserId             = userId;
-        Email              = email;
-        AccessToken        = accessToken;
+        UserId      = userId;
+        Email       = email;
+        IsDriver    = isDriver;
+        IsPassenger = isPassenger;
+        AccessToken = accessToken;
         AccessTokenExpiry  = accessTokenExpiry;
         RefreshToken       = refreshToken;
         RefreshTokenExpiry = refreshTokenExpiry;
@@ -48,7 +55,8 @@ public class UserSession
 
     public void Clear()
     {
-        UserId = null; Email = null; AccessToken = null; RefreshToken = null;
+        UserId = null; Email = null; IsDriver = false; IsPassenger = false;
+        AccessToken = null; RefreshToken = null;
         AccessTokenExpiry = null; RefreshTokenExpiry = null;
         NotifyChange();
     }

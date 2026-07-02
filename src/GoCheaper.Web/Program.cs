@@ -68,6 +68,8 @@ app.MapPost("/auth/signin", async (SignInRequest req, HttpContext ctx) =>
     {
         new(ClaimTypes.NameIdentifier,       req.UserId),
         new(ClaimTypes.Email,                req.Email),
+        new("is_driver",                     req.IsDriver),
+        new("is_passenger",                  req.IsPassenger),
         new("access_token",                  req.AccessToken),
         new("access_token_expiry",           req.AccessTokenExpiry),
         new("refresh_token",                 req.RefreshToken),
@@ -101,6 +103,8 @@ app.Run();
 record SignInRequest(
     string UserId,
     string Email,
+    string IsDriver,
+    string IsPassenger,
     string AccessToken,
     string AccessTokenExpiry,
     string RefreshToken,

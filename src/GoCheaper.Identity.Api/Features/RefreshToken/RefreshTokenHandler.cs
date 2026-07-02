@@ -41,6 +41,8 @@ public class RefreshTokenHandler(IdentityDbContext db, IConfiguration configurat
             RefreshToken: newRefreshToken,
             ExpiresIn:    600,
             UserId:       user.Id,
-            Email:        user.Email));
+            Email:        user.Email,
+            IsDriver:     user.IsDriver,
+            IsPassenger:  user.IsPassenger));
     }
 }

@@ -5,4 +5,6 @@ public record AuthTokenResponse(
     string RefreshToken,
     int    ExpiresIn,
     Guid   UserId,
-    string Email);
+    string Email,
+    bool   IsDriver,
+    bool   IsPassenger);

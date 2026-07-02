@@ -82,6 +82,8 @@
                 await AuthCookies.SignInAsync(
                     result.Tokens.UserId,
                     result.Tokens.Email,
+                    result.Tokens.IsDriver,
+                    result.Tokens.IsPassenger,
                     result.Tokens.AccessToken,
                     result.Tokens.RefreshToken);
 

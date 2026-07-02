@@ -44,6 +44,8 @@ public class VerifyAuthCodeHandler(IdentityDbContext db, IConfiguration configur
             RefreshToken: refreshToken,
             ExpiresIn:    600,
             UserId:       user.Id,
-            Email:        user.Email));
+            Email:        user.Email,
+            IsDriver:     user.IsDriver,
+            IsPassenger:  user.IsPassenger));
     }
 }

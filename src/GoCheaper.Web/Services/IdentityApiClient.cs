@@ -13,7 +13,8 @@ public record RegisterResponse(
     bool IsEmailVerified, string? EmailVerificationToken, DateTime CreatedAt);
 
 public record AuthTokenResponse(
-    string AccessToken, string RefreshToken, int ExpiresIn, Guid UserId, string Email);
+    string AccessToken, string RefreshToken, int ExpiresIn,
+    Guid UserId, string Email, bool IsDriver, bool IsPassenger);
 
 // ── Result wrappers ─────────────────────────────────────────────────────────
 

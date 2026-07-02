@@ -15,6 +15,30 @@
 
     <div class="collapse navbar-collapse" id="navContent">
         <ul class="navbar-nav me-auto">
+            @if (UserSession.IsLoggedIn)
+            {
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="my-profile" Match="NavLinkMatch.Prefix">
+                        My Profile
+                    </NavLink>
+                </li>
+                @if (UserSession.IsDriver)
+                {
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="my-trips" Match="NavLinkMatch.Prefix">
+                            My Trips
+                        </NavLink>
+                    </li>
+                }
+                @if (UserSession.IsPassenger)
+                {
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="my-booked-trips" Match="NavLinkMatch.Prefix">
+                            My Booked Trips
+                        </NavLink>
+                    </li>
+                }
+            }
         </ul>
 
         <ul class="navbar-nav ms-auto align-items-center gap-2">
