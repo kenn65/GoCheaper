@@ -36,7 +36,8 @@ src/
   GoCheaper.Contracts/         # Shared Kafka topic names + event record types (no dependencies)
   GoCheaper.Identity.Api/      # User registration, login (OTP), JWT/refresh tokens, profile management
   GoCheaper.Notification.Api/  # Kafka consumers that send transactional emails via MailKit/Gmail
-  GoCheaper.Web/               # Blazor Web App (Interactive Server) — BFF consuming Identity.Api
+  GoCheaper.Trips.Api/         # Trip management: create/list/book trips, DriverSnapshot Kafka sync
+  GoCheaper.Web/               # Blazor Web App (Interactive Server) — BFF consuming Identity + Trips APIs
 ```
 
 ### Aspire resource wiring (`AppHost/AppHost.cs`)
@@ -45,9 +46,10 @@ src/
 - **Kafka** — Docker container, `ContainerLifetime.Persistent`, KafkaUI sidecar available at the Aspire dashboard link.
 - `identity-api` references `identitydb` and `kafka`; waits for both.
 - `notification-api` references `kafka`; waits for Kafka.
-- `web` references `identity-api` (Aspire injects `https+http://identity-api` base address); waits for Identity.
+- `trips-api` references `tripsdb` and `kafka`; waits for both.
+- `web` references `identity-api` and `trips-api`; waits for both.
 
-The database name string (`"identitydb"`) **must match** between `AppHost` (`sql.AddDatabase("identitydb")`) and Identity.Api (`builder.AddSqlServerDbContext<IdentityDbContext>("identitydb")`).
+Database name strings **must match** between `AppHost` (`sql.AddDatabase("identitydb")` / `"tripsdb"`) and the respective service's `builder.AddSqlServerDbContext<TContext>("identitydb")` / `"tripsdb"`.
 
 Every new microservice must: (1) be added to AppHost with `.AddProject<>().WithReference(...)`, (2) reference `GoCheaper.ServiceDefaults` and call `builder.AddServiceDefaults()` in `Program.cs`.
 
@@ -100,6 +102,7 @@ Each handler is `AddScoped<THandler>()` in `Program.cs`. The Minimal API lambda 
 **EF Core migrations** are under `Data/Migrations/`. Always use:
 ```bash
 dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api --output-dir Data/Migrations
+dotnet-ef migrations add <Name> --project src/GoCheaper.Trips.Api    --output-dir Data/Migrations
 ```
 
 **Authentication policies:**
@@ -129,6 +132,47 @@ dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api --output-di
 ### OpenAPI / Scalar
 
 `Microsoft.AspNetCore.OpenApi` 10.x uses **Microsoft.OpenApi 2.0** — all types are in the `Microsoft.OpenApi` namespace, **not** `Microsoft.OpenApi.Models`. Scalar UI is at `/scalar/v1`.
+
+---
+
+### GoCheaper.Trips.Api
+
+Vertical Slice Architecture, same auth pattern as Identity.Api (copy of `Auth/` folder, same `ApiKeyOnly` / `ApiKeyAndJwt` policies, same JWT Issuer/Audience/Key — all three must match Identity.Api config).
+
+**SQL Server database:** `tripsdb` (separate from `identitydb`).
+
+**EF Core entities:**
+
+| Entity | Key | Notable fields |
+|---|---|---|
+| `Trip` | `Id` (Guid) | `DriverId` (FK to Identity user), `From`, `To`, `TotalSeats`, `PricePerSeat`, `DepartureTime?`, `Note?`, `CarPictureBase64?`, `NumberPlate?`, `CreatedAt` |
+| `PickupPoint` | `Id` (Guid) | `TripId` (FK, cascade delete), `Order` (int), `Address` — always returned sorted by `Order` |
+| `TripBooking` | `Id` (Guid) | `TripId` (FK, cascade delete), `PassengerUserId` (Identity user Guid), `BookedAt` — unique index on `(TripId, PassengerUserId)` prevents double-booking |
+| `DriverSnapshot` | `DriverId` (Guid) | `FullName`, `UpdatedAt` — local copy of driver name, avoids cross-service HTTP calls at read time |
+
+**Kafka consumers (BackgroundService — use IServiceScopeFactory to resolve TripsDbContext):**
+- `UserRegisteredConsumer` (topic `user-registered`, group `trips-user-registered`) — creates initial `DriverSnapshot` from `UserRegisteredEvent.FirstName + LastName`
+- `UserProfileUpdatedConsumer` (topic `user-profile-updated`, group `trips-user-profile-updated`) — upserts `DriverSnapshot.FullName` from `UserProfileUpdatedEvent.FullName`
+
+`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates `user-registered` and `user-profile-updated` topics.
+
+**REST endpoints** (`/api/trips/`):
+
+| Method + Path | Auth | Description |
+|---|---|---|
+| `GET /mine` | ApiKeyAndJwt | Trips where `DriverId == JWT sub` |
+| `GET /booked` | ApiKeyAndJwt | Trips booked by `JWT sub` as passenger |
+| `GET /{id}` | ApiKeyOnly | Full trip details (includes pickup points + booking count) |
+| `POST /` | ApiKeyAndJwt | Create trip; `DriverId` set from JWT sub |
+| `PATCH /{id}` | ApiKeyAndJwt | Update trip fields (403 if not owner; validates seats ≥ current bookings) |
+| `DELETE /{id}` | ApiKeyAndJwt | Delete trip (403 if not owner) |
+| `POST /{id}/book` | ApiKeyAndJwt | Book a seat (prevents self-booking, duplicate booking, overbooking) |
+| `DELETE /{id}/book` | ApiKeyAndJwt | Cancel own booking |
+
+Handlers extract user ID via `user.FindFirst(ClaimTypes.NameIdentifier)` from the `ClaimsPrincipal` bound in the Minimal API delegate.
+
+**`TripSummaryResponse`** (list view): `Id, From, To, TotalSeats, BookedSeats, PricePerSeat, DepartureTime, DriverFullName`
+**`TripDetailsResponse`** (detail view): adds `Note, CarPictureBase64, NumberPlate, List<string> PickupPoints` (ordered)
 
 ---
 
@@ -182,7 +226,9 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 
 **`UserSession` (Scoped):** In-memory auth state for the lifetime of one SignalR circuit. Properties: `IsLoggedIn`, `UserId`, `Email`, `FullName`, `IsDriver`, `IsPassenger`, `AccessToken`, `AccessTokenExpiry`, `RefreshToken`, `RefreshTokenExpiry`, `IsAccessTokenExpired` (true when within 30 s of expiry). `LoadFromClaims(ClaimsPrincipal)` populates it from the cookie on circuit start (called from `Routes.razor`). `NotifyChange()` / `OnChange` event lets `NavMenu` re-render live.
 
-**`IdentityApiClient` (Scoped):** Named `HttpClient` (`"identity-api"`) with Aspire service discovery. Attaches `X-API-Key` and `Authorization: Bearer` to every request. Calls `EnsureFreshTokenAsync()` before any JWT-gated method (`GetUserAsync`, `UpdateProfileAsync`) — if `UserSession.IsAccessTokenExpired`, it calls `RefreshTokenAsync` and updates `UserSession` + cookie via `AuthCookieService.UpdateTokensAsync`. If the refresh token is also expired, `userSession.Clear()` is called and the next page render forces re-login via `AuthorizeRouteView`.
+**`IdentityApiClient` (Scoped):** Named `HttpClient` (`"identity-api"`) with Aspire service discovery. Attaches `X-API-Key` and `Authorization: Bearer` to every request. Calls `EnsureFreshTokenAsync()` before any JWT-gated method — if `UserSession.IsAccessTokenExpired`, it calls `RefreshTokenAsync` and updates `UserSession` + cookie via `AuthCookieService.UpdateTokensAsync`. If the refresh token is also expired, `userSession.Clear()` is called and the next page render forces re-login.
+
+**`TripsApiClient` (Scoped):** Named `HttpClient` (`"trips-api"`) with Aspire service discovery. Same `X-API-Key` + Bearer auth pattern. Calls `EnsureFreshTokenAsync()` via `IdentityApiClient.RefreshTokenAsync` to avoid duplicating refresh logic. Methods: `GetMyTripsAsync`, `GetMyBookedTripsAsync`, `GetTripDetailsAsync`, `CreateTripAsync`, `BookTripAsync`, `CancelBookingAsync`.
 
 #### Route authorization
 
@@ -199,8 +245,10 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. `_Impor
 | `Login.razor` | `/login` | Public | Email + password → OTP; passes `returnUrl` through |
 | `VerifyCode.razor` | `/verify-code` | Public | 6-digit OTP → `/auth/complete` redirect |
 | `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature |
-| `MyTrips.razor` | `/my-trips` | `[Authorize]` | Drivers only (stub) |
-| `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Passengers only (stub) |
+| `MyTrips.razor` | `/my-trips` | `[Authorize]` | Table of driver's trips (From, To, Departure, Seats, Price); "+ New Trip" button |
+| `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; only shown when `UserSession.IsDriver` |
+| `TripDetails.razor` | `/trips/{Id:guid}` | `[Authorize]` | Full details + pickup list + car photo; "Book a Seat" button refreshes count after booking |
+| `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Table of trips booked as passenger (Driver, From, To, Departure, Price) |
 
 #### NavMenu
 
