@@ -13,7 +13,7 @@ dotnet run --project src/GoCheaper.AppHost
 
 # EF Core migrations (Identity.Api only — the only service with a DB)
 dotnet tool install --global dotnet-ef          # install once if missing
-dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api
+dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api --output-dir Data/Migrations
 dotnet-ef migrations remove --project src/GoCheaper.Identity.Api
 
 # Notification.Api SMTP credentials (Gmail App Password — stored in user secrets, never appsettings)
@@ -34,9 +34,9 @@ src/
   GoCheaper.AppHost/           # Aspire orchestrator — full topology declared here
   GoCheaper.ServiceDefaults/   # Shared telemetry, health checks, resilience (referenced by all APIs)
   GoCheaper.Contracts/         # Shared Kafka topic names + event record types (no dependencies)
-  GoCheaper.Identity.Api/      # User registration, auth tokens, email verification, password reset
+  GoCheaper.Identity.Api/      # User registration, login (OTP), JWT/refresh tokens, profile management
   GoCheaper.Notification.Api/  # Kafka consumers that send transactional emails via MailKit/Gmail
-  GoCheaper.Web/               # Blazor Web App (Interactive Server) — UI consuming Identity.Api
+  GoCheaper.Web/               # Blazor Web App (Interactive Server) — BFF consuming Identity.Api
 ```
 
 ### Aspire resource wiring (`AppHost/AppHost.cs`)
@@ -51,13 +51,15 @@ The database name string (`"identitydb"`) **must match** between `AppHost` (`sql
 
 Every new microservice must: (1) be added to AppHost with `.AddProject<>().WithReference(...)`, (2) reference `GoCheaper.ServiceDefaults` and call `builder.AddServiceDefaults()` in `Program.cs`.
 
+---
+
 ### Identity.Api
 
 Identity.Api uses **Vertical Slice Architecture** — each operation lives in its own folder under `Features/`.
 
 ```
 Program.cs         # DI registration and middleware pipeline
-Auth/              # ApiKeyAuthHandler (custom scheme) + BothSchemesRequirement/Handler (AND policy)
+Auth/              # ApiKeyAuthHandler + BothSchemesRequirement/Handler (AND policy)
 Data/
   IdentityDbContext.cs
   Migrations/      # EF Core generated — do not edit manually
@@ -65,31 +67,37 @@ Endpoints/
   AuthEndpoints.cs # Thin route mapper only — delegates to feature handlers
 Features/
   Common/
-    UserResponse.cs          # Shared response record + User.ToResponse() extension
+    UserResponse.cs          # Shared response record + UserMapper.ToResponse() extension
+    JwtHelper.cs             # GenerateToken(userId, email, config) — 10-min HS256 JWT
   Register/
-    RegisterRequest.cs
-    RegisterHandler.cs       # Scoped service; injected into endpoint lambda
   VerifyEmail/
-    VerifyEmailRequest.cs
-    VerifyEmailHandler.cs
+  Login/                     # Validates credentials, stores 6-digit OTP, publishes auth-code-requested
+  VerifyAuthCode/
+    AuthTokenResponse.cs     # AccessToken, RefreshToken, ExpiresIn, UserId, Email, FirstName, LastName, IsDriver, IsPassenger
+    VerifyAuthCodeHandler.cs # Validates OTP, issues JWT + 90-day refresh token
+  RefreshToken/
+    RefreshTokenHandler.cs   # Validates + rotates refresh token, issues new JWT
+  GetUser/
+    GetUserHandler.cs        # GET /api/auth/users/{id} — returns full UserResponse
   UpdateUser/
-    UpdateUserRequest.cs
-    UpdateUserHandler.cs
   DeleteUser/
-    DeleteUserHandler.cs
   ForgotPassword/
-    ForgotPasswordRequest.cs
-    ForgotPasswordHandler.cs
   ResetPassword/
-    ResetPasswordRequest.cs
-    ResetPasswordHandler.cs
 Models/
   User.cs
 ```
 
-Each handler is a plain class registered as `AddScoped<THandler>()` in `Program.cs`. The Minimal API lambda in `AuthEndpoints.cs` receives the handler via DI parameter injection and calls `handler.HandleAsync(...)`. This makes handlers independently unit-testable — inject a real or in-memory `IdentityDbContext` and a mocked `IProducer<string, string>`.
+**User model fields** (relevant additions beyond name/email/password):
+- `IsDriver`, `IsPassenger` — at least one must be true
+- `DriverPictureBase64` — nullable; stored as NVARCHAR(MAX)
+- `MobilePhone` — nullable
+- `IsEmailVerified`, `EmailVerificationToken` — email verification flow
+- `AuthCode`, `AuthCodeExpiry` — 6-digit OTP; 5-minute TTL
+- `RefreshToken`, `RefreshTokenExpiry` — 90-day; rotated on every use
 
-**EF Core migrations** are now under `Data/Migrations/` (namespace `GoCheaper.Identity.Api.Data.Migrations`). When adding new migrations use:
+Each handler is `AddScoped<THandler>()` in `Program.cs`. The Minimal API lambda in `AuthEndpoints.cs` receives the handler via DI and calls `handler.HandleAsync(...)`.
+
+**EF Core migrations** are under `Data/Migrations/`. Always use:
 ```bash
 dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api --output-dir Data/Migrations
 ```
@@ -98,46 +106,113 @@ dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api --output-di
 
 | Policy | Endpoints | Requires |
 |---|---|---|
-| `ApiKeyOnly` | POST register, POST verify-email, POST forgot-password, POST reset-password | `X-API-Key` header matching `ApiKey:Value` config |
-| `ApiKeyAndJwt` | PATCH users/{id}, DELETE users/{id} | API key **and** valid JWT Bearer token |
+| `ApiKeyOnly` | POST register, POST verify-email, POST login, POST verify-code, POST refresh, POST forgot-password, POST reset-password | `X-API-Key` header |
+| `ApiKeyAndJwt` | GET users/{id}, PATCH users/{id}, DELETE users/{id} | API key **and** valid JWT Bearer token |
 
-`BothSchemesHandler` inspects `ClaimsPrincipal.Identities` for both authenticated `"ApiKey"` and `"Bearer"` identities. JWT issuance (login) is not yet implemented — PATCH/DELETE return 401 until it is.
+`BothSchemesHandler` inspects `ClaimsPrincipal.Identities` for both `"ApiKey"` and `"Bearer"` authenticated identities.
 
-**Kafka producer:** `IProducer<string, string>` registered via `builder.AddKafkaProducer<string, string>("kafka")`. Handlers that publish events (`RegisterHandler`, `ForgotPasswordHandler`) contain a private `PublishAsync` helper that wraps produce calls in try/catch so the operation never fails due to Kafka being unavailable.
+**Login flow (OTP → JWT):**
+1. `POST /api/auth/login` — validates email + password hash, generates 6-digit OTP (crypto-random), stores on user with 5-min expiry, publishes `auth-code-requested` Kafka event → Notification.Api emails the code.
+2. `POST /api/auth/verify-code` — validates OTP + expiry, clears code, issues 10-min JWT + 90-day refresh token. Returns `AuthTokenResponse`.
+3. `POST /api/auth/refresh` — validates refresh token, rotates it (new 90-day token), returns new JWT + `AuthTokenResponse`.
 
-**Email verification flow:** On register, a 32-byte random token is stored on the user (`EmailVerificationToken`) and the `user-registered` Kafka event is published. The Notification service sends the verification link email. `POST /api/auth/users/{id}/verify-email` consumes the token (sets `IsEmailVerified = true`, clears token).
+**Token lifetimes:** JWT access token = 10 minutes. Refresh token = 90 days (rotated on every use — old token is immediately invalidated).
 
-**Password reset flow:** `POST /api/auth/forgot-password` always returns 204 (email existence is not revealed). If the user exists, a 1-hour reset token is stored and a `forgot-password-requested` event is published.
+**Kafka producer:** `IProducer<string, string>` registered via `builder.AddKafkaProducer<string, string>("kafka")`. `RegisterHandler` and `ForgotPasswordHandler` (and `LoginHandler`) each have a private `PublishAsync` helper that wraps produce calls in try/catch so a Kafka outage never fails the primary operation.
+
+**Email verification flow:** On register, a 32-byte random token is stored (`EmailVerificationToken`) and `user-registered` event is published. `POST /api/auth/users/{id}/verify-email` consumes it (sets `IsEmailVerified = true`, clears token).
+
+**Password reset flow:** `POST /api/auth/forgot-password` always returns 204 (never reveals email existence). If the user exists, a 1-hour reset token is stored and `forgot-password-requested` event is published.
+
+**Adding new authorized endpoints to Identity.Api:** use `.RequireAuthorization("ApiKeyAndJwt")` for any endpoint that requires a logged-in user, `.RequireAuthorization("ApiKeyOnly")` for public-facing flows (registration, login, etc.).
 
 ### OpenAPI / Scalar
 
-`Microsoft.AspNetCore.OpenApi` 10.x uses **Microsoft.OpenApi 2.0** — all types (`OpenApiSecurityScheme`, `OpenApiComponents`, `SecuritySchemeType`, `ParameterLocation`, etc.) are in the `Microsoft.OpenApi` namespace, **not** `Microsoft.OpenApi.Models`. `SecuritySchemes` is `IDictionary<string, IOpenApiSecurityScheme>`. Scalar UI is at `/scalar/v1`, linked from the Aspire dashboard.
+`Microsoft.AspNetCore.OpenApi` 10.x uses **Microsoft.OpenApi 2.0** — all types are in the `Microsoft.OpenApi` namespace, **not** `Microsoft.OpenApi.Models`. Scalar UI is at `/scalar/v1`.
+
+---
 
 ### Notification.Api
 
-All email sending is event-driven — no HTTP endpoints. Three `BackgroundService` consumers subscribe to Kafka topics:
+All email sending is event-driven — no HTTP endpoints. Three `BackgroundService` consumers:
 
-| Consumer | Topic (from `KafkaTopics`) | Email template | Key tokens |
+| Consumer | Topic | Email template | Key tokens |
 |---|---|---|---|
 | `UserRegisteredConsumer` | `user-registered` | `SignUpEmail.html` | `FullName`, `VerificationLink` |
 | `ForgotPasswordConsumer` | `forgot-password-requested` | `ForgotPasswordEmail.html` | `FullName`, `ResetLink` |
 | `AuthCodeConsumer` | `auth-code-requested` | `AuthCodeEmail.html` | `FullName`, `Code` |
 
-`KafkaTopicInitializer` (registered as `IHostedService` **before** the consumers in `Program.cs`) pre-creates all topics using `IAdminClient` on startup; `TopicAlreadyExists` is silently ignored. This is necessary because Confluent consumers do not auto-create topics.
+`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics on startup; `TopicAlreadyExists` is silently ignored.
 
-**Email templates** are HTML files in `Templates/` built as `<EmbeddedResource>`. `TemplateRenderer` loads them via `Assembly.GetManifestResourceStream` and replaces `{{Token}}` placeholders. Add a new template by: (1) adding an `.html` file to `Templates/`, (2) ensuring the csproj `<EmbeddedResource Include="Templates\*.html" />` glob picks it up.
+**Email templates** are HTML files in `Templates/` built as `<EmbeddedResource>`. `TemplateRenderer` replaces `{{Token}}` placeholders. Add a template by adding an `.html` file — the csproj glob `<EmbeddedResource Include="Templates\*.html" />` picks it up automatically.
 
-**SMTP:** `EmailSender` uses MailKit with `SecureSocketOptions.StartTls` on port 587. Non-secret config (`Host`, `Port`, `FromName`) lives in `appsettings.json`; credentials (`Username`, `Password`, `FromEmail`) are stored in user secrets.
+**SMTP:** MailKit, `SecureSocketOptions.StartTls`, port 587. Non-secret config in `appsettings.json`; credentials in user secrets. `WebApp:BaseUrl` controls the base URL in verification/reset links.
 
-`WebApp:BaseUrl` in `appsettings.json` controls the base URL embedded in verification/reset links — set this to the Blazor app's URL.
+---
 
 ### GoCheaper.Web (Blazor)
 
-Interactive Server rendering via `AddInteractiveServerComponents()` / `AddInteractiveServerRenderMode()`. `Routes.razor` sets the global render mode.
+Interactive Server rendering. `App.razor` sets `<Routes @rendermode="InteractiveServer" />`.
 
-**`IdentityApiClient`** — typed `HttpClient` with base address `https+http://identity-api` (resolved by Aspire service discovery). Reads `ApiKey:Value` from config to set `X-API-Key` on every request.
+#### BFF cookie authentication
 
-**Blazor lifecycle pitfall:** `OnInitializedAsync` fires twice with `InteractiveServer` rendering — once during SSR prerender and once when the SignalR circuit connects. For pages that call one-time-use endpoints (e.g. `VerifyEmail.razor`), use `OnAfterRenderAsync(bool firstRender)` with a `if (!firstRender) return` guard instead. `OnAfterRenderAsync` is never called during SSR prerendering, only in the live interactive phase. Remember to call `StateHasChanged()` after mutating state inside `OnAfterRenderAsync`.
+The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the browser — they are stored server-side and in the `gc_auth` HttpOnly cookie.
+
+**Cookie (`gc_auth`):** HttpOnly, Secure, SameSite=Strict, 90-day lifetime. Claims stored in cookie:
+
+| Claim | Source |
+|---|---|
+| `ClaimTypes.NameIdentifier` | User GUID |
+| `ClaimTypes.Email` | User email |
+| `ClaimTypes.Name` | `"{FirstName} {LastName}"` |
+| `"is_driver"` / `"is_passenger"` | `"true"` / `"false"` |
+| `"access_token"` | Current JWT (10-min) |
+| `"access_token_expiry"` | ISO-8601 UTC |
+| `"refresh_token"` | Current refresh token (90-day) |
+| `"refresh_token_expiry"` | ISO-8601 UTC |
+
+**Sign-in flow (avoids JSDisconnectedException):**
+`VerifyCode.razor` stores the `AuthTokenResponse` in `IMemoryCache` under a random GUID key (30-second TTL), then calls `Nav.NavigateTo("/auth/complete?key={guid}&returnUrl=...", forceLoad: true)`. The `/auth/complete` minimal API endpoint reads + removes the cache entry, calls `HttpContext.SignInAsync(...)` to write the cookie, and redirects. No JS interop is involved — this prevents `JSDisconnectedException` that occurs when JS interop is attempted across a `forceLoad` navigation that tears down the Blazor circuit.
+
+**`/auth/signin` POST endpoint:** Used by `AuthCookieService` (via `auth.js` fetch) to rewrite the cookie after role updates or token rotation. Not used for initial sign-in.
+
+**`/auth/signout` POST endpoint:** Clears the `gc_auth` cookie.
+
+**`AuthCookieService` (Scoped, `IAsyncDisposable`):** Lazy-loads `wwwroot/js/auth.js` as an ES module via `IJSRuntime`. All JS interop calls catch `JSDisconnectedException` (including `DisposeAsync`) because the circuit may be disconnecting during navigation. Methods: `UpdateTokensAsync`, `UpdateRolesAsync`, `SignOutAsync`.
+
+**`UserSession` (Scoped):** In-memory auth state for the lifetime of one SignalR circuit. Properties: `IsLoggedIn`, `UserId`, `Email`, `FullName`, `IsDriver`, `IsPassenger`, `AccessToken`, `AccessTokenExpiry`, `RefreshToken`, `RefreshTokenExpiry`, `IsAccessTokenExpired` (true when within 30 s of expiry). `LoadFromClaims(ClaimsPrincipal)` populates it from the cookie on circuit start (called from `Routes.razor`). `NotifyChange()` / `OnChange` event lets `NavMenu` re-render live.
+
+**`IdentityApiClient` (Scoped):** Named `HttpClient` (`"identity-api"`) with Aspire service discovery. Attaches `X-API-Key` and `Authorization: Bearer` to every request. Calls `EnsureFreshTokenAsync()` before any JWT-gated method (`GetUserAsync`, `UpdateProfileAsync`) — if `UserSession.IsAccessTokenExpired`, it calls `RefreshTokenAsync` and updates `UserSession` + cookie via `AuthCookieService.UpdateTokensAsync`. If the refresh token is also expired, `userSession.Clear()` is called and the next page render forces re-login via `AuthorizeRouteView`.
+
+#### Route authorization
+
+`Routes.razor` uses `AuthorizeRouteView` (not `RouteView`). The `<NotAuthorized>` template renders `RedirectToLogin.razor`, which navigates to `/login?returnUrl={current path}`.
+
+Add `@attribute [Authorize]` to any page that requires a logged-in user. `_Imports.razor` already imports `Microsoft.AspNetCore.Authorization` and `Microsoft.AspNetCore.Components.Authorization` globally.
+
+`Program.cs` registers `builder.Services.AddAuthorization()` and `builder.Services.AddCascadingAuthenticationState()`.
+
+#### Key pages
+
+| Page | Route | Auth | Notes |
+|---|---|---|---|
+| `Login.razor` | `/login` | Public | Email + password → OTP; passes `returnUrl` through |
+| `VerifyCode.razor` | `/verify-code` | Public | 6-digit OTP → `/auth/complete` redirect |
+| `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature |
+| `MyTrips.razor` | `/my-trips` | `[Authorize]` | Drivers only (stub) |
+| `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Passengers only (stub) |
+
+#### NavMenu
+
+`NavMenu.razor` implements `IDisposable` and subscribes to `UserSession.OnChange` → `InvokeAsync(StateHasChanged)` for live updates. Left nav shows role-based items (My Profile always; My Trips if `IsDriver`; My Booked Trips if `IsPassenger`). Right nav shows `UserSession.FullName` + Sign Out when logged in, Sign In when logged out.
+
+#### Blazor pitfalls
+
+- **`OnInitializedAsync` fires twice** with `InteractiveServer` (once SSR, once circuit). Use `OnAfterRenderAsync(bool firstRender)` + `if (!firstRender) return` for one-time API calls. Call `StateHasChanged()` after mutating state there.
+- **`prerender: false`** — use `@rendermode @(new InteractiveServerRenderMode(prerender: false))` on pages that must not run during SSR (e.g. `MyProfile` which checks `UserSession.IsLoggedIn`).
+- **`forceLoad: true` + JS interop** — never call JS interop after `Nav.NavigateTo(url, forceLoad: true)`; the circuit disconnects and the call throws `JSDisconnectedException`. Use the `/auth/complete` server-redirect pattern instead.
+
+---
 
 ### Adding a new microservice
 
@@ -146,4 +221,5 @@ Interactive Server rendering via `AddInteractiveServerComponents()` / `AddIntera
 3. Add project reference to `GoCheaper.ServiceDefaults` and call `builder.AddServiceDefaults()` in `Program.cs`
 4. Register in `AppHost.cs` with required `.WithReference(...)` and `.WaitFor(...)` calls
 5. Follow the `Auth/`, `Data/`, `Features/`, `Endpoints/` layout from Identity.Api
-6. To publish Kafka events, add `builder.AddKafkaProducer<string, string>("kafka")` and reference `GoCheaper.Contracts` for topic names and event types
+6. To publish Kafka events, add `builder.AddKafkaProducer<string, string>("kafka")` and reference `GoCheaper.Contracts`
+7. Endpoints requiring a logged-in user: `.RequireAuthorization("ApiKeyAndJwt")`
