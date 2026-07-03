@@ -172,28 +172,6 @@
                         </ol>
                     }
 
-                    @if (!isOwner)
-                    {
-                        @if (_bookError is not null)
-                        {
-                            <div class="alert alert-danger mt-3 mb-0">@_bookError</div>
-                        }
-                        @if (_bookSuccess)
-                        {
-                            <div class="alert alert-success mt-3 mb-0">Seat booked successfully!</div>
-                        }
-
-                        @if (_trip.TotalSeats > _trip.BookedSeats)
-                        {
-                            <button class="btn btn-success mt-3" @onclick="BookTripAsync" disabled="@_booking">
-                                @(_booking ? "Booking..." : "Book a Seat")
-                            </button>
-                        }
-                        else
-                        {
-                            <div class="alert alert-warning mt-3 mb-0">This trip is fully booked.</div>
-                        }
-                    }
 
                 </div>
             </div>
@@ -208,10 +186,6 @@
     private bool _loading = true;
     private string? _error;
 
-    // passenger booking
-    private string? _bookError;
-    private bool _bookSuccess;
-    private bool _booking;
 
     // owner editing
     private bool _editing;
@@ -281,27 +255,6 @@
         }
 
         _saving = false;
-    }
-
-    private async Task BookTripAsync()
-    {
-        _booking = true;
-        _bookError = null;
-        _bookSuccess = false;
-
-        var result = await TripsClient.BookTripAsync(Id);
-        if (result.Success)
-        {
-            _bookSuccess = true;
-            var refresh = await TripsClient.GetTripDetailsAsync(Id);
-            if (refresh.Success) _trip = refresh.Trip;
-        }
-        else
-        {
-            _bookError = result.Error;
-        }
-
-        _booking = false;
     }
 
     private static string ImageDataUrl(string base64)
