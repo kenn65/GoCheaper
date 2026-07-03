@@ -1,9 +1,16 @@
+using System.Text.Json;
+using Confluent.Kafka;
+using GoCheaper.Contracts;
+using GoCheaper.Contracts.Events;
 using GoCheaper.Identity.Api.Data;
 using GoCheaper.Identity.Api.Features.Common;
 
 namespace GoCheaper.Identity.Api.Features.UpdateUser;
 
-public class UpdateUserHandler(IdentityDbContext db)
+public class UpdateUserHandler(
+    IdentityDbContext db,
+    IProducer<string, string> producer,
+    ILogger<UpdateUserHandler> logger)
 {
     public async Task<IResult> HandleAsync(Guid id, UpdateUserRequest req, CancellationToken ct = default)
     {
@@ -35,6 +42,25 @@ public class UpdateUserHandler(IdentityDbContext db)
 
         await db.SaveChangesAsync(ct);
 
+        await PublishAsync(KafkaTopics.UserProfileUpdated, user.Id.ToString(),
+            new UserProfileUpdatedEvent(user.Id, $"{user.FirstName} {user.LastName}"));
+
         return Results.Ok(user.ToResponse());
+    }
+
+    private async Task PublishAsync<T>(string topic, string key, T @event)
+    {
+        try
+        {
+            await producer.ProduceAsync(topic, new Message<string, string>
+            {
+                Key   = key,
+                Value = JsonSerializer.Serialize(@event)
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to publish event to Kafka topic {Topic}", topic);
+        }
     }
 }

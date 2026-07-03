@@ -19,6 +19,12 @@ builder.Services.AddHttpClient("identity-api", client =>
 });
 builder.Services.AddScoped<IdentityApiClient>();
 
+builder.Services.AddHttpClient("trips-api", client =>
+{
+    client.BaseAddress = new Uri("https+http://trips-api");
+});
+builder.Services.AddScoped<TripsApiClient>();
+
 // Auth: HttpOnly cookie holding the signed-in user's claims + tokens
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

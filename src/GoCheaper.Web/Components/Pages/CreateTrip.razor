@@ -1,0 +1,152 @@
+@page "/trips/create"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using GoCheaper.Web.Services
+@using System.ComponentModel.DataAnnotations
+@inject TripsApiClient TripsClient
+@inject UserSession UserSession
+@inject NavigationManager Nav
+
+<PageTitle>Create Trip - GoCheaper</PageTitle>
+
+<div class="container py-4" style="max-width:700px">
+    <h1 class="h3 mb-4">Post a New Trip</h1>
+
+    @if (!UserSession.IsDriver)
+    {
+        <div class="alert alert-warning">
+            Only drivers can post trips.
+            <a href="/my-profile" class="alert-link">Update your profile</a> to become a driver.
+        </div>
+    }
+    else
+    {
+        <EditForm Model="_model" OnValidSubmit="HandleSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">From</label>
+                <InputText class="form-control" @bind-Value="_model.From" placeholder="Departure city or address" />
+                <ValidationMessage For="() => _model.From" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">To</label>
+                <InputText class="form-control" @bind-Value="_model.To" placeholder="Destination city or address" />
+                <ValidationMessage For="() => _model.To" />
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Total Seats</label>
+                    <InputNumber class="form-control" @bind-Value="_model.TotalSeats" />
+                    <ValidationMessage For="() => _model.TotalSeats" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Price per Seat (DKK)</label>
+                    <InputNumber class="form-control" @bind-Value="_model.PricePerSeat" />
+                    <ValidationMessage For="() => _model.PricePerSeat" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Departure Date &amp; Time (optional)</label>
+                <InputDate Type="InputDateType.DateTimeLocal" class="form-control" @bind-Value="_model.DepartureTime" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Number Plate (optional)</label>
+                <InputText class="form-control" @bind-Value="_model.NumberPlate" placeholder="AB 12 345" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Note (optional)</label>
+                <InputTextArea class="form-control" @bind-Value="_model.Note" rows="3"
+                               placeholder="e.g. Luggage space available, no smoking..." />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Pickup Points (optional)</label>
+                @for (var i = 0; i < _pickupPoints.Count; i++)
+                {
+                    var index = i;
+                    <div class="input-group mb-2">
+                        <span class="input-group-text">@(index + 1)</span>
+                        <input class="form-control" value="@_pickupPoints[index]"
+                               @oninput="e => _pickupPoints[index] = e.Value?.ToString() ?? string.Empty"
+                               placeholder="Address or landmark" />
+                        <button type="button" class="btn btn-outline-danger"
+                                @onclick="() => _pickupPoints.RemoveAt(index)">✕</button>
+                    </div>
+                }
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        @onclick="AddPickupPoint">+ Add Pickup Point</button>
+            </div>
+
+            @if (_error is not null)
+            {
+                <div class="alert alert-danger">@_error</div>
+            }
+
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary" disabled="@_submitting">
+                    @(_submitting ? "Posting..." : "Post Trip")
+                </button>
+                <a href="/my-trips" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private readonly CreateTripModel _model = new();
+    private readonly List<string> _pickupPoints = [];
+    private bool _submitting;
+    private string? _error;
+
+    private void AddPickupPoint() => _pickupPoints.Add(string.Empty);
+
+    private async Task HandleSubmit()
+    {
+        _submitting = true;
+        _error = null;
+
+        var result = await TripsClient.CreateTripAsync(new
+        {
+            _model.From,
+            _model.To,
+            _model.TotalSeats,
+            _model.PricePerSeat,
+            DepartureTime = _model.DepartureTime != default(DateTime) ? (DateTime?)_model.DepartureTime : null,
+            _model.Note,
+            _model.NumberPlate,
+            PickupPoints = _pickupPoints.Where(p => !string.IsNullOrWhiteSpace(p)).ToList()
+        });
+
+        if (result.Success)
+            Nav.NavigateTo($"/trips/{result.Trip!.Id}");
+        else
+            _error = result.Error;
+
+        _submitting = false;
+    }
+
+    private class CreateTripModel
+    {
+        [Required(ErrorMessage = "From is required.")]
+        public string From { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "To is required.")]
+        public string To { get; set; } = string.Empty;
+
+        [Range(1, 50, ErrorMessage = "Seats must be between 1 and 50.")]
+        public int TotalSeats { get; set; } = 1;
+
+        [Range(0, 99999, ErrorMessage = "Price must be 0 or more.")]
+        public decimal PricePerSeat { get; set; }
+
+        public DateTime DepartureTime { get; set; } = default;
+        public string? NumberPlate { get; set; }
+        public string? Note { get; set; }
+    }
+}
