@@ -37,7 +37,7 @@ public class KafkaTopicInitializer(IConfiguration configuration, ILogger<KafkaTo
         {
             foreach (var result in ex.Results)
             {
-                if (result.Error.Code == ErrorCode.TopicAlreadyExists)
+                if (result.Error.Code is ErrorCode.TopicAlreadyExists or ErrorCode.NoError)
                     logger.LogDebug("Topic already exists (OK): {Topic}", result.Topic);
                 else
                     logger.LogError("Failed to create topic {Topic}: {Reason}", result.Topic, result.Error.Reason);
