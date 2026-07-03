@@ -1,6 +1,6 @@
 @page "/my-trips"
 @rendermode InteractiveServer
-@attribute [Authorize]
+@attribute [Authorize(Policy = "DriverOnly")]
 @using GoCheaper.Web.Services
 @inject TripsApiClient TripsClient
 @inject UserSession UserSession

@@ -1,10 +1,19 @@
 @inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
 
 @code {
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        // Use ToBaseRelativePath so we pass a local path, never an absolute URL
-        var path = "/" + Nav.ToBaseRelativePath(Nav.Uri);
-        Nav.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(path)}");
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated == true)
+        {
+            // Authenticated but not authorised for this page (e.g. non-driver hitting a driver-only route)
+            Nav.NavigateTo("/my-profile");
+        }
+        else
+        {
+            var path = "/" + Nav.ToBaseRelativePath(Nav.Uri);
+            Nav.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(path)}");
+        }
     }
 }

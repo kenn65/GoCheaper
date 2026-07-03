@@ -48,7 +48,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("DriverOnly", policy =>
+        policy.RequireAuthenticatedUser()
+              .RequireClaim("is_driver", "true"));
+});
 builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddScoped<UserSession>();

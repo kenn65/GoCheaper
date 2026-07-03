@@ -1,6 +1,6 @@
 @page "/trips/{Id:guid}"
 @rendermode InteractiveServer
-@attribute [Authorize]
+@attribute [Authorize(Policy = "DriverOnly")]
 @using GoCheaper.Web.Services
 @using System.ComponentModel.DataAnnotations
 @inject TripsApiClient TripsClient
