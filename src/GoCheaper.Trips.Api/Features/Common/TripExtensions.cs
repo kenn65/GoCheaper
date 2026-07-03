@@ -9,7 +9,7 @@ public static class TripExtensions
             trip.PricePerSeat, trip.DepartureTime, driverFullName);
 
     public static TripDetailsResponse ToDetails(this Trip trip, string driverFullName) =>
-        new(trip.Id, trip.From, trip.To, trip.TotalSeats, trip.Bookings.Count,
+        new(trip.Id, trip.DriverId, trip.From, trip.To, trip.TotalSeats, trip.Bookings.Count,
             trip.PricePerSeat, trip.DepartureTime, driverFullName,
             trip.Note, trip.CarPictureBase64, trip.NumberPlate,
             trip.PickupPoints.OrderBy(p => p.Order).Select(p => p.Address).ToList());

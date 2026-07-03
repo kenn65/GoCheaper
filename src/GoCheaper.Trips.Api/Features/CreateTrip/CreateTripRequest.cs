@@ -9,4 +9,5 @@ public record CreateTripRequest(
     string?       Note,
     string?       CarPictureBase64,
     string?       NumberPlate,
-    List<string>? PickupPoints);
+    List<string>? PickupPoints,
+    string?       DriverFullName);

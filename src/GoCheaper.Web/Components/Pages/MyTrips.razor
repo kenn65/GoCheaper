@@ -40,6 +40,7 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
+                        <th>Driver</th>
                         <th>From</th>
                         <th>To</th>
                         <th>Departure</th>
@@ -52,6 +53,7 @@
                     @foreach (var trip in _trips!)
                     {
                         <tr>
+                            <td>@(trip.DriverFullName == "Unknown Driver" ? (UserSession.FullName ?? trip.DriverFullName) : trip.DriverFullName)</td>
                             <td>@trip.From</td>
                             <td>@trip.To</td>
                             <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>

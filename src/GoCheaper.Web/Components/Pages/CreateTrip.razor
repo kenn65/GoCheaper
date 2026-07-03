@@ -120,7 +120,8 @@
             DepartureTime = _model.DepartureTime != default(DateTime) ? (DateTime?)_model.DepartureTime : null,
             _model.Note,
             _model.NumberPlate,
-            PickupPoints = _pickupPoints.Where(p => !string.IsNullOrWhiteSpace(p)).ToList()
+            PickupPoints = _pickupPoints.Where(p => !string.IsNullOrWhiteSpace(p)).ToList(),
+            DriverFullName = UserSession.FullName
         });
 
         if (result.Success)

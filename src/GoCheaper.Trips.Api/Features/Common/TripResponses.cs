@@ -12,6 +12,7 @@ public record TripSummaryResponse(
 
 public record TripDetailsResponse(
     Guid         Id,
+    Guid         DriverId,
     string       From,
     string       To,
     int          TotalSeats,

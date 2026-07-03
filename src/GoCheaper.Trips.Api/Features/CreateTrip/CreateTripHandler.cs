@@ -55,6 +55,17 @@ public class CreateTripHandler(TripsDbContext db)
         await db.SaveChangesAsync(ct);
 
         var snapshot = await db.DriverSnapshots.FindAsync([userId], ct);
+        if (snapshot is null && !string.IsNullOrWhiteSpace(req.DriverFullName))
+        {
+            snapshot = new DriverSnapshot
+            {
+                DriverId  = userId,
+                FullName  = req.DriverFullName.Trim(),
+                UpdatedAt = DateTime.UtcNow
+            };
+            db.DriverSnapshots.Add(snapshot);
+            await db.SaveChangesAsync(ct);
+        }
         var driverName = snapshot?.FullName ?? "Unknown Driver";
 
         return Results.Created($"/api/trips/{trip.Id}", trip.ToSummary(driverName));

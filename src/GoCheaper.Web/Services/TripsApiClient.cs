@@ -16,6 +16,7 @@ public record TripSummaryResponse(
 
 public record TripDetailsResponse(
     Guid         Id,
+    Guid         DriverId,
     string       From,
     string       To,
     int          TotalSeats,
@@ -31,6 +32,7 @@ public record TripDetailsResponse(
 public record GetMyTripsResult(List<TripSummaryResponse>? Trips, string? Error, bool Success);
 public record GetTripDetailsResult(TripDetailsResponse? Trip, string? Error, bool Success);
 public record CreateTripResult(TripSummaryResponse? Trip, string? Error, bool Success);
+public record UpdateTripResult(TripSummaryResponse? Trip, string? Error, bool Success);
 public record BookTripResult(string? Error, bool Success);
 
 public class TripsApiClient(
@@ -140,6 +142,27 @@ public class TripsApiClient(
 
         var error = await response.Content.ReadAsStringAsync();
         return new CreateTripResult(null, string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
+    }
+
+    public async Task<UpdateTripResult> UpdateTripAsync(Guid id, object payload)
+    {
+        await EnsureFreshTokenAsync();
+        using var request = BuildRequest(HttpMethod.Patch, $"/api/trips/{id}");
+        request.Content = JsonContent.Create(payload);
+
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return new UpdateTripResult(null, $"Could not reach the trips service: {ex.Message}", false); }
+
+        if (response.IsSuccessStatusCode)
+        {
+            var trip = await response.Content.ReadFromJsonAsync<TripSummaryResponse>();
+            return new UpdateTripResult(trip, null, true);
+        }
+
+        var error = await response.Content.ReadAsStringAsync();
+        return new UpdateTripResult(null, string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
     }
 
     public async Task<BookTripResult> BookTripAsync(Guid tripId)
