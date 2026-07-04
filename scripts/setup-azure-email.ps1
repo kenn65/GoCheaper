@@ -17,7 +17,7 @@
 # ==============================================================
 
 param(
-    [string] $ResourceGroup = "gocheaper-rg",
+    [string] $ResourceGroup = "GoCheaper",
     [string] $Location      = "westeurope",
     [string] $DataLocation  = "europe",
     [string] $EmailService  = "gocheaper",
