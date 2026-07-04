@@ -3,6 +3,7 @@
 @attribute [Authorize(Policy = "DriverOnly")]
 @using GoCheaper.Web.Services
 @inject TripsApiClient TripsClient
+@inject BookingApiClient BookingClient
 @inject UserSession UserSession
 
 <PageTitle>My Trips - GoCheaper</PageTitle>
@@ -18,7 +19,7 @@
 
     @if (_loading)
     {
-        <p class="text-muted">Loading...</p>
+        <div class="spinner-border text-primary" role="status"></div>
     }
     else if (_error is not null)
     {
@@ -52,12 +53,13 @@
                 <tbody>
                     @foreach (var trip in _trips!)
                     {
+                        var booked = _bookedSeats.GetValueOrDefault(trip.Id, 0);
                         <tr>
                             <td>@(trip.DriverFullName == "Unknown Driver" ? (UserSession.FullName ?? trip.DriverFullName) : trip.DriverFullName)</td>
                             <td>@trip.From</td>
                             <td>@trip.To</td>
                             <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
-                            <td>@trip.BookedSeats / @trip.TotalSeats</td>
+                            <td>@booked / @trip.TotalSeats</td>
                             <td>@trip.PricePerSeat.ToString("N2")</td>
                             <td>
                                 <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
@@ -71,17 +73,27 @@
 </div>
 
 @code {
-    private List<TripSummaryResponse>? _trips;
-    private bool _loading = true;
+    private List<TripSummaryResponse>?  _trips;
+    private Dictionary<Guid, int>       _bookedSeats = [];
+    private bool    _loading = true;
     private string? _error;
 
     protected override async Task OnInitializedAsync()
     {
         var result = await TripsClient.GetMyTripsAsync();
         if (result.Success)
+        {
             _trips = result.Trips ?? [];
+            if (_trips.Count > 0)
+            {
+                var ids = _trips.Select(t => t.Id);
+                _bookedSeats = await BookingClient.GetBookedSeatsAsync(ids);
+            }
+        }
         else
+        {
             _error = result.Error;
+        }
         _loading = false;
     }
 }

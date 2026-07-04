@@ -12,6 +12,7 @@ using GoCheaper.Identity.Api.Features.ResetPassword;
 using GoCheaper.Identity.Api.Features.UpdateUser;
 using GoCheaper.Identity.Api.Features.VerifyAuthCode;
 using GoCheaper.Identity.Api.Features.VerifyEmail;
+using GoCheaper.Identity.Api.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -72,6 +73,8 @@ builder.Services.AddScoped<ResetPasswordHandler>();
 builder.Services.AddScoped<LoginHandler>();
 builder.Services.AddScoped<VerifyAuthCodeHandler>();
 builder.Services.AddScoped<RefreshTokenHandler>();
+
+builder.Services.AddHostedService<UserProfileBootstrapPublisher>();
 
 builder.Services.AddOpenApi(options =>
 {

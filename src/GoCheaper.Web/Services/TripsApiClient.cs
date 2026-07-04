@@ -25,6 +25,7 @@ public record TripDetailsResponse(
     DateTime?    DepartureTime,
     string       DriverFullName,
     string?      Note,
+    string?      PaymentMethod,
     string?      CarPictureBase64,
     string?      NumberPlate,
     List<string> PickupPoints);
@@ -34,6 +35,7 @@ public record GetTripDetailsResult(TripDetailsResponse? Trip, string? Error, boo
 public record CreateTripResult(TripSummaryResponse? Trip, string? Error, bool Success);
 public record UpdateTripResult(TripSummaryResponse? Trip, string? Error, bool Success);
 public record BookTripResult(string? Error, bool Success);
+public record DeleteTripResult(string? Error, bool Success);
 
 public class TripsApiClient(
     IHttpClientFactory httpClientFactory,
@@ -180,6 +182,23 @@ public class TripsApiClient(
 
         var error = await response.Content.ReadAsStringAsync();
         return new BookTripResult(string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
+    }
+
+    public async Task<DeleteTripResult> DeleteTripAsync(Guid tripId)
+    {
+        await EnsureFreshTokenAsync();
+        using var request = BuildRequest(HttpMethod.Delete, $"/api/trips/{tripId}");
+
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return new DeleteTripResult($"Could not reach the trips service: {ex.Message}", false); }
+
+        if (response.IsSuccessStatusCode)
+            return new DeleteTripResult(null, true);
+
+        var error = await response.Content.ReadAsStringAsync();
+        return new DeleteTripResult(string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
     }
 
     public async Task<BookTripResult> CancelBookingAsync(Guid tripId)

@@ -25,6 +25,12 @@ builder.Services.AddHttpClient("trips-api", client =>
 });
 builder.Services.AddScoped<TripsApiClient>();
 
+builder.Services.AddHttpClient("booking-api", client =>
+{
+    client.BaseAddress = new Uri("https+http://booking-api");
+});
+builder.Services.AddScoped<BookingApiClient>();
+
 // Auth: HttpOnly cookie holding the signed-in user's claims + tokens
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

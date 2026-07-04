@@ -3,10 +3,8 @@ using GoCheaper.Trips.Api.Auth;
 using GoCheaper.Trips.Api.Consumers;
 using GoCheaper.Trips.Api.Data;
 using GoCheaper.Trips.Api.Endpoints;
-using GoCheaper.Trips.Api.Features.BookTrip;
 using GoCheaper.Trips.Api.Features.CreateTrip;
 using GoCheaper.Trips.Api.Features.DeleteTrip;
-using GoCheaper.Trips.Api.Features.GetMyBookedTrips;
 using GoCheaper.Trips.Api.Features.GetMyTrips;
 using GoCheaper.Trips.Api.Features.GetTripDetails;
 using GoCheaper.Trips.Api.Features.UpdateTrip;
@@ -66,10 +64,10 @@ builder.Services.AddScoped<GetTripDetailsHandler>();
 builder.Services.AddScoped<CreateTripHandler>();
 builder.Services.AddScoped<UpdateTripHandler>();
 builder.Services.AddScoped<DeleteTripHandler>();
-builder.Services.AddScoped<BookTripHandler>();
-builder.Services.AddScoped<GetMyBookedTripsHandler>();
 
 builder.Services.AddHostedService<KafkaTopicInitializer>();
+builder.Services.AddHostedService<UserEmailPatchService>();
+builder.Services.AddHostedService<TripBootstrapPublisher>();
 builder.Services.AddHostedService<UserRegisteredConsumer>();
 builder.Services.AddHostedService<UserProfileUpdatedConsumer>();
 

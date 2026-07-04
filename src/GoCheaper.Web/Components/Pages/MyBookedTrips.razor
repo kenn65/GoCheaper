@@ -2,7 +2,7 @@
 @rendermode InteractiveServer
 @attribute [Authorize]
 @using GoCheaper.Web.Services
-@inject TripsApiClient TripsClient
+@inject BookingApiClient BookingClient
 
 <PageTitle>My Booked Trips - GoCheaper</PageTitle>
 
@@ -11,16 +11,16 @@
 
     @if (_loading)
     {
-        <p class="text-muted">Loading...</p>
+        <div class="spinner-border text-primary" role="status"></div>
     }
     else if (_error is not null)
     {
         <div class="alert alert-danger">@_error</div>
     }
-    else if (_trips is { Count: 0 })
+    else if (_bookings is { Count: 0 })
     {
         <div class="alert alert-info">
-            You have not booked any trips yet.
+            You have not booked any trips yet. <a href="/browse-trips">Browse available trips</a>.
         </div>
     }
     else
@@ -34,20 +34,22 @@
                         <th>To</th>
                         <th>Departure</th>
                         <th>Price (DKK)</th>
+                        <th>Seats</th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var trip in _trips!)
+                    @foreach (var b in _bookings!)
                     {
                         <tr>
-                            <td>@trip.DriverFullName</td>
-                            <td>@trip.From</td>
-                            <td>@trip.To</td>
-                            <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
-                            <td>@trip.PricePerSeat.ToString("N2")</td>
+                            <td><a href="/driver/@b.DriverId">@b.DriverFullName</a></td>
+                            <td>@b.From</td>
+                            <td>@b.To</td>
+                            <td>@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                            <td>@b.PricePerSeat.ToString("N2")</td>
+                            <td>@b.SeatsCount</td>
                             <td>
-                                <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary">Details</a>
                             </td>
                         </tr>
                     }
@@ -58,15 +60,15 @@
 </div>
 
 @code {
-    private List<TripSummaryResponse>? _trips;
-    private bool _loading = true;
+    private List<PassengerBookingResponse>? _bookings;
+    private bool    _loading = true;
     private string? _error;
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await TripsClient.GetMyBookedTripsAsync();
+        var result = await BookingClient.GetMyBookingsAsync();
         if (result.Success)
-            _trips = result.Trips ?? [];
+            _bookings = result.Bookings ?? [];
         else
             _error = result.Error;
         _loading = false;

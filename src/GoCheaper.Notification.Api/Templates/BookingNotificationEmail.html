@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
+<body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f6f8; margin: 0; padding: 24px;">
+  <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+
+    <!-- Header -->
+    <div style="background-color: #198754; padding: 28px 32px;">
+      <h1 style="color: #fff; margin: 0; font-size: 22px; letter-spacing: 0.5px;">GoCheaper</h1>
+      <p style="color: #d1e7dd; margin: 6px 0 0; font-size: 14px;">New booking on your trip</p>
+    </div>
+
+    <!-- Body -->
+    <div style="padding: 32px;">
+      <p style="font-size: 16px; margin-top: 0;">Hi <strong>{{DriverFullName}}</strong>,</p>
+      <p style="color: #555; margin-bottom: 24px;">
+        Great news — someone just booked a seat on your trip. Here is everything you need to know.
+      </p>
+
+      <!-- Passenger highlight -->
+      <div style="background: #f0fff4; border: 1px solid #a3cfbb; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px;">
+        <p style="margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: #198754; font-weight: 600;">Passenger</p>
+        <p style="margin: 0 0 12px; font-size: 22px; font-weight: 700; color: #0f5132;">&#128100; {{PassengerFullName}}</p>
+        <p style="margin: 0; font-size: 14px; color: #555;">
+          Booked <strong>{{SeatsCount}} seat(s)</strong> &nbsp;&middot;&nbsp; Confirmed at {{BookedAt}}
+        </p>
+      </div>
+
+      <!-- Trip route -->
+      <div style="background: #f8f9fa; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px;">
+        <p style="margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: #6c757d; font-weight: 600;">Route</p>
+        <p style="margin: 0 0 10px; font-size: 20px; font-weight: 700; color: #198754;">
+          {{From}} &rarr; {{To}}
+        </p>
+        <p style="margin: 0; font-size: 15px; color: #555;">&#128197; Departure: <strong>{{DepartureTime}}</strong></p>
+        {{NumberPlateSection}}
+      </div>
+
+      <!-- Pickup points -->
+      {{PickupPointsSection}}
+
+      <!-- Booking financials -->
+      <p style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: #6c757d; font-weight: 600; margin-bottom: 8px;">Booking details</p>
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
+        <tr style="border-bottom: 1px solid #e9ecef;">
+          <td style="padding: 10px 0; color: #777; width: 45%;">Seats booked</td>
+          <td style="padding: 10px 0; font-weight: 600;">{{SeatsCount}}</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e9ecef;">
+          <td style="padding: 10px 0; color: #777;">Price per seat</td>
+          <td style="padding: 10px 0; font-weight: 600;">{{PricePerSeat}} DKK</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #e9ecef; background: #f0fff4;">
+          <td style="padding: 10px 0 10px 8px; color: #0f5132; font-weight: 700;">Amount to receive</td>
+          <td style="padding: 10px 0; font-weight: 700; font-size: 17px; color: #198754;">{{TotalPrice}} DKK</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px 0; color: #777;">Payment method</td>
+          <td style="padding: 10px 0; font-weight: 600;">{{PaymentMethod}}</td>
+        </tr>
+      </table>
+
+      <p style="color: #555; font-size: 14px; background: #fff8e1; border-left: 4px solid #ffc107; border-radius: 4px; padding: 12px 16px; margin: 0 0 24px;">
+        &#128204; Remember to confirm the payment arrangement with <strong>{{PassengerFullName}}</strong> before or at pickup.
+      </p>
+
+      <p style="color: #555; font-size: 14px; margin: 0;">
+        Safe travels,<br />
+        <strong style="color: #198754;">The GoCheaper Team</strong>
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div style="background: #f8f9fa; padding: 16px 32px; border-top: 1px solid #e9ecef;">
+      <p style="margin: 0; font-size: 12px; color: #999; text-align: center;">
+        &copy; 2026 GoCheaper &mdash; Ride smarter, spend less.
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>

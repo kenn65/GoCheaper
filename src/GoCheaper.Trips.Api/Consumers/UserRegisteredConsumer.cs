@@ -47,10 +47,17 @@ public class UserRegisteredConsumer(
                     {
                         DriverId  = @event.UserId,
                         FullName  = $"{@event.FirstName} {@event.LastName}",
+                        Email     = @event.Email,
                         UpdatedAt = DateTime.UtcNow
                     });
                     await db.SaveChangesAsync(stoppingToken);
                     logger.LogInformation("Created DriverSnapshot for user {UserId}", @event.UserId);
+                }
+                else if (string.IsNullOrEmpty(existing.Email))
+                {
+                    existing.Email     = @event.Email;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    await db.SaveChangesAsync(stoppingToken);
                 }
             }
             catch (OperationCanceledException)

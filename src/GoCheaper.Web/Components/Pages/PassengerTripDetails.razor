@@ -1,0 +1,167 @@
+@page "/passenger/trips/{Id:guid}"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using GoCheaper.Web.Services
+@inject BookingApiClient BookingClient
+@inject UserSession UserSession
+
+<PageTitle>Trip Details - GoCheaper</PageTitle>
+
+<div class="container py-4" style="max-width: 680px;">
+    <a href="/browse-trips" class="btn btn-sm btn-outline-secondary mb-3">&#8592; Browse Trips</a>
+
+    @if (_loading)
+    {
+        <div class="spinner-border text-primary" role="status"></div>
+    }
+    else if (_error is not null)
+    {
+        <div class="alert alert-danger">@_error</div>
+    }
+    else if (_trip is not null)
+    {
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">@_trip.From &rarr; @_trip.To</h5>
+                    <small class="text-muted">
+                        Driver: <a href="/driver/@_trip.DriverId">@_trip.DriverFullName</a>
+                    </small>
+                </div>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Departure</dt>
+                    <dd class="col-sm-8">@(_trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
+
+                    <dt class="col-sm-4">Available Seats</dt>
+                    <dd class="col-sm-8">@_trip.AvailableSeats of @_trip.TotalSeats</dd>
+
+                    <dt class="col-sm-4">Price per Seat</dt>
+                    <dd class="col-sm-8">@_trip.PricePerSeat.ToString("N2") DKK</dd>
+
+                    @if (!string.IsNullOrWhiteSpace(_trip.NumberPlate))
+                    {
+                        <dt class="col-sm-4">Number Plate</dt>
+                        <dd class="col-sm-8">@_trip.NumberPlate</dd>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(_trip.PaymentMethod))
+                    {
+                        <dt class="col-sm-4">Payment Method</dt>
+                        <dd class="col-sm-8">@_trip.PaymentMethod</dd>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(_trip.Note))
+                    {
+                        <dt class="col-sm-4">Note</dt>
+                        <dd class="col-sm-8">@_trip.Note</dd>
+                    }
+
+                    @if (_trip.PickupPoints.Count > 0)
+                    {
+                        <dt class="col-sm-4"><strong>Pickup Points</strong></dt>
+                        <dd class="col-sm-8">
+                            <ol class="mb-0 ps-3">
+                                @foreach (var pt in _trip.PickupPoints)
+                                {
+                                    <li>@pt</li>
+                                }
+                            </ol>
+                        </dd>
+                    }
+                </dl>
+            </div>
+
+            <div class="card-footer">
+                @if (_bookingStatus is not null)
+                {
+                    <div class="alert alert-success mb-2">
+                        You have booked <strong>@_bookingStatus.SeatsCount seat(s)</strong> on this trip.
+                    </div>
+                    @if (_cancelError is not null)
+                    {
+                        <div class="alert alert-danger">@_cancelError</div>
+                    }
+                    <button class="btn btn-outline-danger btn-sm" @onclick="CancelBookingAsync" disabled="@_actionBusy">
+                        @(_actionBusy ? "Cancelling…" : "Cancel Booking")
+                    </button>
+                }
+                else if (_trip.AvailableSeats > 0)
+                {
+                    @if (_bookError is not null)
+                    {
+                        <div class="alert alert-danger mb-2">@_bookError</div>
+                    }
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="form-label mb-0 small fw-semibold">Seats:</label>
+                        <input type="number" class="form-control form-control-sm" style="width:80px"
+                               min="1" max="@_trip.AvailableSeats" @bind="_seatsToBook" />
+                        <button class="btn btn-primary btn-sm" @onclick="BookAsync" disabled="@_actionBusy">
+                            @(_actionBusy ? "Booking…" : "Book")
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <span class="text-muted small">This trip is fully booked.</span>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private BrowseTripDetail?      _trip;
+    private BookingStatusResponse? _bookingStatus;
+    private bool    _loading     = true;
+    private string? _error;
+    private string? _bookError;
+    private string? _cancelError;
+    private bool    _actionBusy;
+    private int     _seatsToBook = 1;
+
+    protected override async Task OnInitializedAsync()
+        => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        var detailResult = await BookingClient.GetTripDetailAsync(Id);
+        if (!detailResult.Success) { _error = detailResult.Error; _loading = false; return; }
+        _trip = detailResult.Trip;
+
+        if (UserSession.IsLoggedIn)
+        {
+            var statusResult = await BookingClient.GetMyBookingAsync(Id);
+            _bookingStatus = statusResult.Found ? statusResult.Booking : null;
+        }
+
+        _loading = false;
+    }
+
+    private async Task BookAsync()
+    {
+        _actionBusy = true;
+        _bookError  = null;
+        var result = await BookingClient.BookTripAsync(Id, _seatsToBook);
+        if (result.Success)
+            await LoadAsync();
+        else
+            _bookError = result.Error;
+        _actionBusy = false;
+    }
+
+    private async Task CancelBookingAsync()
+    {
+        _actionBusy  = true;
+        _cancelError = null;
+        var result = await BookingClient.CancelBookingAsync(Id);
+        if (result.Success)
+            await LoadAsync();
+        else
+            _cancelError = result.Error;
+        _actionBusy = false;
+    }
+}

@@ -11,10 +11,11 @@ dotnet build
 # Run the full stack (starts SQL Server + Kafka containers + all services)
 dotnet run --project src/GoCheaper.AppHost
 
-# EF Core migrations (Identity.Api only — the only service with a DB)
+# EF Core migrations
 dotnet tool install --global dotnet-ef          # install once if missing
 dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api --output-dir Data/Migrations
-dotnet-ef migrations remove --project src/GoCheaper.Identity.Api
+dotnet-ef migrations add <Name> --project src/GoCheaper.Trips.Api    --output-dir Data/Migrations
+dotnet-ef migrations add <Name> --project src/GoCheaper.Booking.Api  --output-dir Data/Migrations
 
 # Notification.Api SMTP credentials (Gmail App Password — stored in user secrets, never appsettings)
 dotnet user-secrets set "Smtp:Username"  "..." --project src/GoCheaper.Notification.Api
@@ -36,8 +37,9 @@ src/
   GoCheaper.Contracts/         # Shared Kafka topic names + event record types (no dependencies)
   GoCheaper.Identity.Api/      # User registration, login (OTP), JWT/refresh tokens, profile management
   GoCheaper.Notification.Api/  # Kafka consumers that send transactional emails via MailKit/Gmail
-  GoCheaper.Trips.Api/         # Trip management: create/list/book trips, DriverSnapshot Kafka sync
-  GoCheaper.Web/               # Blazor Web App (Interactive Server) — BFF consuming Identity + Trips APIs
+  GoCheaper.Trips.Api/         # Driver trip CRUD; publishes trip events to Kafka; DriverSnapshot sync
+  GoCheaper.Booking.Api/       # Passenger booking context; TripSnapshot + DriverSnapshot via Kafka
+  GoCheaper.Web/               # Blazor Web App (Interactive Server) — BFF consuming all APIs
 ```
 
 ### Aspire resource wiring (`AppHost/AppHost.cs`)
@@ -47,11 +49,42 @@ src/
 - `identity-api` references `identitydb` and `kafka`; waits for both.
 - `notification-api` references `kafka`; waits for Kafka.
 - `trips-api` references `tripsdb` and `kafka`; waits for both.
-- `web` references `identity-api` and `trips-api`; waits for both.
+- `booking-api` references `bookingdb` and `kafka`; waits for both.
+- `web` references `identity-api`, `trips-api`, and `booking-api`; waits for all three.
 
-Database name strings **must match** between `AppHost` (`sql.AddDatabase("identitydb")` / `"tripsdb"`) and the respective service's `builder.AddSqlServerDbContext<TContext>("identitydb")` / `"tripsdb"`.
+Database name strings **must match** between `AppHost` (`sql.AddDatabase("identitydb")` / `"tripsdb"` / `"bookingdb"`) and the respective service's `builder.AddSqlServerDbContext<TContext>("...")`.
 
 Every new microservice must: (1) be added to AppHost with `.AddProject<>().WithReference(...)`, (2) reference `GoCheaper.ServiceDefaults` and call `builder.AddServiceDefaults()` in `Program.cs`.
+
+---
+
+### GoCheaper.Contracts
+
+Shared library with no external dependencies. Referenced by any service that produces or consumes Kafka events.
+
+**Kafka topic names** (`KafkaTopics.cs`):
+
+| Constant | Topic string |
+|---|---|
+| `UserRegistered` | `user-registered` |
+| `UserProfileUpdated` | `user-profile-updated` |
+| `AuthCodeRequested` | `auth-code-requested` |
+| `ForgotPasswordRequested` | `forgot-password-requested` |
+| `TripCreated` | `trip-created` |
+| `TripUpdated` | `trip-updated` |
+| `TripDeleted` | `trip-deleted` |
+| `TripBooked` | `trip-booked` |
+
+**Event record types** (`Events/`):
+
+| Record | Fields |
+|---|---|
+| `TripCreatedEvent` | `TripId, DriverId, DriverFullName, DriverEmail, From, To, TotalSeats, PricePerSeat, DepartureTime?, Note?, PaymentMethod?, NumberPlate?, List<string> PickupPoints, CreatedAt` |
+| `TripUpdatedEvent` | `TripId, DriverFullName, DriverEmail, From, To, TotalSeats, PricePerSeat, DepartureTime?, Note?, PaymentMethod?, NumberPlate?, List<string> PickupPoints` |
+| `TripDeletedEvent` | `TripId` |
+| `TripBookedEvent` | `TripId, From, To, DepartureTime?, PricePerSeat, NumberPlate?, PaymentMethod?, List<string> PickupPoints, PassengerUserId, PassengerEmail, PassengerFullName, DriverUserId, DriverEmail, DriverFullName, SeatsCount, TotalPrice, BookedAt` |
+| `UserRegisteredEvent` | `UserId, FirstName, LastName, Email, VerificationToken` |
+| `UserProfileUpdatedEvent` | `UserId, FullName, Email?` — `Email` is nullable for backwards compatibility with old Kafka messages |
 
 ---
 
@@ -70,7 +103,7 @@ Endpoints/
 Features/
   Common/
     UserResponse.cs          # Shared response record + UserMapper.ToResponse() extension
-    JwtHelper.cs             # GenerateToken(userId, email, config) — 10-min HS256 JWT
+    JwtHelper.cs             # GenerateToken(userId, email, fullName, config) — 10-min HS256 JWT; includes sub, email, name, jti claims
   Register/
   VerifyEmail/
   Login/                     # Validates credentials, stores 6-digit OTP, publishes auth-code-requested
@@ -99,12 +132,6 @@ Models/
 
 Each handler is `AddScoped<THandler>()` in `Program.cs`. The Minimal API lambda in `AuthEndpoints.cs` receives the handler via DI and calls `handler.HandleAsync(...)`.
 
-**EF Core migrations** are under `Data/Migrations/`. Always use:
-```bash
-dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api --output-dir Data/Migrations
-dotnet-ef migrations add <Name> --project src/GoCheaper.Trips.Api    --output-dir Data/Migrations
-```
-
 **Authentication policies:**
 
 | Policy | Endpoints | Requires |
@@ -123,6 +150,8 @@ dotnet-ef migrations add <Name> --project src/GoCheaper.Trips.Api    --output-di
 
 **Kafka producer:** `IProducer<string, string>` registered via `builder.AddKafkaProducer<string, string>("kafka")`. `RegisterHandler` and `ForgotPasswordHandler` (and `LoginHandler`) each have a private `PublishAsync` helper that wraps produce calls in try/catch so a Kafka outage never fails the primary operation.
 
+**`UserProfileBootstrapPublisher`** (`Services/`, registered as `IHostedService`): BackgroundService that waits 8 seconds on startup, then publishes `UserProfileUpdatedEvent(userId, fullName, email)` for every user in `identitydb` to `user-profile-updated`. This ensures all downstream `DriverSnapshot` tables have correct emails even when `user-registered` Kafka message history has expired. Safe to re-run — Notification.Api does not consume `user-profile-updated`.
+
 **Email verification flow:** On register, a 32-byte random token is stored (`EmailVerificationToken`) and `user-registered` event is published. `POST /api/auth/users/{id}/verify-email` consumes it (sets `IsEmailVerified = true`, clears token).
 
 **Password reset flow:** `POST /api/auth/forgot-password` always returns 204 (never reveals email existence). If the user exists, a 1-hour reset token is stored and `forgot-password-requested` event is published.
@@ -139,54 +168,123 @@ dotnet-ef migrations add <Name> --project src/GoCheaper.Trips.Api    --output-di
 
 Vertical Slice Architecture, same auth pattern as Identity.Api (copy of `Auth/` folder, same `ApiKeyOnly` / `ApiKeyAndJwt` policies, same JWT Issuer/Audience/Key — all three must match Identity.Api config).
 
-**SQL Server database:** `tripsdb` (separate from `identitydb`).
+**SQL Server database:** `tripsdb` (separate from `identitydb` and `bookingdb`).
 
 **EF Core entities:**
 
 | Entity | Key | Notable fields |
 |---|---|---|
-| `Trip` | `Id` (Guid) | `DriverId` (FK to Identity user), `From`, `To`, `TotalSeats`, `PricePerSeat`, `DepartureTime?`, `Note?`, `CarPictureBase64?`, `NumberPlate?`, `CreatedAt` |
+| `Trip` | `Id` (Guid) | `DriverId` (FK to Identity user), `From`, `To`, `TotalSeats`, `PricePerSeat`, `DepartureTime?`, `Note?`, `PaymentMethod?`, `CarPictureBase64?`, `NumberPlate?`, `CreatedAt` |
 | `PickupPoint` | `Id` (Guid) | `TripId` (FK, cascade delete), `Order` (int), `Address` — always returned sorted by `Order` |
-| `TripBooking` | `Id` (Guid) | `TripId` (FK, cascade delete), `PassengerUserId` (Identity user Guid), `BookedAt` — unique index on `(TripId, PassengerUserId)` prevents double-booking |
-| `DriverSnapshot` | `DriverId` (Guid) | `FullName`, `UpdatedAt` — local copy of driver name, avoids cross-service HTTP calls at read time |
+| `DriverSnapshot` | `DriverId` (Guid) | `FullName`, `Email`, `UpdatedAt` — local copy of driver name and email synced from Identity via Kafka |
+
+**Booking data does not live in Trips.Api.** All passenger bookings are owned by `Booking.Api`. `BookedSeats` in `TripSummaryResponse` is always 0 from this service — callers that need real counts call the `POST /api/bookings/trips/booked-seats` batch endpoint on Booking.Api.
+
+**Kafka producers:** `CreateTripHandler`, `UpdateTripHandler`, and `DeleteTripHandler` each publish to the respective `trip-created` / `trip-updated` / `trip-deleted` topic after persisting to DB. `TripCreatedEvent` and `TripUpdatedEvent` include both `DriverFullName` and `DriverEmail` (looked up from `DriverSnapshot` at publish time). Kafka outages never fail the primary HTTP response — publish is wrapped in try/catch.
+
+**`TripBootstrapPublisher`** (registered as `IHostedService`): BackgroundService that waits **20 seconds** on startup (to allow `UserEmailPatchService` to complete first), then re-publishes all existing trips as `TripCreatedEvent` messages to `trip-created`. Loads both `DriverSnapshot.FullName` and `DriverSnapshot.Email` so both fields are populated in events.
 
 **Kafka consumers (BackgroundService — use IServiceScopeFactory to resolve TripsDbContext):**
-- `UserRegisteredConsumer` (topic `user-registered`, group `trips-user-registered`) — creates initial `DriverSnapshot` from `UserRegisteredEvent.FirstName + LastName`
-- `UserProfileUpdatedConsumer` (topic `user-profile-updated`, group `trips-user-profile-updated`) — upserts `DriverSnapshot.FullName` from `UserProfileUpdatedEvent.FullName`
+- `UserRegisteredConsumer` (topic `user-registered`, group `trips-user-registered`) — creates initial `DriverSnapshot` with `FullName` and `Email`; patches `Email` on existing rows where empty
+- `UserProfileUpdatedConsumer` (topic `user-profile-updated`, group `trips-user-profile-updated`) — upserts `DriverSnapshot.FullName` and `DriverSnapshot.Email` (if non-null in event)
 
-`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates `user-registered` and `user-profile-updated` topics.
+**`UserEmailPatchService`** (`Services/`, registered as `IHostedService` before `TripBootstrapPublisher`): One-shot BackgroundService. Checks if any `DriverSnapshot.Email` is empty; if so, creates a fresh Kafka consumer (group `trips-user-email-patch-v1`, `AutoOffsetReset.Earliest`, `EnablePartitionEof = true`) to replay historical `user-registered` events and patch emails. Exits when done or if all emails already set.
+
+`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates `user-registered`, `user-profile-updated`, `trip-created`, `trip-updated`, and `trip-deleted` topics.
 
 **REST endpoints** (`/api/trips/`):
 
 | Method + Path | Auth | Description |
 |---|---|---|
 | `GET /mine` | ApiKeyAndJwt | Trips where `DriverId == JWT sub` |
-| `GET /booked` | ApiKeyAndJwt | Trips booked by `JWT sub` as passenger |
-| `GET /{id}` | ApiKeyOnly | Full trip details (includes pickup points + booking count) |
-| `POST /` | ApiKeyAndJwt | Create trip; `DriverId` set from JWT sub |
-| `PATCH /{id}` | ApiKeyAndJwt | Update trip fields (403 if not owner; validates seats ≥ current bookings) |
-| `DELETE /{id}` | ApiKeyAndJwt | Delete trip (403 if not owner) |
-| `POST /{id}/book` | ApiKeyAndJwt | Book a seat (prevents self-booking, duplicate booking, overbooking) |
-| `DELETE /{id}/book` | ApiKeyAndJwt | Cancel own booking |
+| `GET /{id}` | ApiKeyOnly | Full trip details (includes pickup points; `BookedSeats` always 0) |
+| `POST /` | ApiKeyAndJwt | Create trip; `DriverId` set from JWT sub; publishes `TripCreatedEvent` |
+| `PATCH /{id}` | ApiKeyAndJwt | Update trip fields (403 if not owner); publishes `TripUpdatedEvent` |
+| `DELETE /{id}` | ApiKeyAndJwt | Delete trip (403 if not owner); publishes `TripDeletedEvent` |
 
 Handlers extract user ID via `user.FindFirst(ClaimTypes.NameIdentifier)` from the `ClaimsPrincipal` bound in the Minimal API delegate.
 
-**`TripSummaryResponse`** (list view): `Id, From, To, TotalSeats, BookedSeats, PricePerSeat, DepartureTime, DriverFullName`
-**`TripDetailsResponse`** (detail view): adds `Note, CarPictureBase64, NumberPlate, List<string> PickupPoints` (ordered)
+**`TripSummaryResponse`** (list view): `Id, From, To, TotalSeats, BookedSeats (always 0), PricePerSeat, DepartureTime, DriverFullName`
+**`TripDetailsResponse`** (detail view): adds `DriverId, Note, CarPictureBase64, NumberPlate, List<string> PickupPoints` (ordered). `DriverId` is included so the Web can compare with `UserSession.UserId` to determine ownership.
+
+**DriverSnapshot bootstrap:** If no `DriverSnapshot` exists when a trip is created (e.g. user registered before Trips.Api was deployed), `CreateTripHandler` creates one from `CreateTripRequest.DriverFullName` passed by the BFF.
+
+**Updating pickup points (`UpdateTripHandler`):** Do NOT use `db.PickupPoints.RemoveRange(trip.PickupPoints)` followed by `trip.PickupPoints.Clear()` — the combination corrupts EF Core's change tracker and causes `DbUpdateConcurrencyException`. Instead, first `SaveChangesAsync` the scalar field changes, then use `ExecuteDeleteAsync` to bulk-delete by FK (`WHERE TripId = @id`), then add new rows and `SaveChangesAsync` again.
+
+---
+
+### GoCheaper.Booking.Api
+
+Owns all passenger booking logic. No HTTP calls to other services — data arrives via Kafka and is stored locally in `bookingdb`.
+
+Vertical Slice Architecture, same auth pattern (copy of `Auth/` folder, same JWT config as Identity.Api and Trips.Api).
+
+**SQL Server database:** `bookingdb`.
+
+**EF Core entities:**
+
+| Entity | Key | Notable fields |
+|---|---|---|
+| `TripSnapshot` | `TripId` (Guid) | Local copy of trip data: `DriverId`, `DriverFullName`, `DriverEmail`, `From`, `To`, `TotalSeats`, `PricePerSeat`, `DepartureTime?`, `Note?`, `PaymentMethod?`, `NumberPlate?`, `PickupPointsJson` (serialized `List<string>`), `CreatedAt`, `UpdatedAt` |
+| `PassengerBooking` | `Id` (Guid) | `TripId` (FK → TripSnapshot, cascade delete), `PassengerUserId`, `PassengerFullName` (snapshot at booking time), `SeatsCount`, `BookedAt` — unique index on `(TripId, PassengerUserId)` prevents double-booking |
+| `DriverSnapshot` | `DriverId` (Guid) | `FullName`, `Email`, `UpdatedAt` — email is used as fallback when `TripSnapshot.DriverEmail` is empty |
+
+**`DriverFullName` and `DriverEmail` are embedded in `TripSnapshot`** and flow through `TripCreatedEvent` / `TripUpdatedEvent`. Handlers read these fields directly — no runtime lookup against `DriverSnapshot`. This eliminates "Unknown Driver" caused by event replay timing.
+
+**`BookTripHandler`** resolves driver email at booking time: first tries `TripSnapshot.DriverEmail`; falls back to `DriverSnapshot.Email` for trips that pre-date the `DriverEmail` column. Publishes `TripBookedEvent` after saving the booking (triggers notification emails). `PassengerFullName` is read from JWT claims — tries `ClaimTypes.Name` then `"name"` then `"Unknown"`.
+
+**Kafka consumers** (BackgroundService, `IServiceScopeFactory` for `BookingDbContext`):
+
+| Consumer | Topic | Group | AutoOffsetReset | Action |
+|---|---|---|---|---|
+| `TripCreatedConsumer` | `trip-created` | `booking-trip-created` | Earliest | Creates `TripSnapshot`; if already exists, patches empty `DriverFullName`/`DriverEmail` (idempotent + bootstrap-aware) |
+| `TripUpdatedConsumer` | `trip-updated` | `booking-trip-updated` | Earliest | Updates all fields on existing `TripSnapshot` including `DriverFullName` and `DriverEmail` |
+| `TripDeletedConsumer` | `trip-deleted` | `booking-trip-deleted` | Earliest | `ExecuteDeleteAsync` on `TripSnapshot` (cascade-deletes bookings) |
+| `UserRegisteredConsumer` | `user-registered` | `booking-user-registered` | Earliest | Creates `DriverSnapshot` with `Email`; patches email on existing rows |
+| `UserProfileUpdatedConsumer` | `user-profile-updated` | `booking-user-profile-updated` | Earliest | Upserts `DriverSnapshot.FullName` and `DriverSnapshot.Email` (if non-null in event) |
+
+`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics including `trip-booked`.
+
+**`UserEmailPatchService`** (`Services/`, registered as `IHostedService`): Startup BackgroundService that checks whether any `TripSnapshot.DriverEmail` is empty. If so, replays historical `user-registered` events (group `booking-user-email-patch-v1`, `AutoOffsetReset.Earliest`) and **upserts** `DriverSnapshot` rows — creates them if missing (handles drivers who registered before Booking.Api was deployed), patches email if empty. Then sweeps `TripSnapshot` and fills `DriverEmail` from the now-populated `DriverSnapshot`. Retries the sweep every 10 seconds for up to 2 minutes to handle the case where `UserProfileUpdatedConsumer` is still processing bootstrap events from Identity.Api's `UserProfileBootstrapPublisher`.
+
+**REST endpoints** (`/api/bookings/`):
+
+| Method + Path | Auth | Description |
+|---|---|---|
+| `POST /trips/booked-seats` | ApiKeyOnly | Body: `Guid[]` → `Dictionary<Guid, int>` of booked seat totals per trip |
+| `GET /trips` | ApiKeyOnly | Browse future trips with available seats; optional `?from=&to=` query filter |
+| `GET /trips/{id}` | ApiKeyOnly | Full trip detail for passengers (includes `DriverId`, `DriverFullName`, pickup points, available seats) |
+| `GET /mine` | ApiKeyAndJwt | All trips booked by the current user, excluding trips where they are the driver |
+| `POST /trips/{id}/book` | ApiKeyAndJwt | Book seats; prevents self-booking, duplicate booking, overbooking; publishes `TripBookedEvent` |
+| `DELETE /trips/{id}/book` | ApiKeyAndJwt | Cancel own booking |
+| `GET /trips/{id}/my-booking` | ApiKeyAndJwt | Returns `TripBookingStatusResponse(SeatsCount)` or 404 |
+
+**Response types** (`Features/Common/TripSummaryResponse.cs`):
+- `TripSummaryResponse` — browse list: `Id, From, To, TotalSeats, AvailableSeats, PricePerSeat, DepartureTime, NumberPlate, DriverFullName`
+- `TripDetailResponse` — detail: adds `DriverId, Note, PaymentMethod, List<string> PickupPoints`
+- `MyBookingResponse` — passenger booking list: `TripId, DriverId, From, To, DepartureTime, PricePerSeat, DriverFullName, SeatsCount`
+- `TripBookingStatusResponse` — `SeatsCount`
 
 ---
 
 ### Notification.Api
 
-All email sending is event-driven — no HTTP endpoints. Three `BackgroundService` consumers:
+All email sending is event-driven — no HTTP endpoints. Four `BackgroundService` consumers:
 
 | Consumer | Topic | Email template | Key tokens |
 |---|---|---|---|
 | `UserRegisteredConsumer` | `user-registered` | `SignUpEmail.html` | `FullName`, `VerificationLink` |
 | `ForgotPasswordConsumer` | `forgot-password-requested` | `ForgotPasswordEmail.html` | `FullName`, `ResetLink` |
 | `AuthCodeConsumer` | `auth-code-requested` | `AuthCodeEmail.html` | `FullName`, `Code` |
+| `TripBookedConsumer` | `trip-booked` | — (handler sends two emails) | `AutoOffsetReset.Latest` — only new bookings, no historical replay |
 
-`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics on startup; `TopicAlreadyExists` is silently ignored.
+**`TripBookedHandler`** (singleton, called by `TripBookedConsumer`): sends two emails per booking event:
+- **Booking receipt** → passenger (`BookingReceiptEmail.html`): tokens `PassengerFullName, From, To, DepartureTime, DriverFullName, SeatsCount, PricePerSeat, TotalPrice, PaymentMethod, NumberPlate, BookedAt, PickupPointsSection`
+- **Booking notification** → driver (`BookingNotificationEmail.html`): tokens `DriverFullName, PassengerFullName, From, To, DepartureTime, BookedAt, SeatsCount, PricePerSeat, TotalPrice, PaymentMethod, NumberPlateSection, PickupPointsSection`
+
+Both emails are skipped (with a warning log) if the respective email address is empty.
+
+`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics on startup. `CreateTopicsException` is thrown for the entire batch even when only some topics have issues — the catch loop must ignore both `ErrorCode.TopicAlreadyExists` **and** `ErrorCode.NoError` (the latter appears for topics that were actually created successfully in the same batch).
 
 **Email templates** are HTML files in `Templates/` built as `<EmbeddedResource>`. `TemplateRenderer` replaces `{{Token}}` placeholders. Add a template by adding an `.html` file — the csproj glob `<EmbeddedResource Include="Templates\*.html" />` picks it up automatically.
 
@@ -228,15 +326,24 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 
 **`IdentityApiClient` (Scoped):** Named `HttpClient` (`"identity-api"`) with Aspire service discovery. Attaches `X-API-Key` and `Authorization: Bearer` to every request. Calls `EnsureFreshTokenAsync()` before any JWT-gated method — if `UserSession.IsAccessTokenExpired`, it calls `RefreshTokenAsync` and updates `UserSession` + cookie via `AuthCookieService.UpdateTokensAsync`. If the refresh token is also expired, `userSession.Clear()` is called and the next page render forces re-login.
 
-**`TripsApiClient` (Scoped):** Named `HttpClient` (`"trips-api"`) with Aspire service discovery. Same `X-API-Key` + Bearer auth pattern. Calls `EnsureFreshTokenAsync()` via `IdentityApiClient.RefreshTokenAsync` to avoid duplicating refresh logic. Methods: `GetMyTripsAsync`, `GetMyBookedTripsAsync`, `GetTripDetailsAsync`, `CreateTripAsync`, `BookTripAsync`, `CancelBookingAsync`.
+**`TripsApiClient` (Scoped):** Named `HttpClient` (`"trips-api"`) with Aspire service discovery. Same `X-API-Key` + Bearer auth pattern. Calls `EnsureFreshTokenAsync()` via `IdentityApiClient.RefreshTokenAsync`. Methods: `GetMyTripsAsync`, `GetTripDetailsAsync`, `CreateTripAsync`, `UpdateTripAsync`, `DeleteTripAsync`.
+
+**`BookingApiClient` (Scoped):** Named `HttpClient` (`"booking-api"`) with Aspire service discovery. Same auth pattern. Methods:
+- `BrowseTripsAsync(from?, to?)` — browse available trips
+- `GetTripDetailAsync(id)` — passenger trip detail
+- `GetMyBookingsAsync()` — current user's bookings (excludes trips where user is the driver)
+- `BookTripAsync(tripId, seatsCount)` — book seats
+- `CancelBookingAsync(tripId)` — cancel booking
+- `GetMyBookingAsync(tripId)` — check booking status for one trip
+- `GetBookedSeatsAsync(IEnumerable<Guid>)` — batch lookup of booked seat counts; used by `MyTrips.razor` and `TripDetails.razor` to display real counts alongside driver's trip data
 
 #### Route authorization
 
-`Routes.razor` uses `AuthorizeRouteView` (not `RouteView`). The `<NotAuthorized>` template renders `RedirectToLogin.razor`, which navigates to `/login?returnUrl={current path}`.
+`Routes.razor` uses `AuthorizeRouteView` (not `RouteView`). The `<NotAuthorized>` template renders `RedirectToLogin.razor`, which checks `IsAuthenticated`: if true (authenticated but not authorised for that route), it redirects to `/my-profile`; if false, it redirects to `/login?returnUrl={current path}`.
 
-Add `@attribute [Authorize]` to any page that requires a logged-in user. `_Imports.razor` already imports `Microsoft.AspNetCore.Authorization` and `Microsoft.AspNetCore.Components.Authorization` globally.
+Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@attribute [Authorize(Policy = "DriverOnly")]` for driver-only pages. `_Imports.razor` already imports `Microsoft.AspNetCore.Authorization` and `Microsoft.AspNetCore.Components.Authorization` globally.
 
-`Program.cs` registers `builder.Services.AddAuthorization()` and `builder.Services.AddCascadingAuthenticationState()`.
+`Program.cs` registers `builder.Services.AddAuthorization(options => { options.AddPolicy("DriverOnly", policy => policy.RequireAuthenticatedUser().RequireClaim("is_driver", "true")); })` and `builder.Services.AddCascadingAuthenticationState()`.
 
 #### Key pages
 
@@ -245,14 +352,21 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. `_Impor
 | `Login.razor` | `/login` | Public | Email + password → OTP; passes `returnUrl` through |
 | `VerifyCode.razor` | `/verify-code` | Public | 6-digit OTP → `/auth/complete` redirect |
 | `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature |
-| `MyTrips.razor` | `/my-trips` | `[Authorize]` | Table of driver's trips (From, To, Departure, Seats, Price); "+ New Trip" button |
-| `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; only shown when `UserSession.IsDriver` |
-| `TripDetails.razor` | `/trips/{Id:guid}` | `[Authorize]` | Full details + pickup list + car photo; "Book a Seat" button refreshes count after booking |
-| `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Table of trips booked as passenger (Driver, From, To, Departure, Price) |
+| `MyTrips.razor` | `/my-trips` | `DriverOnly` | Driver's trips table; calls `BookingApiClient.GetBookedSeatsAsync` to merge real booked seat counts alongside Trips.Api data |
+| `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; passes `DriverFullName` for DriverSnapshot bootstrap; `DepartureTime` defaults to `DateTime.Today` |
+| `TripDetails.razor` | `/trips/{Id:guid}` | `DriverOnly` | Driver view; owner sees inline edit form; calls `BookingApiClient.GetBookedSeatsAsync` to show real seat counts; refreshes count after save |
+| `BrowseTrips.razor` | `/browse-trips` | `[Authorize]` | Passenger trip search; loads all available future trips from `BookingApiClient`; populates From/To dropdowns from actual data; client-side filter via `@bind:after="ApplyFilter"` |
+| `PassengerTripDetails.razor` | `/passenger/trips/{Id:guid}` | `[Authorize]` | Passenger trip detail from `BookingApiClient`; shows available seats, book/cancel UI; driver name is a link to `/driver/{driverId}`; refreshes all data after book/cancel |
+| `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Passenger's bookings from `BookingApiClient`; driver name is a clickable link to driver profile; links to `/passenger/trips/{id}` for details |
+| `DriverProfile.razor` | `/driver/{Id:guid}` | `[Authorize]` | Public driver profile; calls `IdentityApiClient.GetUserAsync`; shows photo (or initial avatar), name, member since, phone |
 
 #### NavMenu
 
-`NavMenu.razor` implements `IDisposable` and subscribes to `UserSession.OnChange` → `InvokeAsync(StateHasChanged)` for live updates. Left nav shows role-based items (My Profile always; My Trips if `IsDriver`; My Booked Trips if `IsPassenger`). Right nav shows `UserSession.FullName` + Sign Out when logged in, Sign In when logged out.
+`NavMenu.razor` implements `IDisposable` and subscribes to `UserSession.OnChange` → `InvokeAsync(StateHasChanged)` for live updates. Left nav shows role-based items: My Profile (always); My Trips (if `IsDriver`); Browse Trips + My Booked Trips (if `IsPassenger`). Right nav shows `UserSession.FullName` + Sign Out when logged in, Sign In when logged out.
+
+#### Blazor conventions
+
+**Loading state:** All pages that fetch data on load show `<div class="spinner-border text-primary" role="status"></div>` while `_loading` is true. Never use plain text like `<p>Loading...</p>`.
 
 #### Blazor pitfalls
 

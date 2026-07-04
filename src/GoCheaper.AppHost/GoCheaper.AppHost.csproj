@@ -5,6 +5,7 @@
     <ProjectReference Include="..\GoCheaper.Web\GoCheaper.Web.csproj" />
     <ProjectReference Include="..\GoCheaper.Notification.Api\GoCheaper.Notification.Api.csproj" />
     <ProjectReference Include="..\GoCheaper.Trips.Api\GoCheaper.Trips.Api.csproj" />
+    <ProjectReference Include="..\GoCheaper.Booking.Api\GoCheaper.Booking.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

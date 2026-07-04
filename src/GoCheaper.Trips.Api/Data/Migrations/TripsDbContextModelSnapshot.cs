@@ -28,6 +28,11 @@ namespace GoCheaper.Trips.Api.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -94,6 +99,9 @@ namespace GoCheaper.Trips.Api.Data.Migrations
                     b.Property<string>("NumberPlate")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal>("PricePerSeat")
                         .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
@@ -111,29 +119,6 @@ namespace GoCheaper.Trips.Api.Data.Migrations
                     b.ToTable("Trips");
                 });
 
-            modelBuilder.Entity("GoCheaper.Trips.Api.Models.TripBooking", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("BookedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("PassengerUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TripId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TripId", "PassengerUserId")
-                        .IsUnique();
-
-                    b.ToTable("TripBookings");
-                });
-
             modelBuilder.Entity("GoCheaper.Trips.Api.Models.PickupPoint", b =>
                 {
                     b.HasOne("GoCheaper.Trips.Api.Models.Trip", "Trip")
@@ -145,21 +130,8 @@ namespace GoCheaper.Trips.Api.Data.Migrations
                     b.Navigation("Trip");
                 });
 
-            modelBuilder.Entity("GoCheaper.Trips.Api.Models.TripBooking", b =>
-                {
-                    b.HasOne("GoCheaper.Trips.Api.Models.Trip", "Trip")
-                        .WithMany("Bookings")
-                        .HasForeignKey("TripId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Trip");
-                });
-
             modelBuilder.Entity("GoCheaper.Trips.Api.Models.Trip", b =>
                 {
-                    b.Navigation("Bookings");
-
                     b.Navigation("PickupPoints");
                 });
 #pragma warning restore 612, 618

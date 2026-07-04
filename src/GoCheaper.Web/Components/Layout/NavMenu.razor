@@ -33,6 +33,11 @@
                 @if (UserSession.IsPassenger)
                 {
                     <li class="nav-item">
+                        <NavLink class="nav-link" href="browse-trips" Match="NavLinkMatch.Prefix">
+                            Browse Trips
+                        </NavLink>
+                    </li>
+                    <li class="nav-item">
                         <NavLink class="nav-link" href="my-booked-trips" Match="NavLinkMatch.Prefix">
                             My Booked Trips
                         </NavLink>

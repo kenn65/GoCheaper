@@ -10,7 +10,6 @@ public class GetTripDetailsHandler(TripsDbContext db)
     {
         var trip = await db.Trips
             .Include(t => t.PickupPoints.OrderBy(p => p.Order))
-            .Include(t => t.Bookings)
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
         if (trip is null)

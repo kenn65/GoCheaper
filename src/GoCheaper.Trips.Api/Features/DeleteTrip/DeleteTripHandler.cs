@@ -1,9 +1,13 @@
 using System.Security.Claims;
+using System.Text.Json;
+using Confluent.Kafka;
+using GoCheaper.Contracts;
+using GoCheaper.Contracts.Events;
 using GoCheaper.Trips.Api.Data;
 
 namespace GoCheaper.Trips.Api.Features.DeleteTrip;
 
-public class DeleteTripHandler(TripsDbContext db)
+public class DeleteTripHandler(TripsDbContext db, IProducer<string, string> producer, ILogger<DeleteTripHandler> logger)
 {
     public async Task<IResult> HandleAsync(Guid id, ClaimsPrincipal user, CancellationToken ct = default)
     {
@@ -17,6 +21,26 @@ public class DeleteTripHandler(TripsDbContext db)
 
         db.Trips.Remove(trip);
         await db.SaveChangesAsync(ct);
+
+        await PublishAsync(new TripDeletedEvent(id), ct);
+
         return Results.NoContent();
+    }
+
+    private async Task PublishAsync(TripDeletedEvent @event, CancellationToken ct)
+    {
+        try
+        {
+            await producer.ProduceAsync(KafkaTopics.TripDeleted,
+                new Message<string, string>
+                {
+                    Key   = @event.TripId.ToString(),
+                    Value = JsonSerializer.Serialize(@event)
+                }, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to publish trip-deleted event for trip {TripId}", @event.TripId);
+        }
     }
 }

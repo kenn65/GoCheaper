@@ -1,0 +1,139 @@
+@page "/browse-trips"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using GoCheaper.Web.Services
+@inject BookingApiClient BookingClient
+
+<PageTitle>Browse Trips - GoCheaper</PageTitle>
+
+<div class="container py-4">
+    <h1 class="h3 mb-4">Browse Available Trips</h1>
+
+    @if (_loading)
+    {
+        <div class="spinner-border text-primary" role="status"></div>
+    }
+    else if (_error is not null)
+    {
+        <div class="alert alert-danger">@_error</div>
+    }
+    else
+    {
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-5">
+                        <label class="form-label small fw-semibold">From</label>
+                        <select class="form-select" @bind="_filterFrom" @bind:after="ApplyFilter">
+                            <option value="">All departure cities</option>
+                            @foreach (var city in _fromOptions)
+                            {
+                                <option value="@city">@city</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-sm-5">
+                        <label class="form-label small fw-semibold">To</label>
+                        <select class="form-select" @bind="_filterTo" @bind:after="ApplyFilter">
+                            <option value="">All destinations</option>
+                            @foreach (var city in _toOptions)
+                            {
+                                <option value="@city">@city</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-sm-2">
+                        <button class="btn btn-outline-secondary w-100" @onclick="ClearFilter">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (_filtered is { Count: 0 })
+        {
+            <div class="alert alert-info">No available trips match your filter.</div>
+        }
+        else if (_filtered is not null)
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Departure</th>
+                            <th>Seats Available</th>
+                            <th>Price (DKK)</th>
+                            <th>Number Plate</th>
+                            <th>Driver</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var trip in _filtered)
+                        {
+                            <tr>
+                                <td>@trip.From</td>
+                                <td>@trip.To</td>
+                                <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                                <td>@trip.AvailableSeats / @trip.TotalSeats</td>
+                                <td>@trip.PricePerSeat.ToString("N2")</td>
+                                <td>@(trip.NumberPlate ?? "—")</td>
+                                <td>@trip.DriverFullName</td>
+                                <td>
+                                    <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private List<BrowseTripSummary>? _all;
+    private List<BrowseTripSummary>? _filtered;
+    private List<string> _fromOptions = [];
+    private List<string> _toOptions   = [];
+
+    private string? _filterFrom;
+    private string? _filterTo;
+    private bool    _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await BookingClient.BrowseTripsAsync();
+        if (result.Success)
+        {
+            _all = result.Trips ?? [];
+            _fromOptions = _all.Select(t => t.From).Distinct().OrderBy(x => x).ToList();
+            _toOptions   = _all.Select(t => t.To).Distinct().OrderBy(x => x).ToList();
+            ApplyFilter();
+        }
+        else
+        {
+            _error = result.Error;
+        }
+        _loading = false;
+    }
+
+    private void ApplyFilter()
+    {
+        if (_all is null) return;
+
+        _filtered = _all
+            .Where(t => string.IsNullOrEmpty(_filterFrom) || t.From == _filterFrom)
+            .Where(t => string.IsNullOrEmpty(_filterTo)   || t.To   == _filterTo)
+            .ToList();
+    }
+
+    private void ClearFilter()
+    {
+        _filterFrom = null;
+        _filterTo   = null;
+        ApplyFilter();
+    }
+}

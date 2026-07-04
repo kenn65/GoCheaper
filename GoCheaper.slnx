@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GoCheaper.Booking.Api/GoCheaper.Booking.Api.csproj" />
+  </Folder>
   <Project Path="src/GoCheaper.AppHost/GoCheaper.AppHost.csproj" />
   <Project Path="src/GoCheaper.Contracts/GoCheaper.Contracts.csproj" />
   <Project Path="src/GoCheaper.Identity.Api/GoCheaper.Identity.Api.csproj" />

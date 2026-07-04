@@ -4,18 +4,26 @@
 @using GoCheaper.Web.Services
 @using System.ComponentModel.DataAnnotations
 @inject TripsApiClient TripsClient
+@inject BookingApiClient BookingClient
 @inject UserSession UserSession
+@inject NavigationManager Nav
 
 <PageTitle>Trip Details - GoCheaper</PageTitle>
 
 <div class="container py-4" style="max-width:800px">
+    <a href="/my-trips" class="btn btn-outline-secondary btn-sm mb-3">← My Trips</a>
+
     @if (_loading)
     {
-        <p class="text-muted">Loading...</p>
+        <div class="spinner-border text-primary" role="status"></div>
     }
     else if (_error is not null)
     {
         <div class="alert alert-danger">@_error</div>
+    }
+    @if (_deleteError is not null)
+    {
+        <div class="alert alert-danger mt-2">@_deleteError</div>
     }
     else if (_trip is not null)
     {
@@ -62,16 +70,23 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Departure Date &amp; Time</label>
                             <InputDate Type="InputDateType.DateTimeLocal" class="form-control" @bind-Value="_edit.DepartureTime" />
+                            <ValidationMessage For="() => _edit.DepartureTime" />
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Number Plate</label>
                             <InputText class="form-control" @bind-Value="_edit.NumberPlate" />
+                            <ValidationMessage For="() => _edit.NumberPlate" />
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Note</label>
                             <InputTextArea class="form-control" @bind-Value="_edit.Note" rows="3" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Payment Method</label>
+                            <InputText class="form-control" @bind-Value="_edit.PaymentMethod" placeholder="e.g. MobilePay, Cash, Bank Transfer" />
                         </div>
 
                         <div class="mb-3">
@@ -90,6 +105,10 @@
                             }
                             <button type="button" class="btn btn-outline-secondary btn-sm"
                                     @onclick="() => _editPickupPoints.Add(string.Empty)">+ Add Pickup Point</button>
+                            @if (_editPickupPointsError is not null)
+                            {
+                                <div class="text-danger small mt-1">@_editPickupPointsError</div>
+                            }
                         </div>
 
                         @if (_saveError is not null)
@@ -111,68 +130,88 @@
         {
             <!-- ── Read-only view (driver + passenger) ── -->
             <div class="card shadow-sm">
-                <div class="card-body">
-
-                    <div class="d-flex justify-content-between align-items-start mb-3 gap-3">
-                        <div>
-                            <h2 class="h4 mb-1">@_trip.From → @_trip.To</h2>
-                            <p class="text-muted mb-0">Driver: <strong>@_trip.DriverFullName</strong></p>
-                        </div>
-                        <div class="d-flex flex-column align-items-end gap-2">
-                            @if (!string.IsNullOrEmpty(_trip.CarPictureBase64))
-                            {
-                                <div class="text-end">
-                                    <img src="@ImageDataUrl(_trip.CarPictureBase64)"
-                                         alt="@(_trip.NumberPlate ?? "Car")"
-                                         style="height:80px;object-fit:cover;border-radius:8px;" />
-                                    @if (_trip.NumberPlate is not null)
-                                    {
-                                        <div><small class="text-muted">@_trip.NumberPlate</small></div>
-                                    }
-                                </div>
-                            }
-                            @if (isOwner)
-                            {
-                                <button class="btn btn-sm btn-outline-primary" @onclick="StartEdit">Edit Trip</button>
-                            }
-                        </div>
+                <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <div>
+                        <h2 class="h5 mb-1 fw-semibold">@_trip.From → @_trip.To</h2>
+                        <span class="text-muted small">Driver: <strong>@(_trip.DriverFullName == "Unknown Driver" && isOwner ? (UserSession.FullName ?? _trip.DriverFullName) : _trip.DriverFullName)</strong></span>
                     </div>
-
+                    <div class="d-flex align-items-center gap-3">
+                        @if (!string.IsNullOrEmpty(_trip.CarPictureBase64))
+                        {
+                            <div class="text-end">
+                                <img src="@ImageDataUrl(_trip.CarPictureBase64)"
+                                     alt="@(_trip.NumberPlate ?? "Car")"
+                                     style="height:64px;object-fit:cover;border-radius:6px;" />
+                                @if (_trip.NumberPlate is not null)
+                                {
+                                    <div><small class="text-muted">@_trip.NumberPlate</small></div>
+                                }
+                            </div>
+                        }
+                        @if (isOwner)
+                        {
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="StartEdit">Edit Trip</button>
+                                @if (_confirmDelete)
+                                {
+                                    <span class="d-flex align-items-center gap-2">
+                                        <small class="text-danger fw-semibold">Delete this trip?</small>
+                                        <button class="btn btn-sm btn-danger" @onclick="ConfirmDeleteAsync" disabled="@_deleting">
+                                            @(_deleting ? "Deleting..." : "Yes, Delete")
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => _confirmDelete = false">Cancel</button>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => _confirmDelete = true">Delete Trip</button>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
                     <dl class="row mb-0">
                         <dt class="col-sm-4">Departure</dt>
                         <dd class="col-sm-8">@(_trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
 
-                        <dt class="col-sm-4">Total Seats</dt>
-                        <dd class="col-sm-8">@_trip.TotalSeats</dd>
-
-                        <dt class="col-sm-4">Booked Seats</dt>
-                        <dd class="col-sm-8">@_trip.BookedSeats</dd>
-
-                        <dt class="col-sm-4">Available Seats</dt>
-                        <dd class="col-sm-8">@(_trip.TotalSeats - _trip.BookedSeats)</dd>
+                        <dt class="col-sm-4">Seats</dt>
+                        <dd class="col-sm-8">@_bookedSeats booked / @_trip.TotalSeats total &nbsp;<span class="text-muted small">(@(_trip.TotalSeats - _bookedSeats) available)</span></dd>
 
                         <dt class="col-sm-4">Price per Seat</dt>
                         <dd class="col-sm-8">@_trip.PricePerSeat.ToString("N2") DKK</dd>
+
+                        @if (_trip.NumberPlate is not null && string.IsNullOrEmpty(_trip.CarPictureBase64))
+                        {
+                            <dt class="col-sm-4">Number Plate</dt>
+                            <dd class="col-sm-8">@_trip.NumberPlate</dd>
+                        }
 
                         @if (!string.IsNullOrWhiteSpace(_trip.Note))
                         {
                             <dt class="col-sm-4">Note</dt>
                             <dd class="col-sm-8">@_trip.Note</dd>
                         }
+
+                        @if (!string.IsNullOrWhiteSpace(_trip.PaymentMethod))
+                        {
+                            <dt class="col-sm-4">Payment Method</dt>
+                            <dd class="col-sm-8">@_trip.PaymentMethod</dd>
+                        }
+
+                        @if (_trip.PickupPoints is { Count: > 0 })
+                        {
+                            <dt class="col-sm-4">Pickup Points</dt>
+                            <dd class="col-sm-8">
+                                <ol class="mb-0 ps-3">
+                                    @foreach (var point in _trip.PickupPoints)
+                                    {
+                                        <li>@point</li>
+                                    }
+                                </ol>
+                            </dd>
+                        }
                     </dl>
-
-                    @if (_trip.PickupPoints is { Count: > 0 })
-                    {
-                        <h6 class="mt-3 mb-2">Pickup Points</h6>
-                        <ol class="mb-0">
-                            @foreach (var point in _trip.PickupPoints)
-                            {
-                                <li>@point</li>
-                            }
-                        </ol>
-                    }
-
-
                 </div>
             </div>
         }
@@ -183,14 +222,21 @@
     [Parameter] public Guid Id { get; set; }
 
     private TripDetailsResponse? _trip;
-    private bool _loading = true;
+    private int     _bookedSeats;
+    private bool    _loading = true;
     private string? _error;
+
+    // delete
+    private bool _confirmDelete;
+    private bool _deleting;
+    private string? _deleteError;
 
 
     // owner editing
     private bool _editing;
     private bool _saving;
     private string? _saveError;
+    private string? _editPickupPointsError;
     private readonly EditModel _edit = new();
     private readonly List<string> _editPickupPoints = [];
 
@@ -198,10 +244,31 @@
     {
         var result = await TripsClient.GetTripDetailsAsync(Id);
         if (result.Success)
+        {
             _trip = result.Trip;
+            var counts = await BookingClient.GetBookedSeatsAsync([Id]);
+            _bookedSeats = counts.GetValueOrDefault(Id, 0);
+        }
         else
+        {
             _error = result.Error;
+        }
         _loading = false;
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        _deleting = true;
+        _deleteError = null;
+        var result = await TripsClient.DeleteTripAsync(Id);
+        if (result.Success)
+            Nav.NavigateTo("/my-trips");
+        else
+        {
+            _deleteError = result.Error;
+            _confirmDelete = false;
+        }
+        _deleting = false;
     }
 
     private void StartEdit()
@@ -211,8 +278,9 @@
         _edit.To            = _trip.To;
         _edit.TotalSeats    = _trip.TotalSeats;
         _edit.PricePerSeat  = _trip.PricePerSeat;
-        _edit.DepartureTime = _trip.DepartureTime ?? default;
+        _edit.DepartureTime = _trip.DepartureTime;
         _edit.Note          = _trip.Note;
+        _edit.PaymentMethod = _trip.PaymentMethod;
         _edit.NumberPlate   = _trip.NumberPlate;
         _editPickupPoints.Clear();
         _editPickupPoints.AddRange(_trip.PickupPoints);
@@ -231,16 +299,26 @@
         _saving = true;
         _saveError = null;
 
+        var validPickupPoints = _editPickupPoints.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+        if (validPickupPoints.Count == 0)
+        {
+            _editPickupPointsError = "At least one pickup point is required.";
+            _saving = false;
+            return;
+        }
+        _editPickupPointsError = null;
+
         var result = await TripsClient.UpdateTripAsync(Id, new
         {
             _edit.From,
             _edit.To,
             _edit.TotalSeats,
             _edit.PricePerSeat,
-            DepartureTime = _edit.DepartureTime != default(DateTime) ? (DateTime?)_edit.DepartureTime : null,
+            DepartureTime = _edit.DepartureTime,
             _edit.Note,
+            _edit.PaymentMethod,
             _edit.NumberPlate,
-            PickupPoints = _editPickupPoints.Where(p => !string.IsNullOrWhiteSpace(p)).ToList()
+            PickupPoints = validPickupPoints
         });
 
         if (result.Success)
@@ -248,6 +326,8 @@
             _editing = false;
             var refresh = await TripsClient.GetTripDetailsAsync(Id);
             if (refresh.Success) _trip = refresh.Trip;
+            var counts = await BookingClient.GetBookedSeatsAsync([Id]);
+            _bookedSeats = counts.GetValueOrDefault(Id, 0);
         }
         else
         {
@@ -268,12 +348,13 @@
 
     private class EditModel
     {
-        [Required] public string  From         { get; set; } = string.Empty;
-        [Required] public string  To           { get; set; } = string.Empty;
-        [Range(1, 50)] public int TotalSeats   { get; set; } = 1;
+        [Required] public string From { get; set; } = string.Empty;
+        [Required] public string To   { get; set; } = string.Empty;
+        [Range(1, 50)] public int TotalSeats { get; set; } = 1;
         [Range(0, 99999)] public decimal PricePerSeat { get; set; }
-        public DateTime  DepartureTime { get; set; }
-        public string?   Note         { get; set; }
-        public string?   NumberPlate  { get; set; }
+        [Required(ErrorMessage = "Departure date and time is required.")] public DateTime? DepartureTime { get; set; }
+        [Required(ErrorMessage = "Number plate is required.")] public string? NumberPlate { get; set; }
+        public string? Note          { get; set; }
+        public string? PaymentMethod { get; set; }
     }
 }

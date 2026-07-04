@@ -13,6 +13,7 @@ var sql = builder.AddSqlServer("sql", dbPassword)
 
 var identityDb = sql.AddDatabase("identitydb");
 var tripsDb    = sql.AddDatabase("tripsdb");
+var bookingDb  = sql.AddDatabase("bookingdb");
 
 var kafka = builder.AddKafka("kafka")
     .WithKafkaUI()
@@ -36,10 +37,19 @@ var tripsApi = builder.AddProject<Projects.GoCheaper_Trips_Api>("trips-api")
     .WaitFor(sql)
     .WaitFor(kafka);
 
+var bookingApi = builder.AddProject<Projects.GoCheaper_Booking_Api>("booking-api")
+    .WithUrlForEndpoint("https", url => url.Url = "/scalar/v1")
+    .WithReference(bookingDb)
+    .WithReference(kafka)
+    .WaitFor(sql)
+    .WaitFor(kafka);
+
 builder.AddProject<Projects.GoCheaper_Web>("web")
     .WithReference(identityApi)
     .WithReference(tripsApi)
+    .WithReference(bookingApi)
     .WaitFor(identityApi)
-    .WaitFor(tripsApi);
+    .WaitFor(tripsApi)
+    .WaitFor(bookingApi);
 
 builder.Build().Run();

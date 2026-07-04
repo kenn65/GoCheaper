@@ -50,13 +50,15 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">Departure Date &amp; Time (optional)</label>
+                <label class="form-label fw-semibold">Departure Date &amp; Time</label>
                 <InputDate Type="InputDateType.DateTimeLocal" class="form-control" @bind-Value="_model.DepartureTime" />
+                <ValidationMessage For="() => _model.DepartureTime" />
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">Number Plate (optional)</label>
+                <label class="form-label fw-semibold">Number Plate</label>
                 <InputText class="form-control" @bind-Value="_model.NumberPlate" placeholder="AB 12 345" />
+                <ValidationMessage For="() => _model.NumberPlate" />
             </div>
 
             <div class="mb-3">
@@ -66,7 +68,13 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">Pickup Points (optional)</label>
+                <label class="form-label fw-semibold">Payment Method (optional)</label>
+                <InputText class="form-control" @bind-Value="_model.PaymentMethod"
+                           placeholder="e.g. MobilePay, Cash, Bank Transfer" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Pickup Points</label>
                 @for (var i = 0; i < _pickupPoints.Count; i++)
                 {
                     var index = i;
@@ -81,6 +89,10 @@
                 }
                 <button type="button" class="btn btn-outline-secondary btn-sm"
                         @onclick="AddPickupPoint">+ Add Pickup Point</button>
+                @if (_pickupPointsError is not null)
+                {
+                    <div class="text-danger small mt-1">@_pickupPointsError</div>
+                }
             </div>
 
             @if (_error is not null)
@@ -103,6 +115,7 @@
     private readonly List<string> _pickupPoints = [];
     private bool _submitting;
     private string? _error;
+    private string? _pickupPointsError;
 
     private void AddPickupPoint() => _pickupPoints.Add(string.Empty);
 
@@ -111,16 +124,26 @@
         _submitting = true;
         _error = null;
 
+        var validPickupPoints = _pickupPoints.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+        if (validPickupPoints.Count == 0)
+        {
+            _pickupPointsError = "At least one pickup point is required.";
+            _submitting = false;
+            return;
+        }
+        _pickupPointsError = null;
+
         var result = await TripsClient.CreateTripAsync(new
         {
             _model.From,
             _model.To,
             _model.TotalSeats,
             _model.PricePerSeat,
-            DepartureTime = _model.DepartureTime != default(DateTime) ? (DateTime?)_model.DepartureTime : null,
+            DepartureTime = _model.DepartureTime,
             _model.Note,
+            _model.PaymentMethod,
             _model.NumberPlate,
-            PickupPoints = _pickupPoints.Where(p => !string.IsNullOrWhiteSpace(p)).ToList(),
+            PickupPoints = validPickupPoints,
             DriverFullName = UserSession.FullName
         });
 
@@ -146,8 +169,13 @@
         [Range(0, 99999, ErrorMessage = "Price must be 0 or more.")]
         public decimal PricePerSeat { get; set; }
 
-        public DateTime DepartureTime { get; set; } = default;
+        [Required(ErrorMessage = "Departure date and time is required.")]
+        public DateTime? DepartureTime { get; set; }
+
+        [Required(ErrorMessage = "Number plate is required.")]
         public string? NumberPlate { get; set; }
+
         public string? Note { get; set; }
+        public string? PaymentMethod { get; set; }
     }
 }

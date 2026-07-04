@@ -7,6 +7,7 @@ public record UpdateTripRequest(
     decimal?      PricePerSeat,
     DateTime?     DepartureTime,
     string?       Note,
+    string?       PaymentMethod,
     string?       CarPictureBase64,
     string?       NumberPlate,
     List<string>? PickupPoints);

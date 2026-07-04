@@ -43,7 +43,7 @@ public class UpdateUserHandler(
         await db.SaveChangesAsync(ct);
 
         await PublishAsync(KafkaTopics.UserProfileUpdated, user.Id.ToString(),
-            new UserProfileUpdatedEvent(user.Id, $"{user.FirstName} {user.LastName}"));
+            new UserProfileUpdatedEvent(user.Id, $"{user.FirstName} {user.LastName}", user.Email));
 
         return Results.Ok(user.ToResponse());
     }

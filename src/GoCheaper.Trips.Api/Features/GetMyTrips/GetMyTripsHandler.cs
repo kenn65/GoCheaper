@@ -14,7 +14,6 @@ public class GetMyTripsHandler(TripsDbContext db)
             return Results.Unauthorized();
 
         var trips = await db.Trips
-            .Include(t => t.Bookings)
             .Include(t => t.PickupPoints)
             .Where(t => t.DriverId == userId)
             .OrderByDescending(t => t.CreatedAt)

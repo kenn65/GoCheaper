@@ -1,0 +1,72 @@
+@page "/driver/{Id:guid}"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using GoCheaper.Web.Services
+@inject IdentityApiClient IdentityClient
+
+<PageTitle>Driver Profile - GoCheaper</PageTitle>
+
+<div class="container py-4" style="max-width: 480px;">
+    @if (_loading)
+    {
+        <div class="spinner-border text-primary" role="status"></div>
+    }
+    else if (_error is not null)
+    {
+        <div class="alert alert-danger">@_error</div>
+    }
+    else if (_user is not null)
+    {
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                @if (!string.IsNullOrWhiteSpace(_user.DriverPictureBase64))
+                {
+                    <img src="@ImageDataUrl(_user.DriverPictureBase64)"
+                         class="rounded-circle mb-3"
+                         style="width:120px;height:120px;object-fit:cover;"
+                         alt="Driver photo" />
+                }
+                else
+                {
+                    <div class="rounded-circle bg-secondary d-inline-flex align-items-center justify-content-center mb-3"
+                         style="width:120px;height:120px;">
+                        <span class="text-white fs-1">@(_user.FirstName.FirstOrDefault())</span>
+                    </div>
+                }
+                <h4 class="mb-0">@_user.FirstName @_user.LastName</h4>
+                <p class="text-muted small mb-1">Member since @_user.CreatedAt.ToString("MMMM yyyy")</p>
+                @if (!string.IsNullOrWhiteSpace(_user.MobilePhone))
+                {
+                    <p class="mb-0 small">@_user.MobilePhone</p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private RegisterResponse? _user;
+    private bool    _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var result = await IdentityClient.GetUserAsync(Id);
+        if (result.Success)
+            _user = result.User;
+        else
+            _error = result.Error ?? "Driver not found.";
+        _loading = false;
+    }
+
+    private static string ImageDataUrl(string base64)
+    {
+        if (base64.StartsWith("data:")) return base64;
+        var mime = base64.Length > 4 && base64[..4] == "/9j/" ? "image/jpeg"
+                 : base64.Length > 3 && base64[..3] == "iVB" ? "image/png"
+                 : "image/jpeg";
+        return $"data:{mime};base64,{base64}";
+    }
+}

@@ -7,7 +7,7 @@ namespace GoCheaper.Identity.Api.Features.Common;
 
 public static class JwtHelper
 {
-    public static string GenerateToken(Guid userId, string email, IConfiguration configuration)
+    public static string GenerateToken(Guid userId, string email, string fullName, IConfiguration configuration)
     {
         var key         = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -16,6 +16,7 @@ public static class JwtHelper
         {
             new Claim(JwtRegisteredClaimNames.Sub,   userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(JwtRegisteredClaimNames.Name,  fullName),
             new Claim(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString())
         };
 

@@ -37,7 +37,7 @@ public class VerifyAuthCodeHandler(IdentityDbContext db, IConfiguration configur
         user.RefreshTokenExpiry  = DateTime.UtcNow.AddDays(90);
         await db.SaveChangesAsync(ct);
 
-        var accessToken = JwtHelper.GenerateToken(user.Id, user.Email, configuration);
+        var accessToken = JwtHelper.GenerateToken(user.Id, user.Email, $"{user.FirstName} {user.LastName}", configuration);
 
         return Results.Ok(new AuthTokenResponse(
             AccessToken:  accessToken,

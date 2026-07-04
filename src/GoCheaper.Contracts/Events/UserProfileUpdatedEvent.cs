@@ -1,3 +1,3 @@
 namespace GoCheaper.Contracts.Events;
 
-public record UserProfileUpdatedEvent(Guid UserId, string FullName);
+public record UserProfileUpdatedEvent(Guid UserId, string FullName, string? Email = null);
