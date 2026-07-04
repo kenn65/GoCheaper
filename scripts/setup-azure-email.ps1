@@ -56,7 +56,7 @@ Write-Host "  Done." -ForegroundColor Green
 
 # ── 4. Create Email Communication Services resource ─────────
 Write-Host "`n[4/7] Creating Email Communication Services '$EmailService'..." -ForegroundColor Cyan
-$existing = az communication email show --name $EmailService --resource-group $ResourceGroup 2>&1
+az communication email show --name $EmailService --resource-group $ResourceGroup 2>&1 | Out-Null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  Already exists — skipping." -ForegroundColor Yellow
 } else {
@@ -70,10 +70,10 @@ if ($LASTEXITCODE -eq 0) {
 
 # ── 5. Provision Azure-managed sender domain ────────────────
 Write-Host "`n[5/7] Provisioning Azure-managed domain '$EmailService.azurecomm.net'..." -ForegroundColor Cyan
-$domainExisting = az communication email domain show `
-    --domain-name      "AzureManagedDomain" `
+az communication email domain show `
+    --domain-name       "AzureManagedDomain" `
     --email-service-name $EmailService `
-    --resource-group   $ResourceGroup 2>&1
+    --resource-group    $ResourceGroup 2>&1 | Out-Null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  Domain already provisioned — skipping." -ForegroundColor Yellow
 } else {
@@ -95,7 +95,7 @@ $domainId = az communication email domain show `
 
 # ── 6. Create Azure Communication Services resource ─────────
 Write-Host "`n[6/7] Creating Communication Services resource '$CommService'..." -ForegroundColor Cyan
-$commExisting = az communication show --name $CommService --resource-group $ResourceGroup 2>&1
+az communication show --name $CommService --resource-group $ResourceGroup 2>&1 | Out-Null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  Already exists — linking domain..." -ForegroundColor Yellow
     az communication update `
@@ -138,4 +138,4 @@ Write-Host "  Comm service   : $CommService"
 Write-Host "  Sender address : $FromEmail"
 Write-Host "  User secrets   : set on GoCheaper.Notification.Api"
 Write-Host "============================================================`n" -ForegroundColor Cyan
-Write-Host "Restart GoCheaper.AppHost — emails will now go via Azure ACS." -ForegroundColor Green
+Write-Host "Restart GoCheaper.AppHost - emails will now go via Azure ACS." -ForegroundColor Green
