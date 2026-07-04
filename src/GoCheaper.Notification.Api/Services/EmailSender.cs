@@ -4,7 +4,7 @@ using MimeKit;
 
 namespace GoCheaper.Notification.Api.Services;
 
-public class SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEmailSender> logger) : IEmailSender
+public class EmailSender(IConfiguration configuration, ILogger<EmailSender> logger) : IEmailSender
 {
     public async Task SendAsync(string toEmail, string toName, string subject, string htmlContent)
     {

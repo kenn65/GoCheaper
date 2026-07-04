@@ -78,13 +78,15 @@
                 @for (var i = 0; i < _pickupPoints.Count; i++)
                 {
                     var index = i;
-                    <div class="input-group mb-2">
-                        <span class="input-group-text">@(index + 1)</span>
+                    <div class="mb-2">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-secondary">@(index + 1)</span>
+                            <button type="button" class="btn btn-outline-danger btn-sm ms-auto"
+                                    @onclick="() => _pickupPoints.RemoveAt(index)">✕ Remove</button>
+                        </div>
                         <input class="form-control" value="@_pickupPoints[index]"
                                @oninput="e => _pickupPoints[index] = e.Value?.ToString() ?? string.Empty"
                                placeholder="Address or landmark" />
-                        <button type="button" class="btn btn-outline-danger"
-                                @onclick="() => _pickupPoints.RemoveAt(index)">✕</button>
                     </div>
                 }
                 <button type="button" class="btn btn-outline-secondary btn-sm"
@@ -166,7 +168,7 @@
         [Range(1, 50, ErrorMessage = "Seats must be between 1 and 50.")]
         public int TotalSeats { get; set; } = 1;
 
-        [Range(0, 99999, ErrorMessage = "Price must be 0 or more.")]
+        [Range(1, 99999, ErrorMessage = "Price per seat must be at least 1 DKK.")]
         public decimal PricePerSeat { get; set; }
 
         [Required(ErrorMessage = "Departure date and time is required.")]

@@ -7,20 +7,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 builder.Services.AddSingleton<TemplateRenderer>();
-builder.Services.AddSingleton<AzureEmailSender>();
-builder.Services.AddSingleton<SmtpEmailSender>();
-builder.Services.AddSingleton<IEmailSender, FallbackEmailSender>();
+builder.Services.AddSingleton<IEmailSender, EmailSender>();
 
 builder.Services.AddSingleton<UserRegisteredHandler>();
 builder.Services.AddSingleton<ForgotPasswordHandler>();
 builder.Services.AddSingleton<AuthCodeHandler>();
 builder.Services.AddSingleton<TripBookedHandler>();
+builder.Services.AddSingleton<BookingCancelledHandler>();
+builder.Services.AddSingleton<TripCancelledHandler>();
 
 builder.Services.AddHostedService<KafkaTopicInitializer>();
 builder.Services.AddHostedService<UserRegisteredConsumer>();
 builder.Services.AddHostedService<ForgotPasswordConsumer>();
 builder.Services.AddHostedService<AuthCodeConsumer>();
 builder.Services.AddHostedService<TripBookedConsumer>();
+builder.Services.AddHostedService<BookingCancelledConsumer>();
+builder.Services.AddHostedService<TripCancelledConsumer>();
 
 var app = builder.Build();
 

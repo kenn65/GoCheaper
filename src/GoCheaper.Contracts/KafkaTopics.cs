@@ -10,4 +10,6 @@ public static class KafkaTopics
     public const string TripUpdated             = "trip-updated";
     public const string TripDeleted             = "trip-deleted";
     public const string TripBooked              = "trip-booked";
+    public const string BookingCancelled              = "booking-cancelled";
+    public const string TripCancelledForPassenger     = "trip-cancelled-for-passenger";
 }

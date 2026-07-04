@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Confluent.Kafka;
+using Microsoft.EntityFrameworkCore;
 using GoCheaper.Contracts;
 using GoCheaper.Contracts.Events;
 using GoCheaper.Identity.Api.Data;
@@ -25,7 +26,12 @@ public class UpdateUserHandler(
             return Results.BadRequest("At least one of IsDriver or IsPassenger must remain true.");
 
         if (req.MobilePhone is not null)
-            user.MobilePhone = req.MobilePhone;
+        {
+            var normalizedPhone = req.MobilePhone.Trim();
+            if (await db.Users.AnyAsync(u => u.Id != id && u.MobilePhone == normalizedPhone, ct))
+                return Results.Conflict("A user with this mobile phone number already exists.");
+            user.MobilePhone = normalizedPhone;
+        }
 
         if (req.IsDriver.HasValue)
         {

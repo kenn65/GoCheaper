@@ -55,38 +55,68 @@
         }
         else if (_filtered is not null)
         {
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Departure</th>
-                            <th>Seats Available</th>
-                            <th>Price (DKK)</th>
-                            <th>Number Plate</th>
-                            <th>Driver</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var trip in _filtered)
-                        {
+            <!-- Mobile cards -->
+            <div class="d-md-none">
+                @foreach (var trip in _filtered)
+                {
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <div class="fw-semibold">@trip.From &rarr; @trip.To</div>
+                                    <small class="text-muted">@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</small>
+                                    <div class="small mt-1">Driver: <span class="text-body">@trip.DriverFullName</span></div>
+                                </div>
+                                <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">Details</a>
+                            </div>
+                            <div class="row row-cols-2 g-1 small">
+                                <div class="col text-muted">Available: <span class="text-body fw-semibold">@trip.AvailableSeats / @trip.TotalSeats</span></div>
+                                <div class="col text-muted">Price: <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") DKK</span></div>
+                                @if (!string.IsNullOrWhiteSpace(trip.NumberPlate))
+                                {
+                                    <div class="col text-muted">Plate: <span class="text-body">@trip.NumberPlate</span></div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Desktop table -->
+            <div class="d-none d-md-block">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
                             <tr>
-                                <td>@trip.From</td>
-                                <td>@trip.To</td>
-                                <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
-                                <td>@trip.AvailableSeats / @trip.TotalSeats</td>
-                                <td>@trip.PricePerSeat.ToString("N2")</td>
-                                <td>@(trip.NumberPlate ?? "—")</td>
-                                <td>@trip.DriverFullName</td>
-                                <td>
-                                    <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
-                                </td>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Departure</th>
+                                <th>Seats Available</th>
+                                <th>Price (DKK)</th>
+                                <th>Number Plate</th>
+                                <th>Driver</th>
+                                <th></th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var trip in _filtered)
+                            {
+                                <tr>
+                                    <td>@trip.From</td>
+                                    <td>@trip.To</td>
+                                    <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                                    <td>@trip.AvailableSeats / @trip.TotalSeats</td>
+                                    <td>@trip.PricePerSeat.ToString("N2")</td>
+                                    <td>@(trip.NumberPlate ?? "—")</td>
+                                    <td>@trip.DriverFullName</td>
+                                    <td>
+                                        <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         }
     }

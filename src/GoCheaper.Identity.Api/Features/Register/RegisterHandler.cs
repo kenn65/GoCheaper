@@ -46,13 +46,17 @@ public class RegisterHandler(
         if (await db.Users.AnyAsync(u => u.FirstName == firstName && u.LastName == lastName, ct))
             return Results.Conflict("A user with this name already exists.");
 
+        var normalizedPhone = req.MobilePhone.Trim();
+        if (await db.Users.AnyAsync(u => u.MobilePhone == normalizedPhone, ct))
+            return Results.Conflict("A user with this mobile phone number already exists.");
+
         var user = new User
         {
             Id                     = Guid.NewGuid(),
             FirstName              = firstName,
             LastName               = lastName,
             Email                  = normalizedEmail,
-            MobilePhone            = req.MobilePhone,
+            MobilePhone            = normalizedPhone,
             IsDriver               = req.IsDriver.Value,
             IsPassenger            = req.IsPassenger.Value,
             DriverPictureBase64    = req.DriverPictureBase64,

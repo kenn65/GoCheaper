@@ -38,18 +38,24 @@
                     <button class="btn btn-sm btn-outline-secondary" @onclick="CancelEdit">Cancel</button>
                 </div>
                 <div class="card-body">
+                    @if (_bookedSeats > 0)
+                    {
+                        <div class="alert alert-info mb-3">
+                            <strong>This trip has @_bookedSeats booking(s).</strong> Only the note, pickup points, payment method and number plate can be edited.
+                        </div>
+                    }
                     <EditForm Model="_edit" OnValidSubmit="SaveEditAsync">
                         <DataAnnotationsValidator />
 
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">From</label>
-                                <InputText class="form-control" @bind-Value="_edit.From" />
+                                <InputText class="form-control" @bind-Value="_edit.From" disabled="@(_bookedSeats > 0)" />
                                 <ValidationMessage For="() => _edit.From" />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">To</label>
-                                <InputText class="form-control" @bind-Value="_edit.To" />
+                                <InputText class="form-control" @bind-Value="_edit.To" disabled="@(_bookedSeats > 0)" />
                                 <ValidationMessage For="() => _edit.To" />
                             </div>
                         </div>
@@ -57,19 +63,19 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Total Seats</label>
-                                <InputNumber class="form-control" @bind-Value="_edit.TotalSeats" />
+                                <InputNumber class="form-control" @bind-Value="_edit.TotalSeats" disabled="@(_bookedSeats > 0)" />
                                 <ValidationMessage For="() => _edit.TotalSeats" />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Price per Seat (DKK)</label>
-                                <InputNumber class="form-control" @bind-Value="_edit.PricePerSeat" />
+                                <InputNumber class="form-control" @bind-Value="_edit.PricePerSeat" disabled="@(_bookedSeats > 0)" />
                                 <ValidationMessage For="() => _edit.PricePerSeat" />
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Departure Date &amp; Time</label>
-                            <InputDate Type="InputDateType.DateTimeLocal" class="form-control" @bind-Value="_edit.DepartureTime" />
+                            <InputDate Type="InputDateType.DateTimeLocal" class="form-control" @bind-Value="_edit.DepartureTime" disabled="@(_bookedSeats > 0)" />
                             <ValidationMessage For="() => _edit.DepartureTime" />
                         </div>
 
@@ -94,13 +100,15 @@
                             @for (var i = 0; i < _editPickupPoints.Count; i++)
                             {
                                 var index = i;
-                                <div class="input-group mb-2">
-                                    <span class="input-group-text">@(index + 1)</span>
+                                <div class="mb-2">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="badge bg-secondary">@(index + 1)</span>
+                                        <button type="button" class="btn btn-outline-danger btn-sm ms-auto"
+                                                @onclick="() => _editPickupPoints.RemoveAt(index)">✕ Remove</button>
+                                    </div>
                                     <input class="form-control" value="@_editPickupPoints[index]"
                                            @oninput="e => _editPickupPoints[index] = e.Value?.ToString() ?? string.Empty"
                                            placeholder="Address or landmark" />
-                                    <button type="button" class="btn btn-outline-danger"
-                                            @onclick="() => _editPickupPoints.RemoveAt(index)">✕</button>
                                 </div>
                             }
                             <button type="button" class="btn btn-outline-secondary btn-sm"
@@ -130,44 +138,51 @@
         {
             <!-- ── Read-only view (driver + passenger) ── -->
             <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center py-3">
-                    <div>
-                        <h2 class="h5 mb-1 fw-semibold">@_trip.From → @_trip.To</h2>
-                        <span class="text-muted small">Driver: <strong>@(_trip.DriverFullName == "Unknown Driver" && isOwner ? (UserSession.FullName ?? _trip.DriverFullName) : _trip.DriverFullName)</strong></span>
-                    </div>
-                    <div class="d-flex align-items-center gap-3">
-                        @if (!string.IsNullOrEmpty(_trip.CarPictureBase64))
-                        {
-                            <div class="text-end">
-                                <img src="@ImageDataUrl(_trip.CarPictureBase64)"
-                                     alt="@(_trip.NumberPlate ?? "Car")"
-                                     style="height:64px;object-fit:cover;border-radius:6px;" />
-                                @if (_trip.NumberPlate is not null)
-                                {
-                                    <div><small class="text-muted">@_trip.NumberPlate</small></div>
-                                }
-                            </div>
-                        }
-                        @if (isOwner)
-                        {
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-outline-primary" @onclick="StartEdit">Edit Trip</button>
-                                @if (_confirmDelete)
-                                {
-                                    <span class="d-flex align-items-center gap-2">
-                                        <small class="text-danger fw-semibold">Delete this trip?</small>
-                                        <button class="btn btn-sm btn-danger" @onclick="ConfirmDeleteAsync" disabled="@_deleting">
-                                            @(_deleting ? "Deleting..." : "Yes, Delete")
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary" @onclick="() => _confirmDelete = false">Cancel</button>
-                                    </span>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => _confirmDelete = true">Delete Trip</button>
-                                }
-                            </div>
-                        }
+                <div class="card-header py-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                        <div>
+                            <h2 class="h5 mb-1 fw-semibold">@_trip.From &rarr; @_trip.To</h2>
+                            <span class="text-muted small">Driver: <strong>@(_trip.DriverFullName == "Unknown Driver" && isOwner ? (UserSession.FullName ?? _trip.DriverFullName) : _trip.DriverFullName)</strong></span>
+                        </div>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            @if (!string.IsNullOrEmpty(_trip.CarPictureBase64))
+                            {
+                                <div>
+                                    <img src="@ImageDataUrl(_trip.CarPictureBase64)"
+                                         alt="@(_trip.NumberPlate ?? "Car")"
+                                         style="height:56px;object-fit:cover;border-radius:6px;" />
+                                    @if (_trip.NumberPlate is not null)
+                                    {
+                                        <div class="text-center"><small class="text-muted">@_trip.NumberPlate</small></div>
+                                    }
+                                </div>
+                            }
+                            @if (isOwner)
+                            {
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-sm btn-outline-primary" @onclick="StartEdit">Edit Trip</button>
+                                    @if (_confirmDelete)
+                                    {
+                                        <div class="d-flex flex-column gap-2" style="min-width:220px;max-width:100%">
+                                            <small class="text-danger fw-semibold">Delete this trip?</small>
+                                            <textarea class="form-control form-control-sm" rows="2"
+                                                      placeholder="Reason for deletion (optional — sent to passengers)"
+                                                      @bind="_deleteReason" style="font-size:12px;"></textarea>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-danger" @onclick="ConfirmDeleteAsync" disabled="@_deleting">
+                                                    @(_deleting ? "Deleting..." : "Yes, Delete")
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary" @onclick="CancelDelete">Cancel</button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => _confirmDelete = true">Delete Trip</button>
+                                    }
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
                 <div class="card-body">
@@ -227,9 +242,10 @@
     private string? _error;
 
     // delete
-    private bool _confirmDelete;
-    private bool _deleting;
+    private bool    _confirmDelete;
+    private bool    _deleting;
     private string? _deleteError;
+    private string  _deleteReason = string.Empty;
 
 
     // owner editing
@@ -260,7 +276,7 @@
     {
         _deleting = true;
         _deleteError = null;
-        var result = await TripsClient.DeleteTripAsync(Id);
+        var result = await TripsClient.DeleteTripAsync(Id, _deleteReason);
         if (result.Success)
             Nav.NavigateTo("/my-trips");
         else
@@ -269,6 +285,12 @@
             _confirmDelete = false;
         }
         _deleting = false;
+    }
+
+    private void CancelDelete()
+    {
+        _confirmDelete = false;
+        _deleteReason  = string.Empty;
     }
 
     private void StartEdit()
@@ -308,17 +330,18 @@
         }
         _editPickupPointsError = null;
 
+        var locked = _bookedSeats > 0;
         var result = await TripsClient.UpdateTripAsync(Id, new
         {
-            _edit.From,
-            _edit.To,
-            _edit.TotalSeats,
-            _edit.PricePerSeat,
-            DepartureTime = _edit.DepartureTime,
+            From          = locked ? null : _edit.From,
+            To            = locked ? null : _edit.To,
+            TotalSeats    = locked ? (int?)null    : (int?)_edit.TotalSeats,
+            PricePerSeat  = locked ? (decimal?)null : (decimal?)_edit.PricePerSeat,
+            DepartureTime = locked ? (DateTime?)null : _edit.DepartureTime,
             _edit.Note,
             _edit.PaymentMethod,
             _edit.NumberPlate,
-            PickupPoints = validPickupPoints
+            PickupPoints  = validPickupPoints
         });
 
         if (result.Success)
@@ -351,7 +374,7 @@
         [Required] public string From { get; set; } = string.Empty;
         [Required] public string To   { get; set; } = string.Empty;
         [Range(1, 50)] public int TotalSeats { get; set; } = 1;
-        [Range(0, 99999)] public decimal PricePerSeat { get; set; }
+        [Range(1, 99999, ErrorMessage = "Price per seat must be at least 1 DKK.")] public decimal PricePerSeat { get; set; }
         [Required(ErrorMessage = "Departure date and time is required.")] public DateTime? DepartureTime { get; set; }
         [Required(ErrorMessage = "Number plate is required.")] public string? NumberPlate { get; set; }
         public string? Note          { get; set; }

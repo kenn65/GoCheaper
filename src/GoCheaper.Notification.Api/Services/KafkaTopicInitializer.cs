@@ -19,7 +19,9 @@ public class KafkaTopicInitializer(IConfiguration configuration, ILogger<KafkaTo
             KafkaTopics.UserRegistered,
             KafkaTopics.ForgotPasswordRequested,
             KafkaTopics.AuthCodeRequested,
-            KafkaTopics.TripBooked
+            KafkaTopics.TripBooked,
+            KafkaTopics.BookingCancelled,
+            KafkaTopics.TripCancelledForPassenger
         };
 
         var specs = topics.Select(t => new TopicSpecification

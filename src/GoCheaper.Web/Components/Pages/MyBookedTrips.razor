@@ -25,36 +25,62 @@
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>Driver</th>
-                        <th>From</th>
-                        <th>To</th>
-                        <th>Departure</th>
-                        <th>Price (DKK)</th>
-                        <th>Seats</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var b in _bookings!)
-                    {
+        <!-- Mobile cards -->
+        <div class="d-md-none">
+            @foreach (var b in _bookings!)
+            {
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="fw-semibold">@b.From &rarr; @b.To</div>
+                                <small class="text-muted">@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</small>
+                                <div class="small mt-1">Driver: <a href="/driver/@b.DriverId">@b.DriverFullName</a></div>
+                            </div>
+                            <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">Details</a>
+                        </div>
+                        <div class="row row-cols-2 g-1 small">
+                            <div class="col text-muted">Price: <span class="text-body fw-semibold">@b.PricePerSeat.ToString("N2") DKK</span></div>
+                            <div class="col text-muted">Seats: <span class="text-body fw-semibold">@b.SeatsCount</span></div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Desktop table -->
+        <div class="d-none d-md-block">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
                         <tr>
-                            <td><a href="/driver/@b.DriverId">@b.DriverFullName</a></td>
-                            <td>@b.From</td>
-                            <td>@b.To</td>
-                            <td>@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
-                            <td>@b.PricePerSeat.ToString("N2")</td>
-                            <td>@b.SeatsCount</td>
-                            <td>
-                                <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary">Details</a>
-                            </td>
+                            <th>Driver</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Departure</th>
+                            <th>Price (DKK)</th>
+                            <th>Seats</th>
+                            <th></th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in _bookings!)
+                        {
+                            <tr>
+                                <td><a href="/driver/@b.DriverId">@b.DriverFullName</a></td>
+                                <td>@b.From</td>
+                                <td>@b.To</td>
+                                <td>@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                                <td>@b.PricePerSeat.ToString("N2")</td>
+                                <td>@b.SeatsCount</td>
+                                <td>
+                                    <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary">Details</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     }
 </div>
@@ -64,13 +90,16 @@
     private bool    _loading = true;
     private string? _error;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender) return;
+
         var result = await BookingClient.GetMyBookingsAsync();
         if (result.Success)
             _bookings = result.Bookings ?? [];
         else
             _error = result.Error;
         _loading = false;
+        StateHasChanged();
     }
 }

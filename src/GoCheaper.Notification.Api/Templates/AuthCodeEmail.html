@@ -1,18 +1,70 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
-<body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 24px;">
-    <h1 style="color: #0d6efd;">GoCheaper Authentication</h1>
-    <p>Hi {{FullName}}</p>
-    <p>We have received your request to log in to GoCheaper. Please enter the code below.</p>
-    <div style="display: inline-block; margin: 16px 0; padding: 16px 32px;
-                font-size: 32px; font-weight: bold; letter-spacing: 8px;
-                color: cornflowerblue; border: 2px solid cornflowerblue;
-                border-radius: 4px; text-align: center;">
-        {{Code}}
-    </div>
-    <p>This code expires in 10 minutes. If you did not request this, you can safely ignore this email.</p>
-    <p>Have a great day</p>
-    <h3 style="color: #0d6efd;">GoCheaper</h3>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Login Code</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:#6610f2;padding:32px 40px;text-align:center;">
+              <p style="margin:0 0 4px;font-size:13px;color:rgba(255,255,255,0.8);letter-spacing:1px;text-transform:uppercase;">GoCheaper</p>
+              <h1 style="margin:0;font-size:26px;font-weight:700;color:#ffffff;">Login Verification</h1>
+              <p style="margin:10px 0 0;font-size:14px;color:rgba(255,255,255,0.85);">Enter this code to access your account</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:36px 40px;">
+
+              <p style="margin:0 0 16px;font-size:15px;color:#333;">Hi <strong>{{FullName}}</strong>,</p>
+              <p style="margin:0 0 28px;font-size:15px;color:#555;line-height:1.6;">
+                We received a login request for your account. Use the code below to complete your sign-in.
+              </p>
+
+              <!-- OTP code card -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3ebff;border:1px solid #d0aaff;border-radius:6px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:28px 20px;text-align:center;">
+                    <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#6610f2;letter-spacing:1px;text-transform:uppercase;">Your login code</p>
+                    <p style="margin:0;font-size:42px;font-weight:700;letter-spacing:12px;color:#3d0099;font-family:'Courier New',monospace;">{{Code}}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Expiry callout -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;margin-bottom:28px;">
+                <tr>
+                  <td style="padding:14px 18px;font-size:14px;color:#664d03;line-height:1.5;">
+                    This code expires in <strong>5 minutes</strong>. Do not share it with anyone.
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:14px;color:#888;">
+                If you did not request this, you can safely ignore this email. Your account remains secure.
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8f9fa;padding:20px 40px;text-align:center;border-top:1px solid #e9ecef;">
+              <p style="margin:0;font-size:12px;color:#999;">This is an automated notification from GoCheaper. Please do not reply to this email.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>

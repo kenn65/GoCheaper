@@ -9,7 +9,7 @@ namespace GoCheaper.Trips.Api.Features.DeleteTrip;
 
 public class DeleteTripHandler(TripsDbContext db, IProducer<string, string> producer, ILogger<DeleteTripHandler> logger)
 {
-    public async Task<IResult> HandleAsync(Guid id, ClaimsPrincipal user, CancellationToken ct = default)
+    public async Task<IResult> HandleAsync(Guid id, string? reason, ClaimsPrincipal user, CancellationToken ct = default)
     {
         var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdStr, out var userId))
@@ -22,7 +22,7 @@ public class DeleteTripHandler(TripsDbContext db, IProducer<string, string> prod
         db.Trips.Remove(trip);
         await db.SaveChangesAsync(ct);
 
-        await PublishAsync(new TripDeletedEvent(id), ct);
+        await PublishAsync(new TripDeletedEvent(id, string.IsNullOrWhiteSpace(reason) ? null : reason.Trim()), ct);
 
         return Results.NoContent();
     }

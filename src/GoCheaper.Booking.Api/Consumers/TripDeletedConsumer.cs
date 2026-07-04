@@ -10,6 +10,7 @@ namespace GoCheaper.Booking.Api.Consumers;
 public class TripDeletedConsumer(
     IConfiguration configuration,
     IServiceScopeFactory scopeFactory,
+    IProducer<string, string> producer,
     ILogger<TripDeletedConsumer> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,11 +40,48 @@ public class TripDeletedConsumer(
                 using var scope = scopeFactory.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
 
-                await db.TripSnapshots
-                    .Where(t => t.TripId == @event.TripId)
-                    .ExecuteDeleteAsync(stoppingToken);
+                var trip = await db.TripSnapshots
+                    .Include(t => t.Bookings)
+                    .FirstOrDefaultAsync(t => t.TripId == @event.TripId, stoppingToken);
 
-                logger.LogInformation("Deleted TripSnapshot for trip {TripId}", @event.TripId);
+                if (trip is not null)
+                {
+                    var cancelledAt = DateTime.UtcNow;
+                    foreach (var booking in trip.Bookings.Where(b => b.PassengerUserId != trip.DriverId))
+                    {
+                        var email = booking.PassengerEmail;
+                        if (string.IsNullOrWhiteSpace(email))
+                        {
+                            var snapshot = await db.DriverSnapshots.FindAsync([booking.PassengerUserId], stoppingToken);
+                            email = snapshot?.Email ?? "";
+                        }
+
+                        if (string.IsNullOrWhiteSpace(email))
+                        {
+                            logger.LogWarning("Cannot notify passenger {PassengerId} — email not found", booking.PassengerUserId);
+                            continue;
+                        }
+
+                        await PublishPassengerNotificationAsync(new TripCancelledForPassengerEvent(
+                            TripId:            trip.TripId,
+                            From:              trip.From,
+                            To:                trip.To,
+                            DepartureTime:     trip.DepartureTime,
+                            DriverFullName:    trip.DriverFullName,
+                            PassengerEmail:    email,
+                            PassengerFullName: booking.PassengerFullName,
+                            SeatsCount:        booking.SeatsCount,
+                            Reason:            @event.Reason,
+                            CancelledAt:       cancelledAt));
+                    }
+
+                    await db.TripSnapshots
+                        .Where(t => t.TripId == @event.TripId)
+                        .ExecuteDeleteAsync(stoppingToken);
+
+                    logger.LogInformation("Deleted TripSnapshot for trip {TripId}, notified {Count} passenger(s)",
+                        @event.TripId, trip.Bookings.Count);
+                }
             }
             catch (OperationCanceledException) { break; }
             catch (Exception ex)
@@ -54,5 +92,22 @@ public class TripDeletedConsumer(
         }
 
         consumer.Close();
+    }
+
+    private async Task PublishPassengerNotificationAsync(TripCancelledForPassengerEvent @event)
+    {
+        try
+        {
+            await producer.ProduceAsync(KafkaTopics.TripCancelledForPassenger,
+                new Message<string, string>
+                {
+                    Key   = @event.TripId.ToString(),
+                    Value = JsonSerializer.Serialize(@event)
+                });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to publish trip-cancelled-for-passenger event for trip {TripId}", @event.TripId);
+        }
     }
 }

@@ -51,7 +51,7 @@ public static class TripEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapDelete("/{id:guid}",
-            (Guid id, ClaimsPrincipal user, DeleteTripHandler h, CancellationToken ct) => h.HandleAsync(id, user, ct))
+            (Guid id, string? reason, ClaimsPrincipal user, DeleteTripHandler h, CancellationToken ct) => h.HandleAsync(id, reason, user, ct))
             .RequireAuthorization("ApiKeyAndJwt")
             .WithName("DeleteTrip")
             .WithSummary("Delete a trip (owner only)")

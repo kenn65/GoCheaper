@@ -17,14 +17,13 @@ dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api --output-di
 dotnet-ef migrations add <Name> --project src/GoCheaper.Trips.Api    --output-dir Data/Migrations
 dotnet-ef migrations add <Name> --project src/GoCheaper.Booking.Api  --output-dir Data/Migrations
 
-# Notification.Api — Azure Communication Services (primary email sender)
-dotnet user-secrets set "AzureCommunicationServices:ConnectionString" "endpoint=https://..." --project src/GoCheaper.Notification.Api
-dotnet user-secrets set "AzureCommunicationServices:FromEmail" "donotreply@yourdomain.azurecomm.net" --project src/GoCheaper.Notification.Api
-
-# Notification.Api — SMTP/Gmail fallback (used if ACS is not configured or fails)
-dotnet user-secrets set "Smtp:Username"  "..." --project src/GoCheaper.Notification.Api
-dotnet user-secrets set "Smtp:Password"  "..." --project src/GoCheaper.Notification.Api
-dotnet user-secrets set "Smtp:FromEmail" "..." --project src/GoCheaper.Notification.Api
+# Notification.Api — SMTP/Gmail (only email sender — ACS has been removed)
+dotnet user-secrets set "Smtp:Host"      "smtp.gmail.com" --project src/GoCheaper.Notification.Api
+dotnet user-secrets set "Smtp:Port"      "587"            --project src/GoCheaper.Notification.Api
+dotnet user-secrets set "Smtp:Username"  "..."            --project src/GoCheaper.Notification.Api
+dotnet user-secrets set "Smtp:Password"  "..."            --project src/GoCheaper.Notification.Api
+dotnet user-secrets set "Smtp:FromEmail" "..."            --project src/GoCheaper.Notification.Api
+dotnet user-secrets set "Smtp:FromName"  "GoCheaper"      --project src/GoCheaper.Notification.Api
 
 # AppHost SQL Server password
 dotnet user-secrets set "Parameters:sql-password" "..." --project src/GoCheaper.AppHost
@@ -78,6 +77,8 @@ Shared library with no external dependencies. Referenced by any service that pro
 | `TripUpdated` | `trip-updated` |
 | `TripDeleted` | `trip-deleted` |
 | `TripBooked` | `trip-booked` |
+| `BookingCancelled` | `booking-cancelled` |
+| `TripCancelledForPassenger` | `trip-cancelled-for-passenger` |
 
 **Event record types** (`Events/`):
 
@@ -85,8 +86,10 @@ Shared library with no external dependencies. Referenced by any service that pro
 |---|---|
 | `TripCreatedEvent` | `TripId, DriverId, DriverFullName, DriverEmail, From, To, TotalSeats, PricePerSeat, DepartureTime?, Note?, PaymentMethod?, NumberPlate?, List<string> PickupPoints, CreatedAt` |
 | `TripUpdatedEvent` | `TripId, DriverFullName, DriverEmail, From, To, TotalSeats, PricePerSeat, DepartureTime?, Note?, PaymentMethod?, NumberPlate?, List<string> PickupPoints` |
-| `TripDeletedEvent` | `TripId` |
+| `TripDeletedEvent` | `TripId, Reason?` — `Reason` is an optional driver-provided cancellation message sent to passengers |
 | `TripBookedEvent` | `TripId, From, To, DepartureTime?, PricePerSeat, NumberPlate?, PaymentMethod?, List<string> PickupPoints, PassengerUserId, PassengerEmail, PassengerFullName, DriverUserId, DriverEmail, DriverFullName, SeatsCount, TotalPrice, BookedAt` |
+| `BookingCancelledEvent` | `TripId, From, To, DepartureTime?, PassengerUserId, PassengerFullName, PassengerEmail, DriverUserId, DriverEmail, DriverFullName, SeatsCount, CancelledAt` |
+| `TripCancelledForPassengerEvent` | `TripId, From, To, DepartureTime?, DriverFullName, PassengerEmail, PassengerFullName, SeatsCount, Reason?, CancelledAt` |
 | `UserRegisteredEvent` | `UserId, FirstName, LastName, Email, VerificationToken` |
 | `UserProfileUpdatedEvent` | `UserId, FullName, Email?` — `Email` is nullable for backwards compatibility with old Kafka messages |
 
@@ -129,10 +132,15 @@ Models/
 **User model fields** (relevant additions beyond name/email/password):
 - `IsDriver`, `IsPassenger` — at least one must be true
 - `DriverPictureBase64` — nullable; stored as NVARCHAR(MAX)
-- `MobilePhone` — nullable
+- `MobilePhone` — nullable; **unique** across all users (checked on register and update)
 - `IsEmailVerified`, `EmailVerificationToken` — email verification flow
 - `AuthCode`, `AuthCodeExpiry` — 6-digit OTP; 5-minute TTL
 - `RefreshToken`, `RefreshTokenExpiry` — 90-day; rotated on every use
+
+**Uniqueness constraints (enforced in handlers, not DB):**
+- `Email` — unique on register; on profile update the existing user's own email is accepted
+- `MobilePhone` — unique on register; on profile update excludes the current user's own record
+- Both return `409 Conflict` with a descriptive message on violation
 
 Each handler is `AddScoped<THandler>()` in `Program.cs`. The Minimal API lambda in `AuthEndpoints.cs` receives the handler via DI and calls `handler.HandleAsync(...)`.
 
@@ -204,7 +212,7 @@ Vertical Slice Architecture, same auth pattern as Identity.Api (copy of `Auth/` 
 | `GET /{id}` | ApiKeyOnly | Full trip details (includes pickup points; `BookedSeats` always 0) |
 | `POST /` | ApiKeyAndJwt | Create trip; `DriverId` set from JWT sub; publishes `TripCreatedEvent` |
 | `PATCH /{id}` | ApiKeyAndJwt | Update trip fields (403 if not owner); publishes `TripUpdatedEvent` |
-| `DELETE /{id}` | ApiKeyAndJwt | Delete trip (403 if not owner); publishes `TripDeletedEvent` |
+| `DELETE /{id}?reason=` | ApiKeyAndJwt | Delete trip (403 if not owner); optional `reason` query param included in `TripDeletedEvent`; Booking.Api notifies all passengers |
 
 Handlers extract user ID via `user.FindFirst(ClaimTypes.NameIdentifier)` from the `ClaimsPrincipal` bound in the Minimal API delegate.
 
@@ -230,12 +238,12 @@ Vertical Slice Architecture, same auth pattern (copy of `Auth/` folder, same JWT
 | Entity | Key | Notable fields |
 |---|---|---|
 | `TripSnapshot` | `TripId` (Guid) | Local copy of trip data: `DriverId`, `DriverFullName`, `DriverEmail`, `From`, `To`, `TotalSeats`, `PricePerSeat`, `DepartureTime?`, `Note?`, `PaymentMethod?`, `NumberPlate?`, `PickupPointsJson` (serialized `List<string>`), `CreatedAt`, `UpdatedAt` |
-| `PassengerBooking` | `Id` (Guid) | `TripId` (FK → TripSnapshot, cascade delete), `PassengerUserId`, `PassengerFullName` (snapshot at booking time), `SeatsCount`, `BookedAt` — unique index on `(TripId, PassengerUserId)` prevents double-booking |
+| `PassengerBooking` | `Id` (Guid) | `TripId` (FK → TripSnapshot, cascade delete), `PassengerUserId`, `PassengerFullName` (snapshot at booking time), `PassengerEmail` (snapshot at booking time), `SeatsCount`, `BookedAt` — unique index on `(TripId, PassengerUserId)` prevents double-booking |
 | `DriverSnapshot` | `DriverId` (Guid) | `FullName`, `Email`, `UpdatedAt` — email is used as fallback when `TripSnapshot.DriverEmail` is empty |
 
 **`DriverFullName` and `DriverEmail` are embedded in `TripSnapshot`** and flow through `TripCreatedEvent` / `TripUpdatedEvent`. Handlers read these fields directly — no runtime lookup against `DriverSnapshot`. This eliminates "Unknown Driver" caused by event replay timing.
 
-**`BookTripHandler`** resolves driver email at booking time: first tries `TripSnapshot.DriverEmail`; falls back to `DriverSnapshot.Email` for trips that pre-date the `DriverEmail` column. Publishes `TripBookedEvent` after saving the booking (triggers notification emails). `PassengerFullName` is read from JWT claims — tries `ClaimTypes.Name` then `"name"` then `"Unknown"`.
+**`BookTripHandler`** resolves driver email at booking time: first tries `TripSnapshot.DriverEmail`; falls back to `DriverSnapshot.Email` for trips that pre-date the `DriverEmail` column. Publishes `TripBookedEvent` after saving the booking (triggers notification emails). `PassengerFullName` is read from JWT claims — tries `ClaimTypes.Name` then `"name"` then `"Unknown"`. `CancelAsync` deletes the booking and publishes `BookingCancelledEvent` to `booking-cancelled` so Notification.Api can email the driver.
 
 **Kafka consumers** (BackgroundService, `IServiceScopeFactory` for `BookingDbContext`):
 
@@ -243,11 +251,11 @@ Vertical Slice Architecture, same auth pattern (copy of `Auth/` folder, same JWT
 |---|---|---|---|---|
 | `TripCreatedConsumer` | `trip-created` | `booking-trip-created` | Earliest | Creates `TripSnapshot`; if already exists, patches empty `DriverFullName`/`DriverEmail` (idempotent + bootstrap-aware) |
 | `TripUpdatedConsumer` | `trip-updated` | `booking-trip-updated` | Earliest | Updates all fields on existing `TripSnapshot` including `DriverFullName` and `DriverEmail` |
-| `TripDeletedConsumer` | `trip-deleted` | `booking-trip-deleted` | Earliest | `ExecuteDeleteAsync` on `TripSnapshot` (cascade-deletes bookings) |
+| `TripDeletedConsumer` | `trip-deleted` | `booking-trip-deleted` | Earliest | Loads `TripSnapshot` with bookings; publishes `TripCancelledForPassengerEvent` per passenger (excluding the driver); then `ExecuteDeleteAsync` on `TripSnapshot` (cascade-deletes bookings). Falls back to `DriverSnapshot` lookup if `PassengerBooking.PassengerEmail` is empty. |
 | `UserRegisteredConsumer` | `user-registered` | `booking-user-registered` | Earliest | Creates `DriverSnapshot` with `Email`; patches email on existing rows |
 | `UserProfileUpdatedConsumer` | `user-profile-updated` | `booking-user-profile-updated` | Earliest | Upserts `DriverSnapshot.FullName` and `DriverSnapshot.Email` (if non-null in event) |
 
-`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics including `trip-booked`.
+`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics including `trip-booked`, `booking-cancelled`, and `trip-cancelled-for-passenger`.
 
 **`UserEmailPatchService`** (`Services/`, registered as `IHostedService`): Startup BackgroundService that checks whether any `TripSnapshot.DriverEmail` is empty. If so, replays historical `user-registered` events (group `booking-user-email-patch-v1`, `AutoOffsetReset.Earliest`) and **upserts** `DriverSnapshot` rows — creates them if missing (handles drivers who registered before Booking.Api was deployed), patches email if empty. Then sweeps `TripSnapshot` and fills `DriverEmail` from the now-populated `DriverSnapshot`. Retries the sweep every 10 seconds for up to 2 minutes to handle the case where `UserProfileUpdatedConsumer` is still processing bootstrap events from Identity.Api's `UserProfileBootstrapPublisher`.
 
@@ -273,28 +281,34 @@ Vertical Slice Architecture, same auth pattern (copy of `Auth/` folder, same JWT
 
 ### Notification.Api
 
-All email sending is event-driven — no HTTP endpoints. Four `BackgroundService` consumers:
+All email sending is event-driven — no HTTP endpoints. Six `BackgroundService` consumers:
 
-| Consumer | Topic | Email template | Key tokens |
-|---|---|---|---|
-| `UserRegisteredConsumer` | `user-registered` | `SignUpEmail.html` | `FullName`, `VerificationLink` |
-| `ForgotPasswordConsumer` | `forgot-password-requested` | `ForgotPasswordEmail.html` | `FullName`, `ResetLink` |
-| `AuthCodeConsumer` | `auth-code-requested` | `AuthCodeEmail.html` | `FullName`, `Code` |
-| `TripBookedConsumer` | `trip-booked` | — (handler sends two emails) | `AutoOffsetReset.Latest` — only new bookings, no historical replay |
+| Consumer | Topic | Group | AutoOffsetReset | Email template |
+|---|---|---|---|---|
+| `UserRegisteredConsumer` | `user-registered` | `notification-user-registered` | Latest | `SignUpEmail.html` — tokens `FullName`, `VerificationLink` |
+| `ForgotPasswordConsumer` | `forgot-password-requested` | `notification-forgot-password` | Latest | `ForgotPasswordEmail.html` — tokens `FullName`, `ResetLink` |
+| `AuthCodeConsumer` | `auth-code-requested` | `notification-auth-code` | Latest | `AuthCodeEmail.html` — tokens `FullName`, `Code` |
+| `TripBookedConsumer` | `trip-booked` | `notification-trip-booked` | Latest | Two emails via `TripBookedHandler` |
+| `BookingCancelledConsumer` | `booking-cancelled` | `notification-booking-cancelled` | Latest | `BookingCancelledEmail.html` → driver |
+| `TripCancelledConsumer` | `trip-cancelled-for-passenger` | `notification-trip-cancelled-for-passenger` | Latest | `TripCancelledEmail.html` → passenger |
 
-**`TripBookedHandler`** (singleton, called by `TripBookedConsumer`): sends two emails per booking event:
+All consumers use `AutoOffsetReset.Latest` — transactional emails are only sent for new events, never replayed.
+
+**`TripBookedHandler`** (singleton): sends two emails per booking event:
 - **Booking receipt** → passenger (`BookingReceiptEmail.html`): tokens `PassengerFullName, From, To, DepartureTime, DriverFullName, SeatsCount, PricePerSeat, TotalPrice, PaymentMethod, NumberPlate, BookedAt, PickupPointsSection`
 - **Booking notification** → driver (`BookingNotificationEmail.html`): tokens `DriverFullName, PassengerFullName, From, To, DepartureTime, BookedAt, SeatsCount, PricePerSeat, TotalPrice, PaymentMethod, NumberPlateSection, PickupPointsSection`
 
-Both emails are skipped (with a warning log) if the respective email address is empty.
+**`BookingCancelledHandler`** (singleton): emails the driver when a passenger cancels (`BookingCancelledEmail.html`). Skipped if `DriverEmail` is empty.
+
+**`TripCancelledHandler`** (singleton): emails the passenger when a driver deletes a trip (`TripCancelledEmail.html`). Conditionally includes a `{{ReasonSection}}` block if `Reason` is non-empty.
+
+All handlers skip sending (with a warning log) if the target email address is empty.
 
 `KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics on startup. `CreateTopicsException` is thrown for the entire batch even when only some topics have issues — the catch loop must ignore both `ErrorCode.TopicAlreadyExists` **and** `ErrorCode.NoError` (the latter appears for topics that were actually created successfully in the same batch).
 
 **Email templates** are HTML files in `Templates/` built as `<EmbeddedResource>`. `TemplateRenderer` replaces `{{Token}}` placeholders. Add a template by adding an `.html` file — the csproj glob `<EmbeddedResource Include="Templates\*.html" />` picks it up automatically.
 
-**Email sending uses a `FallbackEmailSender`** registered as `IEmailSender`:
-1. **`AzureEmailSender`** (primary) — uses `Azure.Communication.Email` SDK. Reads `AzureCommunicationServices:ConnectionString` and `AzureCommunicationServices:FromEmail` from config/user-secrets. If either is missing it throws `InvalidOperationException` which the fallback catches silently.
-2. **`SmtpEmailSender`** (fallback) — MailKit, `SecureSocketOptions.StartTls`, port 587. Reads `Smtp:Username/Password/FromEmail` from user secrets. Used automatically if ACS is not configured or its send call fails for any reason.
+**Email sending:** Single `EmailSender` class (MailKit SMTP, `SecureSocketOptions.StartTls`, port 587) registered as `IEmailSender`. Reads `Smtp:Host`, `Smtp:Port`, `Smtp:Username`, `Smtp:Password`, `Smtp:FromEmail`, `Smtp:FromName` from config/user-secrets. Azure ACS has been removed.
 
 `WebApp:BaseUrl` controls the base URL in verification/reset email links.
 
@@ -360,13 +374,13 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 | `Login.razor` | `/login` | Public | Email + password → OTP; passes `returnUrl` through |
 | `VerifyCode.razor` | `/verify-code` | Public | 6-digit OTP → `/auth/complete` redirect |
 | `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature |
-| `MyTrips.razor` | `/my-trips` | `DriverOnly` | Driver's trips table; calls `BookingApiClient.GetBookedSeatsAsync` to merge real booked seat counts alongside Trips.Api data |
-| `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; passes `DriverFullName` for DriverSnapshot bootstrap; `DepartureTime` defaults to `DateTime.Today` |
-| `TripDetails.razor` | `/trips/{Id:guid}` | `DriverOnly` | Driver view; owner sees inline edit form; calls `BookingApiClient.GetBookedSeatsAsync` to show real seat counts; refreshes count after save |
-| `BrowseTrips.razor` | `/browse-trips` | `[Authorize]` | Passenger trip search; loads all available future trips from `BookingApiClient`; populates From/To dropdowns from actual data; client-side filter via `@bind:after="ApplyFilter"` |
-| `PassengerTripDetails.razor` | `/passenger/trips/{Id:guid}` | `[Authorize]` | Passenger trip detail from `BookingApiClient`; shows available seats, book/cancel UI; driver name is a link to `/driver/{driverId}`; refreshes all data after book/cancel |
-| `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Passenger's bookings from `BookingApiClient`; driver name is a clickable link to driver profile; links to `/passenger/trips/{id}` for details |
-| `DriverProfile.razor` | `/driver/{Id:guid}` | `[Authorize]` | Public driver profile; calls `IdentityApiClient.GetUserAsync`; shows photo (or initial avatar), name, member since, phone |
+| `MyTrips.razor` | `/my-trips` | `DriverOnly` | Driver's trips; mobile card layout / desktop table; calls `BookingApiClient.GetBookedSeatsAsync` to merge real booked seat counts |
+| `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; passes `DriverFullName` for DriverSnapshot bootstrap; price per seat min 1 DKK |
+| `TripDetails.razor` | `/trips/{Id:guid}` | `DriverOnly` | Driver view; inline edit form; when bookings exist only Note, Pickup Points, Payment Method and Number Plate are editable (From/To/Seats/Price/Departure are disabled); delete shows optional reason textarea sent to passengers via `TripCancelledForPassengerEvent` |
+| `BrowseTrips.razor` | `/browse-trips` | `[Authorize]` | Passenger trip search; mobile card layout / desktop table; client-side From/To filter |
+| `PassengerTripDetails.razor` | `/passenger/trips/{Id:guid}` | `[Authorize]` | Passenger trip detail; shows available seats, book/cancel UI; refreshes all data after book/cancel |
+| `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Passenger's bookings; mobile card layout / desktop table; driver name links to driver profile |
+| `DriverProfile.razor` | `/driver/{Id:guid}` | `[Authorize]` | Public driver profile; shows photo (or initial avatar), name, member since, phone |
 
 #### NavMenu
 
@@ -376,11 +390,16 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 
 **Loading state:** All pages that fetch data on load show `<div class="spinner-border text-primary" role="status"></div>` while `_loading` is true. Never use plain text like `<p>Loading...</p>`.
 
+#### Responsive design
+
+All list pages (MyTrips, MyBookedTrips, BrowseTrips) render a **Bootstrap card list** on mobile (`d-md-none`) and the standard **table** on desktop (`d-none d-md-block`). Detail/form pages use Bootstrap grid (`col-md-6`) which stacks automatically. Pickup point editors use a stacked label+input layout (number badge + Remove button on one row, full-width input below) instead of `input-group` so the address is always fully visible.
+
 #### Blazor pitfalls
 
-- **`OnInitializedAsync` fires twice** with `InteractiveServer` (once SSR, once circuit). Use `OnAfterRenderAsync(bool firstRender)` + `if (!firstRender) return` for one-time API calls. Call `StateHasChanged()` after mutating state there.
+- **`OnInitializedAsync` fires twice** with `InteractiveServer` (once SSR, once circuit). **Always** use `OnAfterRenderAsync(bool firstRender)` + `if (!firstRender) return` for any API call on authenticated pages. Call `StateHasChanged()` after mutating state there. **Critical:** using `OnInitializedAsync` on pages that call `EnsureFreshTokenAsync` causes a logout bug — the SSR pass rotates the refresh token on Identity.Api but can't update the HttpOnly cookie (JS interop unavailable during SSR), so the circuit phase fails to refresh with the now-invalid token and clears the session.
 - **`prerender: false`** — use `@rendermode @(new InteractiveServerRenderMode(prerender: false))` on pages that must not run during SSR (e.g. `MyProfile` which checks `UserSession.IsLoggedIn`).
 - **`forceLoad: true` + JS interop** — never call JS interop after `Nav.NavigateTo(url, forceLoad: true)`; the circuit disconnects and the call throws `JSDisconnectedException`. Use the `/auth/complete` server-redirect pattern instead.
+- **`gc_auth` cookie is encrypted** — the refresh token and all other claims are stored inside this HttpOnly encrypted blob. They are not visible in browser DevTools — that is expected and correct.
 
 ---
 

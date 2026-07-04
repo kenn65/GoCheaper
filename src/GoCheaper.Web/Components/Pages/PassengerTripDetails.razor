@@ -123,8 +123,12 @@
     private bool    _actionBusy;
     private int     _seatsToBook = 1;
 
-    protected override async Task OnInitializedAsync()
-        => await LoadAsync();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await LoadAsync();
+        StateHasChanged();
+    }
 
     private async Task LoadAsync()
     {

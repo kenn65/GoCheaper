@@ -184,10 +184,13 @@ public class TripsApiClient(
         return new BookTripResult(string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
     }
 
-    public async Task<DeleteTripResult> DeleteTripAsync(Guid tripId)
+    public async Task<DeleteTripResult> DeleteTripAsync(Guid tripId, string? reason = null)
     {
         await EnsureFreshTokenAsync();
-        using var request = BuildRequest(HttpMethod.Delete, $"/api/trips/{tripId}");
+        var url = string.IsNullOrWhiteSpace(reason)
+            ? $"/api/trips/{tripId}"
+            : $"/api/trips/{tripId}?reason={Uri.EscapeDataString(reason.Trim())}";
+        using var request = BuildRequest(HttpMethod.Delete, url);
 
         HttpResponseMessage response;
         try { response = await CreateClient().SendAsync(request); }

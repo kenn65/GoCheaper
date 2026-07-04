@@ -21,7 +21,9 @@ public class KafkaTopicInitializer(IConfiguration configuration, ILogger<KafkaTo
             KafkaTopics.TripCreated,
             KafkaTopics.TripUpdated,
             KafkaTopics.TripDeleted,
-            KafkaTopics.TripBooked
+            KafkaTopics.TripBooked,
+            KafkaTopics.BookingCancelled,
+            KafkaTopics.TripCancelledForPassenger
         };
 
         var specs = topics.Select(t => new TopicSpecification

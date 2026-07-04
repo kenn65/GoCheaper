@@ -58,6 +58,7 @@ public class BookTripHandler(BookingDbContext db, IProducer<string, string> prod
             TripId            = trip.TripId,
             PassengerUserId   = userId,
             PassengerFullName = passengerName,
+            PassengerEmail    = passengerEmail,
             SeatsCount        = req.SeatsCount,
             BookedAt          = bookedAt
         });
@@ -99,9 +100,56 @@ public class BookTripHandler(BookingDbContext db, IProducer<string, string> prod
 
         if (booking is null) return Results.NotFound();
 
+        var trip = await db.TripSnapshots.FindAsync([tripId], ct);
+
+        var driverEmail = trip?.DriverEmail ?? "";
+        if (string.IsNullOrEmpty(driverEmail))
+        {
+            var driverSnapshot = trip is null ? null : await db.DriverSnapshots.FindAsync([trip.DriverId], ct);
+            driverEmail = driverSnapshot?.Email ?? "";
+        }
+
+        var passengerEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? "";
+        var cancelledAt    = DateTime.UtcNow;
+
         db.Bookings.Remove(booking);
         await db.SaveChangesAsync(ct);
+
+        if (trip is not null)
+        {
+            await PublishCancelledAsync(new BookingCancelledEvent(
+                TripId:            tripId,
+                From:              trip.From,
+                To:                trip.To,
+                DepartureTime:     trip.DepartureTime,
+                PassengerUserId:   userId,
+                PassengerFullName: booking.PassengerFullName,
+                PassengerEmail:    passengerEmail,
+                DriverUserId:      trip.DriverId,
+                DriverEmail:       driverEmail,
+                DriverFullName:    trip.DriverFullName,
+                SeatsCount:        booking.SeatsCount,
+                CancelledAt:       cancelledAt), ct);
+        }
+
         return Results.NoContent();
+    }
+
+    private async Task PublishCancelledAsync(BookingCancelledEvent @event, CancellationToken ct)
+    {
+        try
+        {
+            await producer.ProduceAsync(KafkaTopics.BookingCancelled,
+                new Message<string, string>
+                {
+                    Key   = @event.TripId.ToString(),
+                    Value = JsonSerializer.Serialize(@event)
+                }, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to publish booking-cancelled event for trip {TripId}", @event.TripId);
+        }
     }
 
     private async Task PublishAsync(TripBookedEvent @event, CancellationToken ct)

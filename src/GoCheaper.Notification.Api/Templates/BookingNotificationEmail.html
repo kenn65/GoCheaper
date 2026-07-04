@@ -1,82 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
-<body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f6f8; margin: 0; padding: 24px;">
-  <div style="max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Booking on Your Trip</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
 
-    <!-- Header -->
-    <div style="background-color: #198754; padding: 28px 32px;">
-      <h1 style="color: #fff; margin: 0; font-size: 22px; letter-spacing: 0.5px;">GoCheaper</h1>
-      <p style="color: #d1e7dd; margin: 6px 0 0; font-size: 14px;">New booking on your trip</p>
-    </div>
+          <!-- Header -->
+          <tr>
+            <td style="background:#198754;padding:32px 40px;text-align:center;">
+              <p style="margin:0 0 4px;font-size:13px;color:rgba(255,255,255,0.8);letter-spacing:1px;text-transform:uppercase;">GoCheaper</p>
+              <h1 style="margin:0;font-size:26px;font-weight:700;color:#ffffff;">New Booking!</h1>
+              <p style="margin:10px 0 0;font-size:14px;color:rgba(255,255,255,0.85);">A passenger has reserved a seat on your trip</p>
+            </td>
+          </tr>
 
-    <!-- Body -->
-    <div style="padding: 32px;">
-      <p style="font-size: 16px; margin-top: 0;">Hi <strong>{{DriverFullName}}</strong>,</p>
-      <p style="color: #555; margin-bottom: 24px;">
-        Great news — someone just booked a seat on your trip. Here is everything you need to know.
-      </p>
+          <!-- Body -->
+          <tr>
+            <td style="padding:36px 40px;">
 
-      <!-- Passenger highlight -->
-      <div style="background: #f0fff4; border: 1px solid #a3cfbb; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px;">
-        <p style="margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: #198754; font-weight: 600;">Passenger</p>
-        <p style="margin: 0 0 12px; font-size: 22px; font-weight: 700; color: #0f5132;">&#128100; {{PassengerFullName}}</p>
-        <p style="margin: 0; font-size: 14px; color: #555;">
-          Booked <strong>{{SeatsCount}} seat(s)</strong> &nbsp;&middot;&nbsp; Confirmed at {{BookedAt}}
-        </p>
-      </div>
+              <p style="margin:0 0 16px;font-size:15px;color:#333;">Hi <strong>{{DriverFullName}}</strong>,</p>
+              <p style="margin:0 0 28px;font-size:15px;color:#555;line-height:1.6;">
+                Great news &mdash; someone just booked a seat on your trip. Here is everything you need to know.
+              </p>
 
-      <!-- Trip route -->
-      <div style="background: #f8f9fa; border-radius: 8px; padding: 20px 24px; margin-bottom: 24px;">
-        <p style="margin: 0 0 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: #6c757d; font-weight: 600;">Route</p>
-        <p style="margin: 0 0 10px; font-size: 20px; font-weight: 700; color: #198754;">
-          {{From}} &rarr; {{To}}
-        </p>
-        <p style="margin: 0; font-size: 15px; color: #555;">&#128197; Departure: <strong>{{DepartureTime}}</strong></p>
-        {{NumberPlateSection}}
-      </div>
+              <!-- Passenger card -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fff4;border:1px solid #a3cfbb;border-radius:6px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:18px 20px;">
+                    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#198754;letter-spacing:1px;text-transform:uppercase;">Passenger</p>
+                    <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#333;">{{PassengerFullName}}</p>
+                    <p style="margin:0;font-size:14px;color:#555;">Booked <strong>{{SeatsCount}}</strong> seat(s) &mdash; confirmed at {{BookedAt}}</p>
+                  </td>
+                </tr>
+              </table>
 
-      <!-- Pickup points -->
-      {{PickupPointsSection}}
+              <!-- Trip details -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa;border-radius:6px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:20px;">
+                    <p style="margin:0 0 14px;font-size:11px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase;">Trip Details</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:6px 0;width:40%;font-size:14px;color:#888;">Route</td>
+                        <td style="padding:6px 0;font-size:14px;font-weight:600;color:#333;">{{From}} &rarr; {{To}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;font-size:14px;color:#888;">Departure</td>
+                        <td style="padding:6px 0;font-size:14px;font-weight:600;color:#333;">{{DepartureTime}}</td>
+                      </tr>
+                      {{NumberPlateSection}}
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-      <!-- Booking financials -->
-      <p style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: #6c757d; font-weight: 600; margin-bottom: 8px;">Booking details</p>
-      <table style="width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px;">
-        <tr style="border-bottom: 1px solid #e9ecef;">
-          <td style="padding: 10px 0; color: #777; width: 45%;">Seats booked</td>
-          <td style="padding: 10px 0; font-weight: 600;">{{SeatsCount}}</td>
-        </tr>
-        <tr style="border-bottom: 1px solid #e9ecef;">
-          <td style="padding: 10px 0; color: #777;">Price per seat</td>
-          <td style="padding: 10px 0; font-weight: 600;">{{PricePerSeat}} DKK</td>
-        </tr>
-        <tr style="border-bottom: 1px solid #e9ecef; background: #f0fff4;">
-          <td style="padding: 10px 0 10px 8px; color: #0f5132; font-weight: 700;">Amount to receive</td>
-          <td style="padding: 10px 0; font-weight: 700; font-size: 17px; color: #198754;">{{TotalPrice}} DKK</td>
-        </tr>
-        <tr>
-          <td style="padding: 10px 0; color: #777;">Payment method</td>
-          <td style="padding: 10px 0; font-weight: 600;">{{PaymentMethod}}</td>
-        </tr>
-      </table>
+              <!-- Pickup points -->
+              {{PickupPointsSection}}
 
-      <p style="color: #555; font-size: 14px; background: #fff8e1; border-left: 4px solid #ffc107; border-radius: 4px; padding: 12px 16px; margin: 0 0 24px;">
-        &#128204; Remember to confirm the payment arrangement with <strong>{{PassengerFullName}}</strong> before or at pickup.
-      </p>
+              <!-- Financial table -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa;border-radius:6px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:20px;">
+                    <p style="margin:0 0 14px;font-size:11px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase;">Booking Financials</p>
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="padding:6px 0;width:40%;font-size:14px;color:#888;">Seats booked</td>
+                        <td style="padding:6px 0;font-size:14px;font-weight:600;color:#333;">{{SeatsCount}}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;font-size:14px;color:#888;">Price per seat</td>
+                        <td style="padding:6px 0;font-size:14px;font-weight:600;color:#333;">{{PricePerSeat}} DKK</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;font-size:14px;color:#888;">Payment method</td>
+                        <td style="padding:6px 0;font-size:14px;font-weight:600;color:#333;">{{PaymentMethod}}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-      <p style="color: #555; font-size: 14px; margin: 0;">
-        Safe travels,<br />
-        <strong style="color: #198754;">The GoCheaper Team</strong>
-      </p>
-    </div>
+              <!-- Amount to receive highlight -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fff4;border:1px solid #a3cfbb;border-radius:6px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="font-size:14px;font-weight:600;color:#198754;">Amount to receive</td>
+                        <td align="right" style="font-size:20px;font-weight:700;color:#198754;">{{TotalPrice}} DKK</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-    <!-- Footer -->
-    <div style="background: #f8f9fa; padding: 16px 32px; border-top: 1px solid #e9ecef;">
-      <p style="margin: 0; font-size: 12px; color: #999; text-align: center;">
-        &copy; 2026 GoCheaper &mdash; Ride smarter, spend less.
-      </p>
-    </div>
+              <!-- Callout -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;margin-bottom:32px;">
+                <tr>
+                  <td style="padding:14px 18px;font-size:14px;color:#664d03;line-height:1.5;">
+                    Remember to confirm the payment arrangement with <strong>{{PassengerFullName}}</strong> before or at pickup.
+                  </td>
+                </tr>
+              </table>
 
-  </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8f9fa;padding:20px 40px;text-align:center;border-top:1px solid #e9ecef;">
+              <p style="margin:0;font-size:12px;color:#999;">This is an automated notification from GoCheaper. Please do not reply to this email.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>

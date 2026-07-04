@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Booking Confirmed</title>
+  <title>Trip Cancelled</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
@@ -13,10 +13,10 @@
 
           <!-- Header -->
           <tr>
-            <td style="background:#0d6efd;padding:32px 40px;text-align:center;">
+            <td style="background:#dc3545;padding:32px 40px;text-align:center;">
               <p style="margin:0 0 4px;font-size:13px;color:rgba(255,255,255,0.8);letter-spacing:1px;text-transform:uppercase;">GoCheaper</p>
-              <h1 style="margin:0;font-size:26px;font-weight:700;color:#ffffff;">Booking Confirmed!</h1>
-              <p style="margin:10px 0 0;font-size:14px;color:rgba(255,255,255,0.85);">Your seat is reserved &mdash; here are your trip details</p>
+              <h1 style="margin:0;font-size:26px;font-weight:700;color:#ffffff;">Trip Cancelled</h1>
+              <p style="margin:10px 0 0;font-size:14px;color:rgba(255,255,255,0.85);">Your reserved trip has been cancelled by the driver</p>
             </td>
           </tr>
 
@@ -26,14 +26,15 @@
 
               <p style="margin:0 0 16px;font-size:15px;color:#333;">Hi <strong>{{PassengerFullName}}</strong>,</p>
               <p style="margin:0 0 28px;font-size:15px;color:#555;line-height:1.6;">
-                Great news &mdash; your booking is confirmed. Here are all the details for your upcoming trip.
+                We&rsquo;re sorry to let you know that <strong>{{DriverFullName}}</strong> has cancelled the following trip.
+                Your booking has been automatically removed.
               </p>
 
-              <!-- Trip route card -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:#e7f1ff;border:1px solid #b6d4fe;border-radius:6px;margin-bottom:24px;">
+              <!-- Trip card -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff5f5;border:1px solid #f5c6cb;border-radius:6px;margin-bottom:24px;">
                 <tr>
                   <td style="padding:18px 20px;">
-                    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#0d6efd;letter-spacing:1px;text-transform:uppercase;">Your Trip</p>
+                    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#dc3545;letter-spacing:1px;text-transform:uppercase;">Cancelled Trip</p>
                     <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#333;">{{From}} &rarr; {{To}}</p>
                     <p style="margin:0;font-size:14px;color:#555;">&#128197; <strong>{{DepartureTime}}</strong></p>
                   </td>
@@ -44,59 +45,33 @@
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa;border-radius:6px;margin-bottom:24px;">
                 <tr>
                   <td style="padding:20px;">
-                    <p style="margin:0 0 14px;font-size:11px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase;">Trip Details</p>
+                    <p style="margin:0 0 14px;font-size:11px;font-weight:700;color:#888;letter-spacing:1px;text-transform:uppercase;">Booking Details</p>
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td style="padding:6px 0;width:40%;font-size:14px;color:#888;">Driver</td>
                         <td style="padding:6px 0;font-size:14px;font-weight:600;color:#333;">{{DriverFullName}}</td>
                       </tr>
                       <tr>
-                        <td style="padding:6px 0;font-size:14px;color:#888;">Seats booked</td>
+                        <td style="padding:6px 0;font-size:14px;color:#888;">Seats reserved</td>
                         <td style="padding:6px 0;font-size:14px;font-weight:600;color:#333;">{{SeatsCount}}</td>
                       </tr>
                       <tr>
-                        <td style="padding:6px 0;font-size:14px;color:#888;">Price per seat</td>
-                        <td style="padding:6px 0;font-size:14px;font-weight:600;color:#333;">{{PricePerSeat}} DKK</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:6px 0;font-size:14px;color:#888;">Number plate</td>
-                        <td style="padding:6px 0;font-size:14px;font-weight:600;color:#333;">{{NumberPlate}}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:6px 0;font-size:14px;color:#888;">Payment method</td>
-                        <td style="padding:6px 0;font-size:14px;font-weight:600;color:#333;">{{PaymentMethod}}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:6px 0;font-size:14px;color:#888;">Booked on</td>
-                        <td style="padding:6px 0;font-size:14px;color:#555;">{{BookedAt}}</td>
+                        <td style="padding:6px 0;font-size:14px;color:#888;">Cancelled on</td>
+                        <td style="padding:6px 0;font-size:14px;color:#555;">{{CancelledAt}}</td>
                       </tr>
                     </table>
                   </td>
                 </tr>
               </table>
 
-              <!-- Total highlight -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="background:#e7f1ff;border:1px solid #b6d4fe;border-radius:6px;margin-bottom:24px;">
-                <tr>
-                  <td style="padding:16px 20px;">
-                    <table width="100%" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="font-size:14px;font-weight:600;color:#0d6efd;">Total amount</td>
-                        <td align="right" style="font-size:20px;font-weight:700;color:#0d6efd;">{{TotalPrice}} DKK</td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Pickup points -->
-              {{PickupPointsSection}}
+              <!-- Driver reason (conditional) -->
+              {{ReasonSection}}
 
               <!-- Callout -->
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff3cd;border-left:4px solid #ffc107;border-radius:4px;margin-bottom:32px;">
                 <tr>
                   <td style="padding:14px 18px;font-size:14px;color:#664d03;line-height:1.5;">
-                    Please arrive at the pickup point on time. Have a safe and comfortable journey!
+                    Browse GoCheaper for alternative trips on the same route &mdash; other drivers may still have available seats.
                   </td>
                 </tr>
               </table>
