@@ -26,7 +26,6 @@ param(
 )
 
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
 
 # ----------------------------------------------------------
 # 1. Verify Azure CLI login
@@ -67,7 +66,7 @@ Write-Host "  Done." -ForegroundColor Green
 # ----------------------------------------------------------
 Write-Host ""
 Write-Host "[4/7] Creating Email Communication Services '$EmailService'..." -ForegroundColor Cyan
-az communication email show --name $EmailService --resource-group $ResourceGroup 2>&1 | Out-Null
+az communication email show --name $EmailService --resource-group $ResourceGroup --only-show-errors 2>&1 | Out-Null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  Already exists - skipping." -ForegroundColor Yellow
 } else {
@@ -75,7 +74,8 @@ if ($LASTEXITCODE -eq 0) {
         --name           $EmailService `
         --resource-group $ResourceGroup `
         --location       "global" `
-        --data-location  $DataLocation | Out-Null
+        --data-location  $DataLocation `
+        --only-show-errors | Out-Null
     Write-Host "  Done." -ForegroundColor Green
 }
 
@@ -87,7 +87,8 @@ Write-Host "[5/7] Provisioning Azure-managed domain '$EmailService.azurecomm.net
 az communication email domain show `
     --domain-name        "AzureManagedDomain" `
     --email-service-name $EmailService `
-    --resource-group     $ResourceGroup 2>&1 | Out-Null
+    --resource-group     $ResourceGroup `
+    --only-show-errors 2>&1 | Out-Null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  Domain already provisioned - skipping." -ForegroundColor Yellow
 } else {
@@ -96,7 +97,8 @@ if ($LASTEXITCODE -eq 0) {
         --email-service-name $EmailService `
         --resource-group     $ResourceGroup `
         --location           "global" `
-        --domain-management  "AzureManaged" | Out-Null
+        --domain-management  "AzureManaged" `
+        --only-show-errors | Out-Null
     Write-Host "  Done." -ForegroundColor Green
 }
 
@@ -104,27 +106,29 @@ $domainId = az communication email domain show `
     --domain-name        "AzureManagedDomain" `
     --email-service-name $EmailService `
     --resource-group     $ResourceGroup `
-    --query id -o tsv
+    --query id -o tsv --only-show-errors
 
 # ----------------------------------------------------------
 # 6. Create Azure Communication Services resource
 # ----------------------------------------------------------
 Write-Host ""
 Write-Host "[6/7] Creating Communication Services resource '$CommService'..." -ForegroundColor Cyan
-az communication show --name $CommService --resource-group $ResourceGroup 2>&1 | Out-Null
+az communication show --name $CommService --resource-group $ResourceGroup --only-show-errors 2>&1 | Out-Null
 if ($LASTEXITCODE -eq 0) {
     Write-Host "  Already exists - linking domain..." -ForegroundColor Yellow
     az communication update `
         --name           $CommService `
         --resource-group $ResourceGroup `
-        --linked-domains $domainId | Out-Null
+        --linked-domains $domainId `
+        --only-show-errors | Out-Null
 } else {
     az communication create `
         --name           $CommService `
         --resource-group $ResourceGroup `
         --location       "global" `
         --data-location  $DataLocation `
-        --linked-domains $domainId | Out-Null
+        --linked-domains $domainId `
+        --only-show-errors | Out-Null
     Write-Host "  Done." -ForegroundColor Green
 }
 
@@ -136,7 +140,7 @@ Write-Host "[7/7] Retrieving connection string and setting user secrets..." -For
 $connectionString = az communication list-key `
     --name           $CommService `
     --resource-group $ResourceGroup `
-    --query          primaryConnectionString -o tsv
+    --query          primaryConnectionString -o tsv --only-show-errors
 
 if ([string]::IsNullOrEmpty($connectionString)) {
     Write-Error "Failed to retrieve connection string from '$CommService'."
