@@ -17,7 +17,11 @@ dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api --output-di
 dotnet-ef migrations add <Name> --project src/GoCheaper.Trips.Api    --output-dir Data/Migrations
 dotnet-ef migrations add <Name> --project src/GoCheaper.Booking.Api  --output-dir Data/Migrations
 
-# Notification.Api SMTP credentials (Gmail App Password — stored in user secrets, never appsettings)
+# Notification.Api — Azure Communication Services (primary email sender)
+dotnet user-secrets set "AzureCommunicationServices:ConnectionString" "endpoint=https://..." --project src/GoCheaper.Notification.Api
+dotnet user-secrets set "AzureCommunicationServices:FromEmail" "donotreply@yourdomain.azurecomm.net" --project src/GoCheaper.Notification.Api
+
+# Notification.Api — SMTP/Gmail fallback (used if ACS is not configured or fails)
 dotnet user-secrets set "Smtp:Username"  "..." --project src/GoCheaper.Notification.Api
 dotnet user-secrets set "Smtp:Password"  "..." --project src/GoCheaper.Notification.Api
 dotnet user-secrets set "Smtp:FromEmail" "..." --project src/GoCheaper.Notification.Api
@@ -288,7 +292,11 @@ Both emails are skipped (with a warning log) if the respective email address is 
 
 **Email templates** are HTML files in `Templates/` built as `<EmbeddedResource>`. `TemplateRenderer` replaces `{{Token}}` placeholders. Add a template by adding an `.html` file — the csproj glob `<EmbeddedResource Include="Templates\*.html" />` picks it up automatically.
 
-**SMTP:** MailKit, `SecureSocketOptions.StartTls`, port 587. Non-secret config in `appsettings.json`; credentials in user secrets. `WebApp:BaseUrl` controls the base URL in verification/reset links.
+**Email sending uses a `FallbackEmailSender`** registered as `IEmailSender`:
+1. **`AzureEmailSender`** (primary) — uses `Azure.Communication.Email` SDK. Reads `AzureCommunicationServices:ConnectionString` and `AzureCommunicationServices:FromEmail` from config/user-secrets. If either is missing it throws `InvalidOperationException` which the fallback catches silently.
+2. **`SmtpEmailSender`** (fallback) — MailKit, `SecureSocketOptions.StartTls`, port 587. Reads `Smtp:Username/Password/FromEmail` from user secrets. Used automatically if ACS is not configured or its send call fails for any reason.
+
+`WebApp:BaseUrl` controls the base URL in verification/reset email links.
 
 ---
 

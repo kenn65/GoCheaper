@@ -7,7 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 builder.Services.AddSingleton<TemplateRenderer>();
-builder.Services.AddSingleton<IEmailSender, EmailSender>();
+builder.Services.AddSingleton<AzureEmailSender>();
+builder.Services.AddSingleton<SmtpEmailSender>();
+builder.Services.AddSingleton<IEmailSender, FallbackEmailSender>();
 
 builder.Services.AddSingleton<UserRegisteredHandler>();
 builder.Services.AddSingleton<ForgotPasswordHandler>();
