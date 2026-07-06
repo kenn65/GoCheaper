@@ -1,4 +1,6 @@
+using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Text;
 using GoCheaper.Web.Components;
 using GoCheaper.Web.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -149,6 +151,53 @@ app.MapPost("/auth/signout", async (HttpContext ctx) =>
     await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return Results.Ok();
 }).AllowAnonymous();
+
+// GDPR data export — returns all personal data as a JSON file download
+app.MapGet("/api/export", async (HttpContext ctx, IHttpClientFactory factory, IConfiguration config) =>
+{
+    var userId      = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var accessToken = ctx.User.FindFirst("access_token")?.Value;
+
+    if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(accessToken))
+        return Results.Unauthorized();
+
+    var apiKey = config["ApiKey:Value"] ?? "";
+
+    HttpRequestMessage Req(HttpMethod method, string url)
+    {
+        var req = new HttpRequestMessage(method, url);
+        req.Headers.TryAddWithoutValidation("X-API-Key", apiKey);
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return req;
+    }
+
+    var identityClient = factory.CreateClient("identity-api");
+    var tripsClient    = factory.CreateClient("trips-api");
+    var bookingClient  = factory.CreateClient("booking-api");
+
+    var profileTask  = identityClient.SendAsync(Req(HttpMethod.Get, $"/api/auth/users/{userId}"));
+    var tripsTask    = tripsClient.SendAsync(Req(HttpMethod.Get, "/api/trips/mine"));
+    var bookingsTask = bookingClient.SendAsync(Req(HttpMethod.Get, "/api/bookings/mine"));
+
+    await Task.WhenAll(profileTask, tripsTask, bookingsTask);
+
+    var profileJson  = profileTask.Result.IsSuccessStatusCode  ? await profileTask.Result.Content.ReadAsStringAsync()  : "null";
+    var tripsJson    = tripsTask.Result.IsSuccessStatusCode    ? await tripsTask.Result.Content.ReadAsStringAsync()    : "[]";
+    var bookingsJson = bookingsTask.Result.IsSuccessStatusCode ? await bookingsTask.Result.Content.ReadAsStringAsync() : "[]";
+
+    var json = $$"""
+{
+  "exportedAt": "{{DateTime.UtcNow:O}}",
+  "profile": {{profileJson}},
+  "trips": {{tripsJson}},
+  "bookings": {{bookingsJson}}
+}
+""";
+
+    var bytes    = Encoding.UTF8.GetBytes(json);
+    var filename = $"gocheaper-data-{DateTime.UtcNow:yyyyMMdd}.json";
+    return Results.File(bytes, "application/json", filename);
+}).RequireAuthorization();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

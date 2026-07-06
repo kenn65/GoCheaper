@@ -1,0 +1,217 @@
+@page "/my-data"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [Authorize]
+@using GoCheaper.Web.Services
+@inject IdentityApiClient IdentityApi
+@inject TripsApiClient TripsClient
+@inject BookingApiClient BookingClient
+@inject UserSession UserSession
+@inject IJSRuntime JS
+
+<HeadContent>
+    <style>
+        @@media print {
+            nav, footer, .no-print { display: none !important; }
+            .container-fluid { padding: 0 !important; }
+            .card { box-shadow: none !important; break-inside: avoid; }
+            .print-header { display: block !important; }
+        }
+        .print-header { display: none; }
+    </style>
+</HeadContent>
+
+<PageTitle>My Data - GoCheaper</PageTitle>
+
+<div class="container py-4" style="max-width:860px">
+
+    <!-- Print header (hidden on screen, shown when printing) -->
+    <div class="print-header mb-4">
+        <h2 class="mb-0">GoCheaper — Personal Data Export</h2>
+        <p class="text-muted small">Exported on @DateTime.UtcNow.ToString("d MMMM yyyy 'at' HH:mm UTC")</p>
+        <hr />
+    </div>
+
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-4 no-print">
+        <div>
+            <h1 class="h3 mb-1">Your Personal Data</h1>
+            <p class="text-muted small mb-0">All data GoCheaper holds about you, in one place.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm" @onclick="PrintAsync" disabled="@_loading">
+                &#128438; Save as PDF
+            </button>
+            <a href="/api/export" class="btn btn-outline-secondary btn-sm">
+                &#8595; Download JSON
+            </a>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    }
+    else
+    {
+        <!-- ── Profile ─────────────────────────── -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fw-semibold">Profile</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <tbody>
+                        <tr><th class="ps-3" style="width:35%">Full name</th>
+                            <td>@_profile?.FirstName @_profile?.LastName</td></tr>
+                        <tr><th class="ps-3">Email</th>
+                            <td>@_profile?.Email
+                                @if (_profile?.IsEmailVerified == true)
+                                { <span class="badge bg-success ms-1 small">Verified</span> }
+                            </td></tr>
+                        <tr><th class="ps-3">Mobile phone</th>
+                            <td>@(string.IsNullOrEmpty(_profile?.MobilePhone) ? "—" : _profile.MobilePhone)</td></tr>
+                        <tr><th class="ps-3">Account type</th>
+                            <td>
+                                @if (_profile?.IsDriver == true && _profile?.IsPassenger == true) { <span>Driver &amp; Passenger</span> }
+                                else if (_profile?.IsDriver == true)    { <span>Driver</span> }
+                                else if (_profile?.IsPassenger == true) { <span>Passenger</span> }
+                            </td></tr>
+                        <tr><th class="ps-3">Member since</th>
+                            <td>@_profile?.CreatedAt.ToString("d MMMM yyyy")</td></tr>
+                        <tr><th class="ps-3">Profile picture</th>
+                            <td>@(string.IsNullOrEmpty(_profile?.DriverPictureBase64) ? "None stored" : "Stored (included in JSON export)")</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── Trips posted ───────────────────── -->
+        @if (UserSession.IsDriver)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-header fw-semibold">
+                    Trips You Posted
+                    <span class="badge bg-secondary ms-2">@_trips.Count</span>
+                </div>
+                @if (_trips.Count == 0)
+                {
+                    <div class="card-body text-muted small">No trips posted yet.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">From</th>
+                                    <th>To</th>
+                                    <th>Departure</th>
+                                    <th>Seats</th>
+                                    <th>Price / seat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var t in _trips)
+                                {
+                                    <tr>
+                                        <td class="ps-3">@t.From</td>
+                                        <td>@t.To</td>
+                                        <td>@(t.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                                        <td>@t.TotalSeats</td>
+                                        <td>@t.PricePerSeat.ToString("N2") @(t.Currency ?? "DKK")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- ── Bookings made ──────────────────── -->
+        @if (UserSession.IsPassenger)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-header fw-semibold">
+                    Trips You Booked
+                    <span class="badge bg-secondary ms-2">@_bookings.Count</span>
+                </div>
+                @if (_bookings.Count == 0)
+                {
+                    <div class="card-body text-muted small">No bookings made yet.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">From</th>
+                                    <th>To</th>
+                                    <th>Departure</th>
+                                    <th>Driver</th>
+                                    <th>Seats</th>
+                                    <th>Price / seat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var b in _bookings)
+                                {
+                                    <tr>
+                                        <td class="ps-3">@b.From</td>
+                                        <td>@b.To</td>
+                                        <td>@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                                        <td>@b.DriverFullName</td>
+                                        <td>@b.SeatsCount</td>
+                                        <td>@b.PricePerSeat.ToString("N2") @(b.Currency ?? "DKK")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        <p class="text-muted small text-center mt-2 no-print">
+            This is all the data GoCheaper stores about you.
+            To delete it permanently, use the
+            <a href="/my-profile">Danger Zone on your profile page</a>.
+        </p>
+    }
+</div>
+
+@code {
+    private RegisterResponse?              _profile;
+    private List<TripSummaryResponse>      _trips    = [];
+    private List<PassengerBookingResponse> _bookings = [];
+    private bool _loading = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        var profileTask  = IdentityApi.GetUserAsync(UserSession.UserId!.Value);
+        var tripsTask    = UserSession.IsDriver    ? TripsClient.GetMyTripsAsync()      : null;
+        var bookingsTask = UserSession.IsPassenger ? BookingClient.GetMyBookingsAsync() : null;
+
+        var pending = new List<Task> { profileTask };
+        if (tripsTask    is not null) pending.Add(tripsTask);
+        if (bookingsTask is not null) pending.Add(bookingsTask);
+        await Task.WhenAll(pending);
+
+        _profile = profileTask.Result.User;
+        if (tripsTask?.Result is { Success: true, Trips: { } trips })
+            _trips = trips;
+        if (bookingsTask?.Result is { Success: true, Bookings: { } bookings })
+            _bookings = bookings;
+
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private async Task PrintAsync()
+    {
+        try { await JS.InvokeVoidAsync("window.print"); }
+        catch (JSDisconnectedException) { }
+    }
+}
