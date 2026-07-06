@@ -2,6 +2,7 @@ namespace GoCheaper.Contracts.Events;
 
 public record TripCancelledForPassengerEvent(
     Guid      TripId,
+    Guid      PassengerUserId,
     string    From,
     string    To,
     DateTime? DepartureTime,

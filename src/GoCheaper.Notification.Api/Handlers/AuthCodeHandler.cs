@@ -5,7 +5,8 @@ namespace GoCheaper.Notification.Api.Handlers;
 
 public class AuthCodeHandler(
     TemplateRenderer renderer,
-    IEmailSender emailSender)
+    IEmailSender emailSender,
+    NotificationPublisher notificationPublisher)
 {
     public async Task HandleAsync(AuthCodeRequestedEvent @event)
     {
@@ -20,5 +21,9 @@ public class AuthCodeHandler(
             toName:      $"{@event.FirstName} {@event.LastName}",
             subject:     "Your GoCheaper login code",
             htmlContent: html);
+
+        await notificationPublisher.PublishAsync(@event.UserId,
+            "Login code sent",
+            "Your 6-digit login code has been emailed to you.");
     }
 }

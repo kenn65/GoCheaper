@@ -6,6 +6,7 @@ namespace GoCheaper.Notification.Api.Handlers;
 public class BookingCancelledHandler(
     TemplateRenderer renderer,
     IEmailSender emailSender,
+    NotificationPublisher notificationPublisher,
     ILogger<BookingCancelledHandler> logger)
 {
     public async Task HandleAsync(BookingCancelledEvent @event)
@@ -35,6 +36,10 @@ public class BookingCancelledHandler(
             toName:      @event.DriverFullName,
             subject:     $"Booking cancelled: {@event.PassengerFullName} cancelled {@event.SeatsCount} seat(s) on your trip",
             htmlContent: html);
+
+        await notificationPublisher.PublishAsync(@event.DriverUserId,
+            "Booking cancelled",
+            $"{@event.PassengerFullName} cancelled their booking — a notification has been emailed to you.");
 
         logger.LogInformation("Sent cancellation notification to driver {DriverUserId} for trip {TripId}",
             @event.DriverUserId, @event.TripId);

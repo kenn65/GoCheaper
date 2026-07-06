@@ -65,12 +65,19 @@
     </div>
 </div>
 
+<NotificationModal Show="_showEmailModal"
+                   Title="Login Code Sent"
+                   Message="We've emailed you a 6-digit login code. Click OK to enter it."
+                   OnClose="NavigateAfterModal" />
+
 @code {
     [SupplyParameterFromQuery(Name = "returnUrl")] public string? ReturnUrl { get; set; }
 
     private readonly LoginModel model = new();
     private string? apiError;
-    private bool isLoading;
+    private bool    isLoading;
+    private bool    _showEmailModal;
+    private string? _pendingUrl;
 
     private async Task HandleSubmit()
     {
@@ -80,14 +87,25 @@
         {
             var result = await IdentityApi.LoginAsync(model.Email, model.Password);
             if (result.Success)
-                Nav.NavigateTo($"/verify-code?email={Uri.EscapeDataString(model.Email)}" +
-                               (string.IsNullOrEmpty(ReturnUrl) ? "" : $"&returnUrl={Uri.EscapeDataString(ReturnUrl)}"));
+            {
+                _pendingUrl = "/verify-code?email=" + Uri.EscapeDataString(model.Email) +
+                              (string.IsNullOrEmpty(ReturnUrl) ? "" : "&returnUrl=" + Uri.EscapeDataString(ReturnUrl));
+                _showEmailModal = true;
+            }
             else
+            {
                 apiError = result.Error ?? "Login failed. Please try again.";
+            }
         }
         finally
         {
             isLoading = false;
         }
+    }
+
+    private void NavigateAfterModal()
+    {
+        _showEmailModal = false;
+        if (_pendingUrl is not null) Nav.NavigateTo(_pendingUrl);
     }
 }

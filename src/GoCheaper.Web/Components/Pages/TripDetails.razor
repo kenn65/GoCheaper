@@ -21,11 +21,7 @@
     {
         <div class="alert alert-danger">@_error</div>
     }
-    @if (_deleteError is not null)
-    {
-        <div class="alert alert-danger mt-2">@_deleteError</div>
-    }
-    else if (_trip is not null)
+    @if (_trip is not null)
     {
         var isOwner = UserSession.UserId.HasValue && UserSession.UserId.Value == _trip.DriverId;
 
@@ -171,25 +167,7 @@
                             {
                                 <div class="d-flex flex-wrap gap-2">
                                     <button class="btn btn-sm btn-outline-primary" @onclick="StartEdit">Edit Trip</button>
-                                    @if (_confirmDelete)
-                                    {
-                                        <div class="d-flex flex-column gap-2" style="min-width:220px;max-width:100%">
-                                            <small class="text-danger fw-semibold">Delete this trip?</small>
-                                            <textarea class="form-control form-control-sm" rows="2"
-                                                      placeholder="Reason for deletion (optional — sent to passengers)"
-                                                      @bind="_deleteReason" style="font-size:12px;"></textarea>
-                                            <div class="d-flex gap-2">
-                                                <button class="btn btn-sm btn-danger" @onclick="ConfirmDeleteAsync" disabled="@_deleting">
-                                                    @(_deleting ? "Deleting..." : "Yes, Delete")
-                                                </button>
-                                                <button class="btn btn-sm btn-outline-secondary" @onclick="CancelDelete">Cancel</button>
-                                            </div>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => _confirmDelete = true">Delete Trip</button>
-                                    }
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => _confirmDelete = true">Delete Trip</button>
                                 </div>
                             }
                         </div>
@@ -242,6 +220,24 @@
         }
     }
 </div>
+
+<ConfirmModal Show="_confirmDelete"
+              Title="Delete Trip"
+              ConfirmLabel="@(_deleting ? "Deleting..." : "OK")"
+              CancelLabel="Cancel"
+              ConfirmDisabled="_deleting"
+              OnConfirm="ConfirmDeleteAsync"
+              OnCancel="CancelDelete">
+    <p class="text-muted mb-3">Permanently deletes this trip. Passengers with bookings will be notified by email.</p>
+    <label class="form-label small fw-semibold">Reason for deletion (optional)</label>
+    <textarea class="form-control" rows="2"
+              placeholder="Sent to passengers if provided"
+              @bind="_deleteReason"></textarea>
+    @if (_deleteError is not null)
+    {
+        <div class="text-danger small mt-2">@_deleteError</div>
+    }
+</ConfirmModal>
 
 @code {
     [Parameter] public Guid Id { get; set; }

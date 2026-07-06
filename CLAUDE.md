@@ -79,6 +79,7 @@ Shared library with no external dependencies. Referenced by any service that pro
 | `TripBooked` | `trip-booked` |
 | `BookingCancelled` | `booking-cancelled` |
 | `TripCancelledForPassenger` | `trip-cancelled-for-passenger` |
+| `UserNotification` | `user-notification` |
 
 **Event record types** (`Events/`):
 
@@ -89,7 +90,8 @@ Shared library with no external dependencies. Referenced by any service that pro
 | `TripDeletedEvent` | `TripId, Reason?` — `Reason` is an optional driver-provided cancellation message sent to passengers |
 | `TripBookedEvent` | `TripId, From, To, DepartureTime?, PricePerSeat, NumberPlate?, PaymentMethod?, List<string> PickupPoints, PassengerUserId, PassengerEmail, PassengerFullName, DriverUserId, DriverEmail, DriverFullName, SeatsCount, TotalPrice, BookedAt` |
 | `BookingCancelledEvent` | `TripId, From, To, DepartureTime?, PassengerUserId, PassengerFullName, PassengerEmail, DriverUserId, DriverEmail, DriverFullName, SeatsCount, CancelledAt` |
-| `TripCancelledForPassengerEvent` | `TripId, From, To, DepartureTime?, DriverFullName, PassengerEmail, PassengerFullName, SeatsCount, Reason?, CancelledAt` |
+| `TripCancelledForPassengerEvent` | `TripId, PassengerUserId, From, To, DepartureTime?, DriverFullName, PassengerEmail, PassengerFullName, SeatsCount, Reason?, CancelledAt` |
+| `UserNotificationEvent` | `UserId, Title, Message, CreatedAt` — published by Notification.Api to `user-notification` after each email send; intended for future in-app notification consumers |
 | `UserRegisteredEvent` | `UserId, FirstName, LastName, Email, VerificationToken` |
 | `UserProfileUpdatedEvent` | `UserId, FullName, Email?` — `Email` is nullable for backwards compatibility with old Kafka messages |
 
@@ -304,9 +306,13 @@ All consumers use `AutoOffsetReset.Latest` — transactional emails are only sen
 
 All handlers skip sending (with a warning log) if the target email address is empty.
 
-`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics on startup. `CreateTopicsException` is thrown for the entire batch even when only some topics have issues — the catch loop must ignore both `ErrorCode.TopicAlreadyExists` **and** `ErrorCode.NoError` (the latter appears for topics that were actually created successfully in the same batch).
+**`NotificationPublisher`** (singleton, `Services/`): After each successful email send, every handler calls `notificationPublisher.PublishAsync(userId, title, message)`. This publishes a `UserNotificationEvent` to the `user-notification` topic. Publish failures are swallowed (warning log only) — a Kafka outage must never fail an email send. Registered via `builder.Services.AddSingleton<NotificationPublisher>()` and requires `builder.AddKafkaProducer<string, string>("kafka")`.
+
+`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics on startup including `user-notification`. `CreateTopicsException` is thrown for the entire batch even when only some topics have issues — the catch loop must ignore both `ErrorCode.TopicAlreadyExists` **and** `ErrorCode.NoError` (the latter appears for topics that were actually created successfully in the same batch).
 
 **Email templates** are HTML files in `Templates/` built as `<EmbeddedResource>`. `TemplateRenderer` replaces `{{Token}}` placeholders. Add a template by adding an `.html` file — the csproj glob `<EmbeddedResource Include="Templates\*.html" />` picks it up automatically.
+
+**Email logo:** All 7 templates embed the logo as a base64-encoded PNG `<img>` data URI (`data:image/png;base64,...`). Do **not** use inline SVG — Outlook.com strips SVG from emails.
 
 **Email sending:** Single `EmailSender` class (MailKit SMTP, `SecureSocketOptions.StartTls`, port 587) registered as `IEmailSender`. Reads `Smtp:Host`, `Smtp:Port`, `Smtp:Username`, `Smtp:Password`, `Smtp:FromEmail`, `Smtp:FromName` from config/user-secrets. Azure ACS has been removed.
 
@@ -371,16 +377,24 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 
 | Page | Route | Auth | Notes |
 |---|---|---|---|
-| `Login.razor` | `/login` | Public | Email + password → OTP; passes `returnUrl` through |
+| `Login.razor` | `/login` | Public | Email + password → OTP; on success shows `NotificationModal` ("Login Code Sent") then navigates to `/verify-code` after OK |
 | `VerifyCode.razor` | `/verify-code` | Public | 6-digit OTP → `/auth/complete` redirect |
-| `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature |
+| `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature; `NotificationModal` on save success; `ConfirmModal` with "Type DELETE" input for account delete |
 | `MyTrips.razor` | `/my-trips` | `DriverOnly` | Driver's trips; mobile card layout / desktop table; calls `BookingApiClient.GetBookedSeatsAsync` to merge real booked seat counts |
 | `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; passes `DriverFullName` for DriverSnapshot bootstrap; price per seat min 1 DKK |
-| `TripDetails.razor` | `/trips/{Id:guid}` | `DriverOnly` | Driver view; inline edit form; when bookings exist only Note, Pickup Points, Payment Method and Number Plate are editable (From/To/Seats/Price/Departure are disabled); delete shows optional reason textarea sent to passengers via `TripCancelledForPassengerEvent` |
+| `TripDetails.razor` | `/trips/{Id:guid}` | `DriverOnly` | Driver view; inline edit form; when bookings exist only Note, Pickup Points, Payment Method and Number Plate are editable (From/To/Seats/Price/Departure are disabled); delete opens `ConfirmModal` with optional reason textarea (sent to passengers via `TripCancelledForPassengerEvent`) |
 | `BrowseTrips.razor` | `/browse-trips` | `[Authorize]` | Passenger trip search; mobile card layout / desktop table; client-side From/To filter |
-| `PassengerTripDetails.razor` | `/passenger/trips/{Id:guid}` | `[Authorize]` | Passenger trip detail; shows available seats, book/cancel UI; refreshes all data after book/cancel |
+| `PassengerTripDetails.razor` | `/passenger/trips/{Id:guid}` | `[Authorize]` | Passenger trip detail; shows available seats, book/cancel UI; `NotificationModal` on booking success; `ConfirmModal` for cancel booking |
 | `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Passenger's bookings; mobile card layout / desktop table; driver name links to driver profile |
 | `DriverProfile.razor` | `/driver/{Id:guid}` | `[Authorize]` | Public driver profile; shows photo (or initial avatar), name, member since, phone |
+
+#### Shared modal components (`Components/`)
+
+**`NotificationModal.razor`** — Bootstrap CSS-only modal for success/informational messages after an action. Parameters: `bool Show`, `string Title`, `string Message`, `EventCallback OnClose`. Renders a single **OK** button that fires `OnClose`. Used on pages where an action triggers an email to the current user: shows after login code sent, after booking, after profile save.
+
+**`ConfirmModal.razor`** — Bootstrap CSS-only confirm dialog. Parameters: `bool Show`, `string Title`, `string Message`, `string ConfirmLabel` (default `"OK"`), `string CancelLabel` (default `"Cancel"`), `string ConfirmButtonClass` (default `"btn-danger"`), `bool ConfirmDisabled`, `EventCallback OnConfirm`, `EventCallback OnCancel`, `RenderFragment? ChildContent`. Use `ChildContent` for custom body content (e.g. "Type DELETE" inputs, reason textareas). Used for all destructive or significant confirmation flows; replaces inline expand-on-button patterns.
+
+Both modals use pure Blazor conditional rendering (`show d-block` CSS class) — no Bootstrap JS or JSInterop. Click on backdrop does not dismiss them (ConfirmModal intentionally lacks backdrop-click handler to prevent accidental dismissal on confirms).
 
 #### NavMenu
 

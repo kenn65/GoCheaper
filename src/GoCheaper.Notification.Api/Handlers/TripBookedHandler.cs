@@ -6,6 +6,7 @@ namespace GoCheaper.Notification.Api.Handlers;
 public class TripBookedHandler(
     TemplateRenderer renderer,
     IEmailSender emailSender,
+    NotificationPublisher notificationPublisher,
     ILogger<TripBookedHandler> logger)
 {
     public async Task HandleAsync(TripBookedEvent @event)
@@ -54,6 +55,10 @@ public class TripBookedHandler(
             subject:     $"Booking confirmed: {{{@event.From}}} → {@event.To} on {departure}",
             htmlContent: html);
 
+        await notificationPublisher.PublishAsync(@event.PassengerUserId,
+            "Booking confirmed",
+            $"Your booking receipt for {@event.From} → {@event.To} has been emailed to you.");
+
         logger.LogInformation("Sent booking receipt to passenger {PassengerUserId}", @event.PassengerUserId);
     }
 
@@ -91,6 +96,10 @@ public class TripBookedHandler(
             toName:      @event.DriverFullName,
             subject:     $"New booking: {@event.PassengerFullName} booked {@event.SeatsCount} seat(s) on your trip",
             htmlContent: html);
+
+        await notificationPublisher.PublishAsync(@event.DriverUserId,
+            "New booking",
+            $"{@event.PassengerFullName} booked {@event.SeatsCount} seat(s) on your trip — a notification has been emailed to you.");
 
         logger.LogInformation("Sent booking notification to driver {DriverUserId}", @event.DriverUserId);
     }

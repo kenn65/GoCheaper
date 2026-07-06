@@ -6,7 +6,8 @@ namespace GoCheaper.Notification.Api.Handlers;
 public class UserRegisteredHandler(
     TemplateRenderer renderer,
     IEmailSender emailSender,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    NotificationPublisher notificationPublisher)
 {
     public async Task HandleAsync(UserRegisteredEvent @event)
     {
@@ -24,5 +25,9 @@ public class UserRegisteredHandler(
             toName:      $"{@event.FirstName} {@event.LastName}",
             subject:     "Confirm your GoCheaper account",
             htmlContent: html);
+
+        await notificationPublisher.PublishAsync(@event.UserId,
+            "Welcome email sent",
+            "Check your inbox to verify your GoCheaper account.");
     }
 }

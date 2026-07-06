@@ -64,6 +64,7 @@ public class TripDeletedConsumer(
 
                         await PublishPassengerNotificationAsync(new TripCancelledForPassengerEvent(
                             TripId:            trip.TripId,
+                            PassengerUserId:   booking.PassengerUserId,
                             From:              trip.From,
                             To:                trip.To,
                             DepartureTime:     trip.DepartureTime,

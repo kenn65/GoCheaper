@@ -6,7 +6,8 @@ namespace GoCheaper.Notification.Api.Handlers;
 public class ForgotPasswordHandler(
     TemplateRenderer renderer,
     IEmailSender emailSender,
-    IConfiguration configuration)
+    IConfiguration configuration,
+    NotificationPublisher notificationPublisher)
 {
     public async Task HandleAsync(ForgotPasswordRequestedEvent @event)
     {
@@ -24,5 +25,9 @@ public class ForgotPasswordHandler(
             toName:      $"{@event.FirstName} {@event.LastName}",
             subject:     "Reset your GoCheaper password",
             htmlContent: html);
+
+        await notificationPublisher.PublishAsync(@event.UserId,
+            "Password reset link sent",
+            "Check your inbox for a link to reset your password.");
     }
 }

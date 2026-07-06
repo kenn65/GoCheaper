@@ -1,0 +1,29 @@
+@if (Show)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog"
+         style="background:rgba(0,0,0,.45);" @onclick="HandleClose">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+            <div class="modal-content shadow">
+                <div class="modal-header border-0 pb-1">
+                    <h5 class="modal-title fw-semibold">@Title</h5>
+                    <button type="button" class="btn-close" @onclick="HandleClose" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-1 pb-2">
+                    <p class="mb-0 text-muted">@Message</p>
+                </div>
+                <div class="modal-footer border-0 pt-1">
+                    <button type="button" class="btn btn-primary" @onclick="HandleClose">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool     Show    { get; set; }
+    [Parameter] public string   Title   { get; set; } = "Done";
+    [Parameter] public string   Message { get; set; } = "";
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private async Task HandleClose() => await OnClose.InvokeAsync();
+}
