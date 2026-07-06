@@ -284,6 +284,7 @@ Vertical Slice Architecture, same auth pattern (copy of `Auth/` folder, same JWT
 | `TripDeletedConsumer` | `trip-deleted` | `booking-trip-deleted` | Earliest | Loads `TripSnapshot` with bookings; publishes `TripCancelledForPassengerEvent` per passenger (excluding the driver); then `ExecuteDeleteAsync` on `TripSnapshot` (cascade-deletes bookings). Falls back to `DriverSnapshot` lookup if `PassengerBooking.PassengerEmail` is empty. |
 | `UserRegisteredConsumer` | `user-registered` | `booking-user-registered` | Earliest | Creates `DriverSnapshot` with `Email`; patches email on existing rows |
 | `UserProfileUpdatedConsumer` | `user-profile-updated` | `booking-user-profile-updated` | Earliest | Upserts `DriverSnapshot.FullName` and `DriverSnapshot.Email` (if non-null in event) |
+| `UserDeletedConsumer` | `user-deleted` | `booking-user-deleted` | Earliest | GDPR cascade: deletes all `PassengerBooking` rows and `DriverSnapshot` for the deleted user |
 
 `KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics including `trip-booked`, `booking-cancelled`, and `trip-cancelled-for-passenger`.
 
@@ -317,16 +318,18 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<TripRatingEmailSer
 **Rating fields on `PassengerBooking`:** `RatingToken (Guid?)`, `RatingEmailSentAt (DateTime?)`, `DriverRating (int?)`, `DriverRatingComment (string?, max 500)`, `RatedAt (DateTime?)`.
 
 **Response types** (`Features/Common/TripSummaryResponse.cs`):
-- `TripSummaryResponse` — browse list: `Id, From, To, TotalSeats, AvailableSeats, PricePerSeat, DepartureTime, NumberPlate, DriverFullName`
+- `TripSummaryResponse` — browse list: `Id, From, To, TotalSeats, AvailableSeats, PricePerSeat, DepartureTime, NumberPlate, DriverFullName, Currency?`
 - `TripDetailResponse` — detail: adds `DriverId, Note, PaymentMethod, List<string> PickupPoints`
-- `MyBookingResponse` — passenger booking list: `TripId, DriverId, From, To, DepartureTime, PricePerSeat, DriverFullName, SeatsCount`
+- `MyBookingResponse` — passenger booking list: `TripId, DriverId, From, To, DepartureTime, PricePerSeat, DriverFullName, SeatsCount, Currency?`
 - `TripBookingStatusResponse` — `SeatsCount`
+
+**Currency:** Trips carry an optional `Currency` field (DKK/NOK/SEK). Displayed alongside price on all trip views. Set by the driver when creating or editing a trip.
 
 ---
 
 ### Notification.Api
 
-All email sending is event-driven — no HTTP endpoints. Six `BackgroundService` consumers:
+All email sending is event-driven — no HTTP endpoints. Seven `BackgroundService` consumers:
 
 | Consumer | Topic | Group | AutoOffsetReset | Email template |
 |---|---|---|---|---|
@@ -431,9 +434,12 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 
 | Page | Route | Auth | Notes |
 |---|---|---|---|
+| `Home.razor` | `/` | Public | Landing page with logo, stats dashboard (total trips/users counts), and sign-in/sign-up CTAs |
 | `Login.razor` | `/login` | Public | Email + password → OTP; on success shows `NotificationModal` ("Login Code Sent") then navigates to `/verify-code` after OK |
 | `VerifyCode.razor` | `/verify-code` | Public | 6-digit OTP → `/auth/complete` redirect |
-| `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature; `NotificationModal` on save success; `ConfirmModal` with "Type DELETE" input for account delete |
+| `Register.razor` | `/register` | Public | Registration form; includes GDPR consent checkbox (must be checked before submit) |
+| `PrivacyPolicy.razor` | `/privacy-policy` | Public | GDPR privacy policy page linked from registration and footer |
+| `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature; `NotificationModal` on save success; `ConfirmModal` with "Type DELETE" input for account delete; GDPR data export button downloads a ZIP containing PDF summary + JSON raw data |
 | `MyTrips.razor` | `/my-trips` | `DriverOnly` | Driver's trips; mobile card layout / desktop table; calls `BookingApiClient.GetBookedSeatsAsync` to merge real booked seat counts |
 | `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; passes `DriverFullName` for DriverSnapshot bootstrap; price per seat min 1 DKK |
 | `TripDetails.razor` | `/trips/{Id:guid}` | `DriverOnly` | Driver view; inline edit form; when bookings exist only Note, Pickup Points, Payment Method and Number Plate are editable (From/To/Seats/Price/Departure are disabled); delete opens `ConfirmModal` with optional reason textarea (sent to passengers via `TripCancelledForPassengerEvent`) |
@@ -481,8 +487,6 @@ All list pages (MyTrips, MyBookedTrips, BrowseTrips) render a **Bootstrap card l
 - **`prerender: false`** — use `@rendermode @(new InteractiveServerRenderMode(prerender: false))` on pages that must not run during SSR (e.g. `MyProfile` which checks `UserSession.IsLoggedIn`).
 - **`forceLoad: true` + JS interop** — never call JS interop after `Nav.NavigateTo(url, forceLoad: true)`; the circuit disconnects and the call throws `JSDisconnectedException`. Use the `/auth/complete` server-redirect pattern instead.
 - **`gc_auth` cookie is encrypted** — the refresh token and all other claims are stored inside this HttpOnly encrypted blob. They are not visible in browser DevTools — that is expected and correct.
-
----
 
 ---
 
