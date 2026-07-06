@@ -28,8 +28,13 @@ public static class Extensions
 
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            // Turn on resilience by default
-            http.AddStandardResilienceHandler();
+            // Turn on resilience by default. Raise timeouts above the 10 s defaults —
+            // Docker container cold-start and the parallel export endpoint need more headroom.
+            http.AddStandardResilienceHandler(options =>
+            {
+                options.AttemptTimeout.Timeout      = TimeSpan.FromSeconds(30);
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
+            });
 
             // Turn on service discovery by default
             http.AddServiceDiscovery();
