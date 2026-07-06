@@ -68,8 +68,7 @@
                                     <div class="small mt-1">Driver: <span class="text-body">@trip.DriverFullName</span></div>
                                 </div>
                                 <div class="d-flex flex-column gap-1 ms-2 flex-shrink-0">
-                                    <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
-                                    <a href="/passenger/trips/@trip.Id#book" class="btn btn-primary">Book</a>
+                                    <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-primary">Book Trip</a>
                                 </div>
                             </div>
                             <div class="row row-cols-2 g-1 small">
@@ -113,10 +112,7 @@
                                     <td>@(trip.NumberPlate ?? "—")</td>
                                     <td>@trip.DriverFullName</td>
                                     <td>
-                                        <div class="d-flex gap-1 align-items-center">
-                                            <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
-                                            <a href="/passenger/trips/@trip.Id#book" class="btn btn-primary">Book</a>
-                                        </div>
+                                        <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-primary">Book Trip</a>
                                     </td>
                                 </tr>
                             }
