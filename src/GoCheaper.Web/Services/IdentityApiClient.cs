@@ -63,7 +63,7 @@ public class IdentityApiClient(
         if (result.Success && result.Tokens is not null)
             await authCookieService.UpdateTokensAsync(result.Tokens.AccessToken, result.Tokens.RefreshToken);
         else
-            userSession.Clear(); // refresh token expired — next render forces re-login
+            await authCookieService.SignOutAsync(); // refresh token expired — clears session + cookie
     }
 
     // ── Register ─────────────────────────────────────────────────────────────
