@@ -128,6 +128,24 @@
                                 <div class="form-text">JPEG or PNG, max 5 MB.</div>
                             </div>
 
+                            <hr />
+
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="chkPrivacy"
+                                           checked="@model.AgreeToPrivacyPolicy"
+                                           @onchange="e => model.AgreeToPrivacyPolicy = (bool)e.Value!" />
+                                    <label class="form-check-label" for="chkPrivacy">
+                                        I have read and agree to the
+                                        <a href="/privacy-policy" target="_blank">Privacy Policy</a>
+                                    </label>
+                                </div>
+                                @if (privacyError is not null)
+                                {
+                                    <div class="text-danger small mt-1">@privacyError</div>
+                                }
+                            </div>
+
                             <button type="submit" class="btn btn-primary btn-lg w-100" disabled="@isLoading">
                                 @if (isLoading)
                                 {
@@ -153,6 +171,7 @@
     private string? apiError;
     private string? roleError;
     private string? pictureError;
+    private string? privacyError;
     private string pictureFileName = "";
     private bool isLoading;
 
@@ -185,9 +204,10 @@
 
     private async Task HandleSubmit()
     {
-        roleError = null;
-        apiError = null;
+        roleError    = null;
+        apiError     = null;
         pictureError = null;
+        privacyError = null;
 
         if (!model.IsDriver && !model.IsPassenger)
         {
@@ -198,6 +218,12 @@
         if (string.IsNullOrEmpty(model.DriverPictureBase64))
         {
             pictureError = "A profile picture is required.";
+            return;
+        }
+
+        if (!model.AgreeToPrivacyPolicy)
+        {
+            privacyError = "You must agree to the Privacy Policy to create an account.";
             return;
         }
 

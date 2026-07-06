@@ -1,0 +1,92 @@
+@page "/privacy-policy"
+
+<PageTitle>Privacy Policy - GoCheaper</PageTitle>
+
+<div class="container py-5" style="max-width:760px">
+
+    <h1 class="h3 mb-1">Privacy Policy</h1>
+    <p class="text-muted small mb-4">Effective date: July 2026</p>
+
+    <p>
+        GoCheaper is a free, non-profit, open-source ride-sharing platform operated by
+        <strong>Kenn Skjellerup</strong> (the data controller).
+        Contact: <a href="mailto:kennskjellerup@gmail.com">kennskjellerup@gmail.com</a>
+    </p>
+
+    <hr />
+
+    <h5>1. What data we collect</h5>
+    <ul>
+        <li><strong>Account data</strong> — first name, last name, email address, mobile phone number, profile picture, account type (driver / passenger), hashed password.</li>
+        <li><strong>Trip data</strong> — departure, destination, seats, price, currency, departure time, pickup points, number plate, car picture, notes, payment method.</li>
+        <li><strong>Booking data</strong> — trips you have booked, number of seats, booking date.</li>
+        <li><strong>Authentication data</strong> — an encrypted session stored in the <code>gc_auth</code> HttpOnly cookie (see section 5).</li>
+    </ul>
+
+    <h5 class="mt-4">2. Why we collect it</h5>
+    <p>All data is collected solely to provide the ride-sharing service:</p>
+    <ul>
+        <li>Connecting drivers offering rides with passengers looking for them.</li>
+        <li>Sending transactional emails (OTP login codes, booking confirmations, cancellations).</li>
+        <li>Displaying your name and profile picture to other users when you participate in a trip.</li>
+    </ul>
+    <p>
+        The legal basis is <strong>Article 6(1)(b) GDPR</strong> — performance of a contract
+        (providing the service you signed up for).
+    </p>
+
+    <h5 class="mt-4">3. Who can see your data</h5>
+    <ul>
+        <li><strong>Other users</strong> — when you book a trip, the driver sees your name. When a passenger books your trip, you see their name.</li>
+        <li><strong>No third parties</strong> — your data is not sold, shared with advertisers, or passed to any third party except the email delivery described below.</li>
+    </ul>
+
+    <h5 class="mt-4">4. Email delivery</h5>
+    <p>
+        Transactional emails are sent via <strong>Gmail SMTP</strong> (Google's mail servers).
+        Google processes the email content transiently for delivery purposes.
+        Google's privacy policy applies to that transit: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.
+    </p>
+
+    <h5 class="mt-4">5. Cookies</h5>
+    <p>
+        GoCheaper sets one cookie: <code>gc_auth</code>. It is <strong>strictly necessary</strong>
+        for authentication — it stores your encrypted session so you stay logged in.
+        It is HttpOnly (inaccessible to JavaScript), Secure, SameSite=Strict, and expires after 90 days.
+        No tracking, analytics, or advertising cookies are used.
+    </p>
+
+    <h5 class="mt-4">6. Data retention</h5>
+    <p>
+        Your personal data is kept for as long as you have an account.
+        When you delete your account, all your data is permanently removed:
+        your profile, your posted trips (passengers are notified), and your bookings (drivers are notified).
+        No backups are kept beyond the deletion.
+    </p>
+
+    <h5 class="mt-4">7. Your rights</h5>
+    <p>Under GDPR you have the right to:</p>
+    <ul>
+        <li><strong>Access</strong> — view all your data on the My Profile page.</li>
+        <li><strong>Rectification</strong> — update your data on the My Profile page.</li>
+        <li><strong>Erasure</strong> — delete your account from the Danger Zone on the My Profile page.</li>
+        <li><strong>Portability</strong> — contact <a href="mailto:kennskjellerup@gmail.com">kennskjellerup@gmail.com</a> to request a data export.</li>
+        <li><strong>Complaint</strong> — you may lodge a complaint with the Danish Data Protection Agency (Datatilsynet) at <a href="https://www.datatilsynet.dk" target="_blank" rel="noopener">datatilsynet.dk</a>.</li>
+    </ul>
+
+    <h5 class="mt-4">8. Open source</h5>
+    <p>
+        The full source code of this platform is publicly available at
+        <a href="https://github.com/kenn65/GoCheaper" target="_blank" rel="noopener">github.com/kenn65/GoCheaper</a>.
+        You can inspect exactly how your data is processed.
+    </p>
+
+    <h5 class="mt-4">9. Changes to this policy</h5>
+    <p>
+        Any material changes will be announced by updating the effective date above.
+        Continued use of the service after the date constitutes acceptance.
+    </p>
+
+    <hr />
+    <p class="text-muted small">Questions? Email <a href="mailto:kennskjellerup@gmail.com">kennskjellerup@gmail.com</a>.</p>
+</div>

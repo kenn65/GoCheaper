@@ -28,4 +28,6 @@ public class RegisterModel
     public bool IsPassenger { get; set; }
 
     public string DriverPictureBase64 { get; set; } = "";
+
+    public bool AgreeToPrivacyPolicy { get; set; }
 }
