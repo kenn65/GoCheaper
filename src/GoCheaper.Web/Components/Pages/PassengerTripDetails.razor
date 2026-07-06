@@ -189,7 +189,7 @@
         if (result.Success)
         {
             _confirmCancel = false;
-            Nav.NavigateTo("/browse-trips");
+            await LoadAsync();
         }
         else
         {
