@@ -518,7 +518,13 @@ appsettings.json  →  appsettings.AzureTest.json  →  env vars injected by Asp
 
 **Network:** Only `web` has external ingress. All four API services are internal — reachable only within the Container Apps environment via Aspire service discovery.
 
-**Kafka in Azure:** Runs as a container app — message history is not persisted across redeployments. Acceptable for the test environment.
+**Kafka in Azure — single-replica requirement:** Kafka runs in KRaft mode (no ZooKeeper). ACA's default `maxReplicas: 10` causes autoscaling to multiple Kafka instances; multiple KRaft controllers fight over state and crash each other, losing all topic metadata. After **every** deploy via the Aspire publish wizard, run `scripts/post-deploy-azure.ps1` to lock Kafka to exactly one replica:
+```powershell
+.\scripts\post-deploy-azure.ps1         # defaults to rg-AzureTest
+# or for a different resource group:
+.\scripts\post-deploy-azure.ps1 -ResourceGroup "rg-MyEnv"
+```
+Message history is not persisted across Kafka restarts — acceptable for the test environment.
 
 **Azure SQL + Managed Identity:** `Microsoft.Data.SqlClient 7.0.1` does not ship `Azure.Identity` as a dependency. Add `Azure.Identity` directly to each API project and register a custom `ManagedIdentitySqlAuthProvider : SqlAuthenticationProvider` using `DefaultAzureCredential` before `var builder`. Call `SqlAuthenticationProvider.SetProvider(SqlAuthenticationMethod.ActiveDirectoryDefault, new ManagedIdentitySqlAuthProvider())` at the top of `Program.cs`. Do **not** use `Microsoft.Data.SqlClient.Extensions.Azure` — it requires `Extensions.Abstractions [7.0.2, 8.0.0)` which is incompatible with SqlClient 7.0.1's `Extensions.Abstractions 1.0.0` and causes `AmbiguousMatchException`.
 

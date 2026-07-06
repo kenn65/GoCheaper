@@ -1,3 +1,6 @@
+using Azure.Core;
+using Azure.Identity;
+using Microsoft.Data.SqlClient;
 using System.Text;
 using GoCheaper.Booking.Api.Auth;
 using GoCheaper.Booking.Api.Consumers;
@@ -19,6 +22,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
+
+SqlAuthenticationProvider.SetProvider(
+    SqlAuthenticationMethod.ActiveDirectoryDefault,
+    new ManagedIdentitySqlAuthProvider());
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -130,3 +137,18 @@ app.MapScalarApiReference(options =>
 app.MapBookingEndpoints();
 
 app.Run();
+
+sealed class ManagedIdentitySqlAuthProvider : SqlAuthenticationProvider
+{
+    private readonly DefaultAzureCredential _credential = new();
+
+    public override async Task<SqlAuthenticationToken> AcquireTokenAsync(SqlAuthenticationParameters parameters)
+    {
+        var token = await _credential.GetTokenAsync(
+            new TokenRequestContext(["https://database.windows.net/.default"]));
+        return new SqlAuthenticationToken(token.Token, token.ExpiresOn);
+    }
+
+    public override bool IsSupported(SqlAuthenticationMethod authenticationMethod)
+        => authenticationMethod == SqlAuthenticationMethod.ActiveDirectoryDefault;
+}
