@@ -1,8 +1,5 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-// ── Infrastructure secrets ────────────────────────────────────────────────────
-var dbPassword = builder.AddParameter("sql-password", secret: true);
-
 // ── Application secrets ───────────────────────────────────────────────────────
 var jwtKey             = builder.AddParameter("jwt-key",              secret: true);
 var identityApiKey     = builder.AddParameter("identity-api-key",     secret: true);
@@ -13,15 +10,17 @@ var smtpUsername       = builder.AddParameter("smtp-username",        secret: tr
 var smtpPassword       = builder.AddParameter("smtp-password",        secret: true);
 var smtpFromEmail      = builder.AddParameter("smtp-from-email",      secret: true);
 
-// ── SQL Server ────────────────────────────────────────────────────────────────
-var sql = builder.AddSqlServer("sql", dbPassword)
-    .WithContainerName("gocheaper-sql-server")
-    .WithEndpoint("tcp", e => e.Port = 1455)
-    .WithDataVolume("gocheaper-sqlserver-data")
-    .WithVolume("gocheaper-sqlserver-backup", "/backup")
-    .WithEnvironment("ACCEPT_EULA", "Y")
-    .WithEnvironment("MSSQL_SA_PASSWORD", dbPassword)
-    .WithLifetime(ContainerLifetime.Persistent);
+// ── SQL Server (local dev) / Azure SQL (publish) ──────────────────────────────
+// RunAsContainer → SQL Server container locally, Azure SQL Database in Azure.
+// No password parameter needed: locally Aspire auto-generates one (stored in
+// AppHost user secrets); in Azure, Managed Identity is used — no password at all.
+var sql = builder.AddAzureSqlServer("sql")
+    .RunAsContainer(c => c
+        .WithContainerName("gocheaper-sql-server")
+        .WithEndpoint("tcp", e => e.Port = 1455)
+        .WithDataVolume("gocheaper-sqlserver-data")
+        .WithVolume("gocheaper-sqlserver-backup", "/backup")
+        .WithLifetime(ContainerLifetime.Persistent));
 
 var identityDb = sql.AddDatabase("identitydb");
 var tripsDb    = sql.AddDatabase("tripsdb");
