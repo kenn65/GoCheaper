@@ -115,7 +115,7 @@
 <NotificationModal Show="_showBookingModal"
                    Title="Booking Confirmed"
                    Message="Your seat is reserved. A booking confirmation has been emailed to you."
-                   OnClose="() => Nav.NavigateTo("/my-booked-trips")" />
+                   OnClose="GoToMyBookings" />
 
 <ConfirmModal Show="_confirmCancel"
               Title="Cancel Booking"
@@ -139,6 +139,8 @@
     private int     _seatsToBook      = 1;
     private bool    _showBookingModal;
     private bool    _confirmCancel;
+
+    private void GoToMyBookings() => Nav.NavigateTo("/my-booked-trips");
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
