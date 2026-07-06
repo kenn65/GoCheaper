@@ -1,7 +1,8 @@
-﻿@page "/verify-email"
+@page "/verify-email"
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @using GoCheaper.Web.Services
 @inject IdentityApiClient IdentityApi
+@inject AuthCookieService AuthCookieService
 
 <PageTitle>Verify Email - GoCheaper</PageTitle>
 
@@ -23,7 +24,7 @@
                         <p class="text-muted">
                             @if (result.FirstName is not null)
                             {
-                                <span>Hi <strong>@result.FirstName</strong> â€” your </span>
+                                <span>Hi <strong>@result.FirstName</strong> &mdash; your </span>
                             }
                             else
                             {
@@ -64,11 +65,9 @@
     [SupplyParameterFromQuery(Name = "token")]  public string? Token  { get; set; }
 
     private VerifyEmailResult? result;
-    private bool isLoading = true;   // show spinner until the circuit is live
+    private bool isLoading = true;
     private bool linkInvalid;
 
-    // OnAfterRenderAsync(firstRender=true) is never called during SSR prerendering,
-    // only once when the interactive SignalR circuit fires â€” preventing the double-call bug.
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
@@ -82,6 +81,16 @@
         }
 
         result = await IdentityApi.VerifyEmailAsync(userId, Token);
+
+        // Sign out any existing session so the user lands on the logged-out
+        // home page. The Blazor SignalR circuit is established as a same-site
+        // request (cookie IS sent), even when the page was opened from an email
+        // link (cross-site, where SameSite=Strict blocks the cookie on the
+        // initial GET). Without this sign-out the home page shows a broken
+        // logged-in state for any previously active session.
+        if (result.Success)
+            await AuthCookieService.SignOutAsync();
+
         isLoading = false;
         StateHasChanged();
     }
