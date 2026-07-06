@@ -32,8 +32,10 @@ public static class Extensions
             // Docker container cold-start and the parallel export endpoint need more headroom.
             http.AddStandardResilienceHandler(options =>
             {
-                options.AttemptTimeout.Timeout      = TimeSpan.FromSeconds(30);
-                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
+                options.AttemptTimeout.Timeout                        = TimeSpan.FromSeconds(30);
+                options.TotalRequestTimeout.Timeout                   = TimeSpan.FromSeconds(90);
+                // Circuit breaker sampling duration must be > 2× AttemptTimeout
+                options.CircuitBreaker.SamplingDuration               = TimeSpan.FromSeconds(90);
             });
 
             // Turn on service discovery by default
