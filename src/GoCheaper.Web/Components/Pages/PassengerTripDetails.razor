@@ -184,9 +184,14 @@
         _cancelError = null;
         var result = await BookingClient.CancelBookingAsync(Id);
         if (result.Success)
+        {
+            _confirmCancel = false;
             await LoadAsync();
+        }
         else
+        {
             _cancelError = result.Error;
+        }
         _actionBusy = false;
     }
 }
