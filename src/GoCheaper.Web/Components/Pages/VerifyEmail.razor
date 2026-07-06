@@ -2,7 +2,6 @@
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @using GoCheaper.Web.Services
 @inject IdentityApiClient IdentityApi
-@inject AuthCookieService AuthCookieService
 
 <PageTitle>Verify Email - GoCheaper</PageTitle>
 
@@ -32,7 +31,7 @@
                             }
                             email address has been confirmed and your account is now active.
                         </p>
-                        <a href="/" class="btn btn-primary mt-2" data-enhance-nav="false">Go to Home</a>
+                        <a href="/auth/verify-redirect" class="btn btn-primary mt-2">Go to Home</a>
                     }
                     else if (result is not null && !result.Success)
                     {
@@ -81,15 +80,6 @@
         }
 
         result = await IdentityApi.VerifyEmailAsync(userId, Token);
-
-        // Sign out any existing session so the user lands on the logged-out
-        // home page. The Blazor SignalR circuit is established as a same-site
-        // request (cookie IS sent), even when the page was opened from an email
-        // link (cross-site, where SameSite=Strict blocks the cookie on the
-        // initial GET). Without this sign-out the home page shows a broken
-        // logged-in state for any previously active session.
-        if (result.Success)
-            await AuthCookieService.SignOutAsync();
 
         isLoading = false;
         StateHasChanged();

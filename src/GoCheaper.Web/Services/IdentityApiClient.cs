@@ -86,6 +86,8 @@ public class IdentityApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new RegisterResult(null, $"Could not reach the identity service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new RegisterResult(null, "The identity service did not respond in time. Please try again.", false); }
 
         if (response.StatusCode == HttpStatusCode.Created)
         {

@@ -236,6 +236,10 @@
             else
                 apiError = result.Error ?? "Registration failed. Please try again.";
         }
+        catch (Exception)
+        {
+            apiError = "Could not reach the server. Please try again.";
+        }
         finally
         {
             isLoading = false;

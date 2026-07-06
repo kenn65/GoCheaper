@@ -152,6 +152,15 @@ app.MapPost("/auth/signout", async (HttpContext ctx) =>
     return Results.Ok();
 }).AllowAnonymous();
 
+// Used after email verification — signs out any existing session and does a
+// clean server-side redirect to /. Bypasses Blazor circuit state entirely so
+// the home page always loads fresh and anonymous.
+app.MapGet("/auth/verify-redirect", async (HttpContext ctx) =>
+{
+    await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.Redirect("/");
+}).AllowAnonymous();
+
 // GDPR data export — returns all personal data as a JSON file download
 app.MapGet("/api/export", async (HttpContext ctx, IHttpClientFactory factory, IConfiguration config) =>
 {

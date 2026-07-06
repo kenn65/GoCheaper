@@ -369,6 +369,7 @@
 
 @code {
     private bool _statsLoading = true;
+    private bool _statsLoaded;
 
     // Driver stats
     private int _tripsPosted;
@@ -381,8 +382,12 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender) return;
-        if (!UserSession.IsLoggedIn) { _statsLoading = false; return; }
+        if (_statsLoaded) return;
+        // AuthorizeView may resolve before Routes.OnInitializedAsync calls
+        // LoadFromClaims — return without marking loaded so the next render retries.
+        if (!UserSession.IsLoggedIn) return;
+
+        _statsLoaded = true;
 
         // Kick off driver and passenger fetches in parallel
         var driverTask    = UserSession.IsDriver    ? TripsClient.GetMyTripsAsync()      : null;
