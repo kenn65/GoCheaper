@@ -1,7 +1,257 @@
-﻿@page "/"
+@page "/"
+@rendermode InteractiveServer
+@using GoCheaper.Web.Services
+@inject UserSession UserSession
 
-<PageTitle>Home</PageTitle>
+<PageTitle>GoCheaper — Affordable Ride Sharing</PageTitle>
 
-<h1>Hello, world!</h1>
+<AuthorizeView>
 
-Welcome to your new app.
+    <!-- ════════════════════════════════════════════════════
+         Logged-in: personalised quick-access dashboard
+    ════════════════════════════════════════════════════ -->
+    <Authorized>
+        <div class="container py-5">
+            <div class="text-center mb-5">
+                <div class="d-inline-flex align-items-center gap-3 mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="48" height="48">
+                        <rect width="64" height="64" rx="14" fill="#1d4ed8" />
+                        <rect x="7" y="38" width="50" height="15" rx="4" fill="white" />
+                        <path d="M15 38 L20 24 L44 24 L49 38 Z" fill="white" />
+                        <path d="M22 37 L25 27 L39 27 L42 37 Z" fill="#93c5fd" />
+                        <path d="M16 37 L18 27 L22 27 L21 37 Z" fill="#93c5fd" opacity="0.5" />
+                        <circle cx="19" cy="53" r="8" fill="#1d4ed8" />
+                        <circle cx="45" cy="53" r="8" fill="#1d4ed8" />
+                        <circle cx="19" cy="53" r="3.5" fill="#bfdbfe" />
+                        <circle cx="45" cy="53" r="3.5" fill="#bfdbfe" />
+                        <circle cx="51" cy="13" r="11" fill="#15803d" />
+                        <rect x="49.5" y="6" width="3" height="8" rx="1" fill="white" />
+                        <polygon points="46,14 56,14 51,21" fill="white" />
+                    </svg>
+                    <span class="fs-3 fw-bold">
+                        <span class="text-primary">Go</span><span style="color:#15803d">Cheaper</span>
+                    </span>
+                </div>
+                <h2 class="fw-bold mb-1">Welcome back, @UserSession.FullName!</h2>
+                <p class="text-muted">What would you like to do today?</p>
+            </div>
+
+            <div class="row g-4 justify-content-center" style="max-width:740px;margin:auto">
+                @if (UserSession.IsDriver)
+                {
+                    <div class="col-12 col-sm-6">
+                        <div class="card h-100 shadow-sm text-center p-4">
+                            <div class="mb-2" style="font-size:2.5rem">🚗</div>
+                            <h5 class="fw-semibold">My Trips</h5>
+                            <p class="text-muted small flex-grow-1">Manage your posted trips and see passenger bookings.</p>
+                            <a href="/my-trips" class="btn btn-outline-primary btn-sm">View My Trips</a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="card h-100 shadow-sm text-center p-4">
+                            <div class="mb-2" style="font-size:2.5rem">➕</div>
+                            <h5 class="fw-semibold">Post a Trip</h5>
+                            <p class="text-muted small flex-grow-1">Offer seats and share your travel costs with others.</p>
+                            <a href="/trips/create" class="btn btn-primary btn-sm">Create Trip</a>
+                        </div>
+                    </div>
+                }
+                @if (UserSession.IsPassenger)
+                {
+                    <div class="col-12 col-sm-6">
+                        <div class="card h-100 shadow-sm text-center p-4">
+                            <div class="mb-2" style="font-size:2.5rem">🔍</div>
+                            <h5 class="fw-semibold">Browse Trips</h5>
+                            <p class="text-muted small flex-grow-1">Find affordable rides to your destination.</p>
+                            <a href="/browse-trips" class="btn btn-outline-primary btn-sm">Browse Trips</a>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="card h-100 shadow-sm text-center p-4">
+                            <div class="mb-2" style="font-size:2.5rem">🎫</div>
+                            <h5 class="fw-semibold">My Bookings</h5>
+                            <p class="text-muted small flex-grow-1">View your upcoming booked trips at a glance.</p>
+                            <a href="/my-booked-trips" class="btn btn-outline-primary btn-sm">My Bookings</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </Authorized>
+
+    <!-- ════════════════════════════════════════════════════
+         Not logged in: full marketing landing page
+    ════════════════════════════════════════════════════ -->
+    <NotAuthorized>
+        <div style="overflow-x:hidden">
+
+            <!-- ── Hero ────────────────────────────────── -->
+            <div class="text-white py-5"
+                 style="margin:-1.5rem -0.75rem 0;background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%)">
+                <div class="container text-center py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="96" height="96"
+                         class="mb-4" style="filter:drop-shadow(0 6px 24px rgba(0,0,0,0.4))">
+                        <rect width="64" height="64" rx="14" fill="#1d4ed8" />
+                        <rect x="7" y="38" width="50" height="15" rx="4" fill="white" />
+                        <path d="M15 38 L20 24 L44 24 L49 38 Z" fill="white" />
+                        <path d="M22 37 L25 27 L39 27 L42 37 Z" fill="#93c5fd" />
+                        <path d="M16 37 L18 27 L22 27 L21 37 Z" fill="#93c5fd" opacity="0.5" />
+                        <circle cx="19" cy="53" r="8" fill="#1d4ed8" />
+                        <circle cx="45" cy="53" r="8" fill="#1d4ed8" />
+                        <circle cx="19" cy="53" r="3.5" fill="#bfdbfe" />
+                        <circle cx="45" cy="53" r="3.5" fill="#bfdbfe" />
+                        <circle cx="51" cy="13" r="11" fill="#15803d" />
+                        <rect x="49.5" y="6" width="3" height="8" rx="1" fill="white" />
+                        <polygon points="46,14 56,14 51,21" fill="white" />
+                    </svg>
+
+                    <h1 class="display-3 fw-bold mb-2 lh-1">
+                        Go<span style="color:#86efac">Cheaper</span>
+                    </h1>
+                    <p class="fs-5 mb-1">Share the journey. Split the cost.</p>
+                    <p class="mb-4" style="color:rgba(255,255,255,0.65)">
+                        A free, non-profit ride-sharing platform for drivers and passengers.
+                    </p>
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <a href="/register" class="btn btn-light btn-lg px-5 fw-semibold">Get Started Free</a>
+                        <a href="/login" class="btn btn-outline-light btn-lg px-4">Sign In</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Key values ──────────────────────────── -->
+            <div class="container py-5">
+                <div class="row g-4 text-center">
+                    <div class="col-12 col-md-4">
+                        <div class="py-2">
+                            <div class="mb-2" style="font-size:2.5rem">🆓</div>
+                            <h5 class="fw-semibold">Always Free</h5>
+                            <p class="text-muted small mb-0">
+                                No booking fees, no commissions, no hidden costs.
+                                The platform is completely free for both drivers and passengers.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="py-2">
+                            <div class="mb-2" style="font-size:2.5rem">🤝</div>
+                            <h5 class="fw-semibold">Non-Profit</h5>
+                            <p class="text-muted small mb-0">
+                                GoCheaper is run for the community, not for profit.
+                                No investors, no ads — just people helping people travel affordably.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="py-2">
+                            <div class="mb-2" style="font-size:2.5rem">💸</div>
+                            <h5 class="fw-semibold">Pay the Driver Directly</h5>
+                            <p class="text-muted small mb-0">
+                                No middleman. Agree on a price, choose your payment method,
+                                and settle directly with your driver — cash, MobilePay, or bank transfer.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── How it works (light bg) ─────────────── -->
+            <div style="margin:0 -0.75rem;background:#f1f5f9">
+                <div class="container py-5">
+                    <h2 class="text-center fw-bold mb-5">How it works</h2>
+                    <div class="row g-4 justify-content-center">
+                        <div class="col-12 col-md-4 text-center">
+                            <div class="rounded-circle bg-primary text-white d-inline-flex
+                                        align-items-center justify-content-center fw-bold fs-5 mb-3"
+                                 style="width:48px;height:48px">1</div>
+                            <h5 class="fw-semibold">Driver posts a trip</h5>
+                            <p class="text-muted small mb-0">
+                                Set your route, departure time, available seats, and price per seat.
+                                Passengers can discover your trip instantly.
+                            </p>
+                        </div>
+                        <div class="col-12 col-md-4 text-center">
+                            <div class="rounded-circle bg-primary text-white d-inline-flex
+                                        align-items-center justify-content-center fw-bold fs-5 mb-3"
+                                 style="width:48px;height:48px">2</div>
+                            <h5 class="fw-semibold">Passenger books a seat</h5>
+                            <p class="text-muted small mb-0">
+                                Browse available trips, pick one that fits, and book in seconds.
+                                Both driver and passenger receive an email confirmation.
+                            </p>
+                        </div>
+                        <div class="col-12 col-md-4 text-center">
+                            <div class="rounded-circle bg-primary text-white d-inline-flex
+                                        align-items-center justify-content-center fw-bold fs-5 mb-3"
+                                 style="width:48px;height:48px">3</div>
+                            <h5 class="fw-semibold">Travel &amp; pay directly</h5>
+                            <p class="text-muted small mb-0">
+                                Meet at the pickup point, enjoy the ride, and pay the driver
+                                in whichever way you both agreed on.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Open-source / Contribute ────────────── -->
+            <div class="container py-5">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8 col-lg-7 text-center">
+                        <div class="mb-3" style="font-size:2.5rem">🌍</div>
+                        <h2 class="fw-bold mb-3">Open Source &amp; Community-Driven</h2>
+                        <p class="text-muted mb-3">
+                            GoCheaper is a non-profit project built with .NET 10 and a passion for
+                            sustainable, affordable travel. There are no shareholders — only contributors
+                            who believe that getting around shouldn't cost a fortune.
+                        </p>
+                        <p class="text-muted mb-4">
+                            Whether you're a developer, a designer, or simply someone with great ideas,
+                            your contribution matters. The codebase is open source and welcomes
+                            pull requests, bug reports, and feature suggestions.
+                        </p>
+                        <a href="https://github.com/kenn65/GoCheaper"
+                           target="_blank" rel="noopener noreferrer"
+                           class="btn btn-dark btn-lg px-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                 viewBox="0 0 24 24" fill="currentColor" class="me-2"
+                                 style="vertical-align:-2px">
+                                <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205
+                                         11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04
+                                         -3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7
+                                         3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838
+                                         1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998
+                                         .108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466
+                                         -5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105
+                                         -3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405
+                                         1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23
+                                         .645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22
+                                         0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22
+                                         0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57
+                                         C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                            </svg>
+                            View on GitHub
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Final CTA (dark blue) ────────────────── -->
+            <div class="text-white"
+                 style="margin:0 -0.75rem -1.5rem;background:#1e3a8a">
+                <div class="container text-center py-5">
+                    <h2 class="fw-bold mb-3">Ready to go cheaper?</h2>
+                    <p class="mb-4" style="color:rgba(255,255,255,0.65)">
+                        Join the community of drivers and passengers making travel more affordable.
+                    </p>
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <a href="/register" class="btn btn-light btn-lg px-5 fw-semibold">Create a Free Account</a>
+                        <a href="/login" class="btn btn-outline-light btn-lg px-4">Sign In</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </NotAuthorized>
+
+</AuthorizeView>

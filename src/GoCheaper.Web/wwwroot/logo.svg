@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GoCheaper">
+  <!-- Blue rounded-square background -->
+  <rect width="64" height="64" rx="14" fill="#1d4ed8"/>
+
+  <!-- Car body (side profile, white) -->
+  <rect x="7" y="38" width="50" height="15" rx="4" fill="white"/>
+
+  <!-- Cabin (trapezoid above body) -->
+  <path d="M15 38 L20 24 L44 24 L49 38 Z" fill="white"/>
+
+  <!-- Windshield glass -->
+  <path d="M22 37 L25 27 L39 27 L42 37 Z" fill="#93c5fd"/>
+
+  <!-- Rear window (subtle) -->
+  <path d="M16 37 L18 27 L22 27 L21 37 Z" fill="#93c5fd" opacity="0.5"/>
+
+  <!-- Wheel arches — same colour as background so they cut into the body -->
+  <circle cx="19" cy="53" r="8" fill="#1d4ed8"/>
+  <circle cx="45" cy="53" r="8" fill="#1d4ed8"/>
+
+  <!-- Wheel hubs (light accent) -->
+  <circle cx="19" cy="53" r="3.5" fill="#bfdbfe"/>
+  <circle cx="45" cy="53" r="3.5" fill="#bfdbfe"/>
+
+  <!-- Green "price down" badge (top-right) -->
+  <circle cx="51" cy="13" r="11" fill="#15803d"/>
+
+  <!-- Down arrow: shaft -->
+  <rect x="49.5" y="6" width="3" height="8" rx="1" fill="white"/>
+  <!-- Down arrow: head -->
+  <polygon points="46,14 56,14 51,21" fill="white"/>
+</svg>
