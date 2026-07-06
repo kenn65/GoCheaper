@@ -127,37 +127,33 @@
                             }
                         </div>
 
-                        @if (model.IsDriver == true)
-                        {
-                            <div class="mb-4">
-                                <label class="form-label">Profile Picture</label>
+                        <div class="mb-4">
+                            <label class="form-label">Profile Picture</label>
 
-                                @{
-                                    // Show preview of newly selected image, or the saved one
-                                    var previewBase64 = model.DriverPictureBase64 ?? user.DriverPictureBase64;
-                                }
-                                @if (!string.IsNullOrEmpty(previewBase64))
-                                {
-                                    <div class="mb-2">
-                                        <img src="@ImageDataUrl(previewBase64)"
-                                             class="rounded border"
-                                             style="max-height:140px;max-width:100%;object-fit:contain;"
-                                             alt="Profile picture" />
-                                    </div>
-                                }
+                            @{
+                                var previewBase64 = model.DriverPictureBase64 ?? user.DriverPictureBase64;
+                            }
+                            @if (!string.IsNullOrEmpty(previewBase64))
+                            {
+                                <div class="mb-2">
+                                    <img src="@ImageDataUrl(previewBase64)"
+                                         class="rounded border"
+                                         style="max-height:140px;max-width:100%;object-fit:contain;"
+                                         alt="Profile picture" />
+                                </div>
+                            }
 
-                                <InputFile OnChange="HandleImageUpload" accept="image/*" class="form-control" />
-                                @if (!string.IsNullOrEmpty(pictureFileName))
-                                {
-                                    <div class="text-success small mt-1">&#10003; @pictureFileName selected</div>
-                                }
-                                @if (pictureError is not null)
-                                {
-                                    <div class="text-danger small mt-1">@pictureError</div>
-                                }
-                                <div class="form-text">JPEG or PNG, max 5 MB. Leave blank to keep current picture.</div>
-                            </div>
-                        }
+                            <InputFile OnChange="HandleImageUpload" accept="image/*" class="form-control" />
+                            @if (!string.IsNullOrEmpty(pictureFileName))
+                            {
+                                <div class="text-success small mt-1">&#10003; @pictureFileName selected</div>
+                            }
+                            @if (pictureError is not null)
+                            {
+                                <div class="text-danger small mt-1">@pictureError</div>
+                            }
+                            <div class="form-text">JPEG or PNG, max 5 MB. Leave blank to keep current picture.</div>
+                        </div>
 
                         <button class="btn btn-primary" @onclick="HandleSave" disabled="@isSaving">
                             @if (isSaving)
