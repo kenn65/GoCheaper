@@ -355,7 +355,7 @@ All handlers skip sending (with a warning log) if the target email address is em
 
 **`NotificationPublisher`** (singleton, `Services/`): After each successful email send, every handler calls `notificationPublisher.PublishAsync(userId, title, message)`. This publishes a `UserNotificationEvent` to the `user-notification` topic. Publish failures are swallowed (warning log only) — a Kafka outage must never fail an email send. Registered via `builder.Services.AddSingleton<NotificationPublisher>()` and requires `builder.AddKafkaProducer<string, string>("kafka")`.
 
-`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics on startup including `user-notification`. `CreateTopicsException` is thrown for the entire batch even when only some topics have issues — the catch loop must ignore both `ErrorCode.TopicAlreadyExists` **and** `ErrorCode.NoError` (the latter appears for topics that were actually created successfully in the same batch).
+`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics on startup including `user-notification`. Retries every 5 seconds until successful, catching all exceptions — `CreateTopicsException` results where every code is `TopicAlreadyExists` or `NoError` are treated as success. The `adminClient` is re-created each attempt.
 
 **Email templates** are HTML files in `Templates/` built as `<EmbeddedResource>`. `TemplateRenderer` replaces `{{Token}}` placeholders. Add a template by adding an `.html` file — the csproj glob `<EmbeddedResource Include="Templates\*.html" />` picks it up automatically.
 
@@ -508,6 +508,10 @@ appsettings.json  →  appsettings.AzureTest.json  →  env vars injected by Asp
 **Network:** Only `web` has external ingress. All four API services are internal — reachable only within the Container Apps environment via Aspire service discovery.
 
 **Kafka in Azure:** Runs as a container app — message history is not persisted across redeployments. Acceptable for the test environment.
+
+**Azure SQL + Managed Identity:** `Microsoft.Data.SqlClient 7.0.1` does not ship `Azure.Identity` as a dependency. Add `Azure.Identity` directly to each API project and register a custom `ManagedIdentitySqlAuthProvider : SqlAuthenticationProvider` using `DefaultAzureCredential` before `var builder`. Call `SqlAuthenticationProvider.SetProvider(SqlAuthenticationMethod.ActiveDirectoryDefault, new ManagedIdentitySqlAuthProvider())` at the top of `Program.cs`. Do **not** use `Microsoft.Data.SqlClient.Extensions.Azure` — it requires `Extensions.Abstractions [7.0.2, 8.0.0)` which is incompatible with SqlClient 7.0.1's `Extensions.Abstractions 1.0.0` and causes `AmbiguousMatchException`.
+
+**`KafkaTopicInitializer` retry pattern:** In Azure Container Apps, Kafka may not be fully ready when services start even after `.WaitFor(kafka)`. `KafkaTopicInitializer.StartAsync` must catch **all** exceptions (not just `CreateTopicsException`) and retry with a 5-second delay until topics are created. The `adminClient` must be re-created inside each retry loop iteration. `ServiceDefaults` raises `HostOptions.StartupTimeout` to 3 minutes to give the retry loop time to succeed. Consumers registered after `KafkaTopicInitializer` in `Program.cs` won't start until `StartAsync` returns, guaranteeing topics exist before first consume.
 
 ---
 

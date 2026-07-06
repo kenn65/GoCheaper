@@ -11,9 +11,6 @@ public class KafkaTopicInitializer(IConfiguration configuration, ILogger<KafkaTo
         var bootstrapServers = configuration.GetConnectionString("kafka")
             ?? throw new InvalidOperationException("Kafka connection string 'kafka' is not configured.");
 
-        using var adminClient = new AdminClientBuilder(
-            new AdminClientConfig { BootstrapServers = bootstrapServers }).Build();
-
         var topics = new[]
         {
             KafkaTopics.UserRegistered,
@@ -35,20 +32,38 @@ public class KafkaTopicInitializer(IConfiguration configuration, ILogger<KafkaTo
             ReplicationFactor = 1
         }).ToList();
 
-        try
+        while (!cancellationToken.IsCancellationRequested)
         {
-            await adminClient.CreateTopicsAsync(specs);
-            logger.LogInformation("Kafka topics ready: {Topics}", string.Join(", ", topics));
-        }
-        catch (CreateTopicsException ex)
-        {
-            foreach (var result in ex.Results)
+            try
             {
-                if (result.Error.Code is ErrorCode.TopicAlreadyExists or ErrorCode.NoError)
-                    logger.LogDebug("Topic already exists (OK): {Topic}", result.Topic);
-                else
-                    logger.LogError("Failed to create topic {Topic}: {Reason}", result.Topic, result.Error.Reason);
+                using var adminClient = new AdminClientBuilder(
+                    new AdminClientConfig { BootstrapServers = bootstrapServers }).Build();
+
+                await adminClient.CreateTopicsAsync(specs);
+                logger.LogInformation("Kafka topics ready: {Topics}", string.Join(", ", topics));
+                return;
             }
+            catch (CreateTopicsException ex)
+            {
+                var failed = ex.Results
+                    .Where(r => r.Error.Code is not (ErrorCode.TopicAlreadyExists or ErrorCode.NoError))
+                    .ToList();
+
+                if (failed.Count == 0)
+                {
+                    logger.LogInformation("Kafka topics ready (all pre-existing): {Topics}", string.Join(", ", topics));
+                    return;
+                }
+
+                logger.LogWarning("Topic creation errors, retrying in 5s: {Errors}",
+                    string.Join(", ", failed.Select(r => $"{r.Topic}: {r.Error.Reason}")));
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Kafka not ready, retrying in 5s...");
+            }
+
+            await Task.Delay(5000, cancellationToken);
         }
     }
 

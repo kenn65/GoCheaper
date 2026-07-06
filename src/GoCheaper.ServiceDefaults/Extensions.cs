@@ -26,6 +26,9 @@ public static class Extensions
 
         builder.Services.AddServiceDiscovery();
 
+        builder.Services.Configure<HostOptions>(options =>
+            options.StartupTimeout = TimeSpan.FromSeconds(180));
+
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
             // Turn on resilience by default. Raise timeouts above the 10 s defaults —
