@@ -32,7 +32,7 @@ var bookingDb  = sql.AddDatabase("bookingdb");
 var kafka = builder.AddKafka("kafka")
     .WithLifetime(ContainerLifetime.Persistent);
 
-if (builder.Environment.IsDevelopment())
+if (builder.Environment.EnvironmentName == "Development")
     kafka.WithKafkaUI();
 
 // ── Services ──────────────────────────────────────────────────────────────────
