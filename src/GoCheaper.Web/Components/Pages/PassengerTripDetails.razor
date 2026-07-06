@@ -24,7 +24,10 @@
         <div class="card shadow-sm">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
-                    <h5 class="mb-0">@_trip.From &rarr; @_trip.To</h5>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h5 class="mb-0">@_trip.From &rarr; @_trip.To</h5>
+                        <span class="badge @TripStatus.BadgeClass(_trip.DepartureTime)">@TripStatus.Compute(_trip.DepartureTime)</span>
+                    </div>
                     <small class="text-muted">
                         Driver: <a href="/driver/@_trip.DriverId">@_trip.DriverFullName</a>
                     </small>

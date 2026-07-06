@@ -147,7 +147,10 @@
                 <div class="card-header py-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
                         <div>
-                            <h2 class="h5 mb-1 fw-semibold">@_trip.From &rarr; @_trip.To</h2>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <h2 class="h5 mb-0 fw-semibold">@_trip.From &rarr; @_trip.To</h2>
+                                <span class="badge @TripStatus.BadgeClass(_trip.DepartureTime)">@TripStatus.Compute(_trip.DepartureTime)</span>
+                            </div>
                             <span class="text-muted small">Driver: <strong>@(_trip.DriverFullName == "Unknown Driver" && isOwner ? (UserSession.FullName ?? _trip.DriverFullName) : _trip.DriverFullName)</strong></span>
                         </div>
                         <div class="d-flex flex-wrap align-items-center gap-2">

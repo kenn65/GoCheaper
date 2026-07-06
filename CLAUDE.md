@@ -388,6 +388,18 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 | `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Passenger's bookings; mobile card layout / desktop table; driver name links to driver profile |
 | `DriverProfile.razor` | `/driver/{Id:guid}` | `[Authorize]` | Public driver profile; shows photo (or initial avatar), name, member since, phone |
 
+#### Trip status
+
+`Helpers/TripStatus.cs` — static helper used by all trip list and detail pages to derive a display status from `DepartureTime`:
+
+| Status | Condition | Badge colour |
+|---|---|---|
+| **Pending** | `DepartureTime` is null or in the future | `bg-primary` (blue) |
+| **Active** | `DepartureTime` ≤ now and < now − 2 days | `bg-success` (green) |
+| **Completed** | `DepartureTime` + 2 days ≤ now | `bg-secondary` (grey) |
+
+`TripStatus.Compute(DateTime?)` returns the label string; `TripStatus.BadgeClass(DateTime?)` returns the Bootstrap badge CSS class. Both are imported globally via `_Imports.razor`. Applied to: MyTrips, TripDetails, BrowseTrips, PassengerTripDetails, MyBookedTrips.
+
 #### Shared modal components (`Components/`)
 
 **`NotificationModal.razor`** — Bootstrap CSS-only modal for success/informational messages after an action. Parameters: `bool Show`, `string Title`, `string Message`, `EventCallback OnClose`. Renders a single **OK** button that fires `OnClose`. Used on pages where an action triggers an email to the current user: shows after login code sent, after booking, after profile save.

@@ -36,6 +36,9 @@
                                 <div class="fw-semibold">@b.From &rarr; @b.To</div>
                                 <small class="text-muted">@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</small>
                                 <div class="small mt-1">Driver: <a href="/driver/@b.DriverId">@b.DriverFullName</a></div>
+                                <div class="mt-1">
+                                    <span class="badge @TripStatus.BadgeClass(b.DepartureTime)">@TripStatus.Compute(b.DepartureTime)</span>
+                                </div>
                             </div>
                             <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">Details</a>
                         </div>
@@ -58,6 +61,7 @@
                             <th>From</th>
                             <th>To</th>
                             <th>Departure</th>
+                            <th>Status</th>
                             <th>Price</th>
                             <th>Seats</th>
                             <th></th>
@@ -71,6 +75,7 @@
                                 <td>@b.From</td>
                                 <td>@b.To</td>
                                 <td>@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                                <td><span class="badge @TripStatus.BadgeClass(b.DepartureTime)">@TripStatus.Compute(b.DepartureTime)</span></td>
                                 <td>@b.PricePerSeat.ToString("N2") @(b.Currency ?? "DKK")</td>
                                 <td>@b.SeatsCount</td>
                                 <td>
