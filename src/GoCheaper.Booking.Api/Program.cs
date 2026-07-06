@@ -73,7 +73,8 @@ builder.Services.AddScoped<RateDriverHandler>();
 builder.Services.AddScoped<GetDriverRatingsHandler>();
 
 builder.Services.AddHostedService<KafkaTopicInitializer>();
-builder.Services.AddHostedService<TripRatingEmailService>();
+builder.Services.AddSingleton<TripRatingEmailService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<TripRatingEmailService>());
 builder.Services.AddHostedService<UserEmailPatchService>();
 builder.Services.AddHostedService<TripCreatedConsumer>();
 builder.Services.AddHostedService<TripUpdatedConsumer>();
