@@ -518,7 +518,11 @@ appsettings.json  →  appsettings.AzureTest.json  →  env vars injected by Asp
 
 **Network:** Only `web` has external ingress. All four API services are internal — reachable only within the Container Apps environment via Aspire service discovery.
 
-**Kafka in Azure — single-replica requirement:** Kafka runs in KRaft mode (no ZooKeeper). ACA's default `maxReplicas: 10` causes autoscaling to multiple Kafka instances; multiple KRaft controllers fight over state and crash each other, losing all topic metadata. After **every** deploy via the Aspire publish wizard, run `scripts/post-deploy-azure.ps1` to lock Kafka to exactly one replica:
+**Kafka in Azure — single-replica requirement:** Kafka runs in KRaft mode (no ZooKeeper). ACA's default `maxReplicas: 10` causes autoscaling to multiple Kafka instances; multiple KRaft controllers fight over state and crash each other, losing all topic metadata.
+
+**Blazor Server sticky sessions:** Blazor Server keeps circuit state server-side and requires the same server instance for the lifetime of a SignalR connection. Aspire 13.x does not configure `stickySessionsAffinity: sticky` for the web container app, so ACA may route WebSocket frames to different replicas — button clicks appear to do nothing, state updates never reach the browser.
+
+After **every** deploy via the Aspire publish wizard, run `scripts/post-deploy-azure.ps1` to fix both:
 ```powershell
 .\scripts\post-deploy-azure.ps1         # defaults to rg-AzureTest
 # or for a different resource group:
