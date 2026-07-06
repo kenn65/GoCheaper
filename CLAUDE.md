@@ -174,6 +174,18 @@ Each handler is `AddScoped<THandler>()` in `Program.cs`. The Minimal API lambda 
 
 **Adding new authorized endpoints to Identity.Api:** use `.RequireAuthorization("ApiKeyAndJwt")` for any endpoint that requires a logged-in user, `.RequireAuthorization("ApiKeyOnly")` for public-facing flows (registration, login, etc.).
 
+### GoCheaper.ServiceDefaults
+
+Shared resilience, telemetry, and health check defaults referenced by all APIs. Key customisation in `Extensions.cs`:
+
+**Resilience timeouts** — raised from defaults to avoid false `OnTimeout` events during Docker cold-start:
+```csharp
+options.AttemptTimeout.Timeout          = TimeSpan.FromSeconds(30);
+options.TotalRequestTimeout.Timeout     = TimeSpan.FromSeconds(90);
+options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(90); // must be > 2× AttemptTimeout
+```
+`SamplingDuration` must be at least double `AttemptTimeout` — the framework throws `OptionsValidationException` if this constraint is violated.
+
 ### OpenAPI / Scalar
 
 `Microsoft.AspNetCore.OpenApi` 10.x uses **Microsoft.OpenApi 2.0** — all types are in the `Microsoft.OpenApi` namespace, **not** `Microsoft.OpenApi.Models`. Scalar UI is at `/scalar/v1`.
@@ -277,8 +289,16 @@ Vertical Slice Architecture, same auth pattern (copy of `Auth/` folder, same JWT
 | `GET /rate/{bookingId}?token=` | ApiKeyOnly | Returns `RatingInfoResponse(DriverFullName, DriverId, From, To, DepartureTime?, AlreadyRated)` for the rating page; 404 if token invalid |
 | `POST /rate/{bookingId}` | ApiKeyOnly | Body: `{Token, Stars(1-5), Comment?}` — saves rating; 409 if already rated |
 | `GET /drivers/{driverId}/ratings` | ApiKeyOnly | Returns `DriverRatingSummary(AverageRating, RatingCount, Recent[RatingEntry])` |
+| `POST /dev/trigger-rating-emails` | ApiKeyOnly | Dev helper: immediately runs `TripRatingEmailService.ProcessAsync` — no body needed |
+| `POST /dev/reset-rating/{bookingId}` | ApiKeyOnly | Dev helper: clears all rating fields on a booking so the email can be re-sent |
 
-**`TripRatingEmailService`** (`Services/`, registered as `IHostedService`): BackgroundService that polls every 30 minutes for `PassengerBooking` rows where `Trip.DepartureTime + 2 days <= DateTime.Now` and `RatingEmailSentAt is null`. Generates a Guid `RatingToken`, sets `RatingEmailSentAt`, then publishes `TripRatingRequestedEvent` to `trip-rating-requested`. Notification.Api sends an email with a one-time link: `{WebApp:BaseUrl}/rate/{bookingId}?token={token}`.
+**`TripRatingEmailService` DI registration:** Must be registered as both a singleton AND a hosted service so the dev trigger endpoint can inject it by concrete type. `AddHostedService<T>()` alone only registers it under `IHostedService` — Minimal API can't inject it and falls back to body-binding, causing a 400/serialization error. Correct pattern:
+```csharp
+builder.Services.AddSingleton<TripRatingEmailService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<TripRatingEmailService>());
+```
+
+**`TripRatingEmailService`** (`Services/`, registered as above): BackgroundService that polls every 30 minutes for `PassengerBooking` rows where `Trip.DepartureTime + 2 days <= DateTime.Now` and `RatingEmailSentAt is null`. Generates a Guid `RatingToken`, sets `RatingEmailSentAt`, then publishes `TripRatingRequestedEvent` to `trip-rating-requested`. Notification.Api sends an email with a one-time link: `{WebApp:BaseUrl}/rate/{bookingId}?token={token}`.
 
 **Rating fields on `PassengerBooking`:** `RatingToken (Guid?)`, `RatingEmailSentAt (DateTime?)`, `DriverRating (int?)`, `DriverRatingComment (string?, max 500)`, `RatedAt (DateTime?)`.
 
@@ -322,11 +342,18 @@ All handlers skip sending (with a warning log) if the target email address is em
 
 **Email templates** are HTML files in `Templates/` built as `<EmbeddedResource>`. `TemplateRenderer` replaces `{{Token}}` placeholders. Add a template by adding an `.html` file — the csproj glob `<EmbeddedResource Include="Templates\*.html" />` picks it up automatically.
 
-**Email logo:** All 7 templates embed the logo as a base64-encoded PNG `<img>` data URI (`data:image/png;base64,...`). Do **not** use inline SVG — Outlook.com strips SVG from emails.
+**Email logo:** All templates embed the logo as a base64-encoded PNG `<img>` data URI (`data:image/png;base64,...`). Do **not** use inline SVG — Outlook.com strips SVG from emails.
+
+**Email button gotcha — Outlook strips CSS gradients:** Never use `background:linear-gradient(...)` on `<a>` tags in email templates. Outlook ignores it, leaving white text invisible on a white background. Always wrap the `<a>` in a `<td bgcolor="#xxxxxx">` (HTML attribute, not CSS) with a matching solid `background-color` on the link itself:
+```html
+<td align="center" bgcolor="#3949ab" style="border-radius:8px;">
+  <a href="{{Link}}" style="background-color:#3949ab;color:#ffffff;...">CTA text</a>
+</td>
+```
 
 **Email sending:** Single `EmailSender` class (MailKit SMTP, `SecureSocketOptions.StartTls`, port 587) registered as `IEmailSender`. Reads `Smtp:Host`, `Smtp:Port`, `Smtp:Username`, `Smtp:Password`, `Smtp:FromEmail`, `Smtp:FromName` from config/user-secrets. Azure ACS has been removed.
 
-`WebApp:BaseUrl` controls the base URL in verification/reset email links.
+`WebApp:BaseUrl` controls the base URL in verification/reset/rating email links (set in Notification.Api config).
 
 ---
 
@@ -374,6 +401,9 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 - `CancelBookingAsync(tripId)` — cancel booking
 - `GetMyBookingAsync(tripId)` — check booking status for one trip
 - `GetBookedSeatsAsync(IEnumerable<Guid>)` — batch lookup of booked seat counts; used by `MyTrips.razor` and `TripDetails.razor` to display real counts alongside driver's trip data
+- `GetRatingInfoAsync(bookingId, token)` — fetch driver/trip info for the rating page (no JWT needed)
+- `SubmitRatingAsync(bookingId, token, stars, comment?)` — submit a rating (no JWT needed)
+- `GetDriverRatingsAsync(driverId)` — fetch `DriverRatingSummary` for DriverProfile display (no JWT needed)
 
 #### Route authorization
 
