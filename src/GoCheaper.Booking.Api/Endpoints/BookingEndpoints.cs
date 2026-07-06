@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GoCheaper.Booking.Api.Data;
 using GoCheaper.Booking.Api.Features.BookTrip;
 using GoCheaper.Booking.Api.Services;
 using GoCheaper.Booking.Api.Features.BrowseTrips;
@@ -110,6 +111,24 @@ public static class BookingEndpoints
             .RequireAuthorization("ApiKeyOnly")
             .WithName("TriggerRatingEmails")
             .WithSummary("Dev helper: immediately run the rating email background service");
+
+        // Dev-only: reset RatingEmailSentAt so the trigger can re-send
+        group.MapPost("/dev/reset-rating/{bookingId:guid}",
+            async (Guid bookingId, BookingDbContext db, CancellationToken ct) =>
+            {
+                var booking = await db.Bookings.FindAsync([bookingId], ct);
+                if (booking is null) return Results.NotFound();
+                booking.RatingEmailSentAt   = null;
+                booking.RatingToken         = null;
+                booking.DriverRating        = null;
+                booking.DriverRatingComment = null;
+                booking.RatedAt             = null;
+                await db.SaveChangesAsync(ct);
+                return Results.Ok($"Booking {bookingId} reset — re-run trigger-rating-emails to resend.");
+            })
+            .RequireAuthorization("ApiKeyOnly")
+            .WithName("ResetRating")
+            .WithSummary("Dev helper: clear rating fields so the email can be re-sent");
 
         group.MapGet("/drivers/{driverId:guid}/ratings",
             (Guid driverId, GetDriverRatingsHandler h, CancellationToken ct) =>
