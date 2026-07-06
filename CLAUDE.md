@@ -392,9 +392,9 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 
 **`NotificationModal.razor`** — Bootstrap CSS-only modal for success/informational messages after an action. Parameters: `bool Show`, `string Title`, `string Message`, `EventCallback OnClose`. Renders a single **OK** button that fires `OnClose`. Used on pages where an action triggers an email to the current user: shows after login code sent, after booking, after profile save.
 
-**`ConfirmModal.razor`** — Bootstrap CSS-only confirm dialog. Parameters: `bool Show`, `string Title`, `string Message`, `string ConfirmLabel` (default `"OK"`), `string CancelLabel` (default `"Cancel"`), `string ConfirmButtonClass` (default `"btn-danger"`), `bool ConfirmDisabled`, `EventCallback OnConfirm`, `EventCallback OnCancel`, `RenderFragment? ChildContent`. Use `ChildContent` for custom body content (e.g. "Type DELETE" inputs, reason textareas). Used for all destructive or significant confirmation flows; replaces inline expand-on-button patterns.
+**`ConfirmModal.razor`** — Bootstrap CSS-only confirm dialog with branded blue header (logo + "GoCheaper"), amber warning icon, and colored buttons. Parameters: `bool Show`, `string Title`, `string Message`, `string ConfirmLabel` (default `"OK"`), `string CancelLabel` (default `"Cancel"`), `string ConfirmButtonClass` (default `"btn-success"` — green), `bool ConfirmDisabled`, `EventCallback OnConfirm`, `EventCallback OnCancel`, `RenderFragment? ChildContent`. Cancel button is always `btn-danger` (red). Use `ChildContent` for custom body content (e.g. "Type DELETE" inputs, reason textareas). Used for all destructive or significant confirmation flows; replaces inline expand-on-button patterns.
 
-Both modals use pure Blazor conditional rendering (`show d-block` CSS class) — no Bootstrap JS or JSInterop. Click on backdrop does not dismiss them (ConfirmModal intentionally lacks backdrop-click handler to prevent accidental dismissal on confirms).
+Both modals use pure Blazor conditional rendering (`show d-block` CSS class) — no Bootstrap JS or JSInterop. `NotificationModal` closes on backdrop click; `ConfirmModal` intentionally lacks a backdrop-click handler to prevent accidental dismissal.
 
 #### NavMenu
 

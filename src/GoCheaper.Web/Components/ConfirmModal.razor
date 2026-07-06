@@ -1,26 +1,54 @@
 @if (Show)
 {
-    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background:rgba(0,0,0,.45);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow">
-                <div class="modal-header border-0 pb-1">
-                    <h5 class="modal-title fw-semibold">@Title</h5>
-                    <button type="button" class="btn-close" @onclick="HandleCancel" aria-label="Close"></button>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog"
+         style="background:rgba(0,0,0,.5);">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:460px" @onclick:stopPropagation>
+            <div class="modal-content border-0 shadow-lg" style="border-radius:14px;overflow:hidden">
+
+                <!-- Branded header -->
+                <div class="d-flex align-items-center gap-2 px-4 py-3"
+                     style="background:linear-gradient(135deg,#0d6efd 0%,#0a58ca 100%)">
+                    <img src="data:image/png;base64,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"
+                         width="28" height="28" alt="GoCheaper" />
+                    <span class="fw-bold text-white" style="font-size:1rem;letter-spacing:.4px">GoCheaper</span>
+                    <button type="button" class="btn-close btn-close-white ms-auto"
+                            @onclick="HandleCancel" aria-label="Close"></button>
                 </div>
-                <div class="modal-body pt-1">
+
+                <!-- Warning icon + title + body -->
+                <div class="px-4 pt-4 pb-2">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+                            <circle cx="19" cy="19" r="19" fill="#fff3cd"/>
+                            <circle cx="19" cy="19" r="14" fill="#ffc107"/>
+                            <rect x="17.5" y="11" width="3" height="10" rx="1.5" fill="white"/>
+                            <circle cx="19" cy="26" r="1.8" fill="white"/>
+                        </svg>
+                        <h5 class="fw-bold mb-0" style="color:#1a1a2e;font-size:1.1rem">@Title</h5>
+                    </div>
                     @if (ChildContent is not null)
                     {
                         @ChildContent
                     }
                     else if (!string.IsNullOrEmpty(Message))
                     {
-                        <p class="mb-0 text-muted">@Message</p>
+                        <p class="text-muted mb-0" style="font-size:.92rem;line-height:1.5">@Message</p>
                     }
                 </div>
-                <div class="modal-footer border-0 pt-1">
-                    <button type="button" class="btn btn-outline-secondary" @onclick="HandleCancel">@CancelLabel</button>
-                    <button type="button" class="btn @ConfirmButtonClass" @onclick="HandleConfirm" disabled="@ConfirmDisabled">@ConfirmLabel</button>
+
+                <!-- Buttons -->
+                <div class="px-4 pb-4 pt-3 d-flex justify-content-end gap-2">
+                    <button type="button"
+                            class="btn btn-danger fw-semibold"
+                            style="border-radius:8px;min-width:90px"
+                            @onclick="HandleCancel">@CancelLabel</button>
+                    <button type="button"
+                            class="btn @ConfirmButtonClass fw-semibold"
+                            style="border-radius:8px;min-width:90px"
+                            disabled="@ConfirmDisabled"
+                            @onclick="HandleConfirm">@ConfirmLabel</button>
                 </div>
+
             </div>
         </div>
     </div>
@@ -32,7 +60,7 @@
     [Parameter] public string           Message            { get; set; } = "";
     [Parameter] public string           ConfirmLabel       { get; set; } = "OK";
     [Parameter] public string           CancelLabel        { get; set; } = "Cancel";
-    [Parameter] public string           ConfirmButtonClass { get; set; } = "btn-danger";
+    [Parameter] public string           ConfirmButtonClass { get; set; } = "btn-success";
     [Parameter] public bool             ConfirmDisabled    { get; set; }
     [Parameter] public EventCallback    OnConfirm          { get; set; }
     [Parameter] public EventCallback    OnCancel           { get; set; }
