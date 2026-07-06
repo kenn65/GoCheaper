@@ -80,6 +80,7 @@ Shared library with no external dependencies. Referenced by any service that pro
 | `BookingCancelled` | `booking-cancelled` |
 | `TripCancelledForPassenger` | `trip-cancelled-for-passenger` |
 | `UserNotification` | `user-notification` |
+| `TripRatingRequested` | `trip-rating-requested` |
 
 **Event record types** (`Events/`):
 
@@ -91,6 +92,7 @@ Shared library with no external dependencies. Referenced by any service that pro
 | `TripBookedEvent` | `TripId, From, To, DepartureTime?, PricePerSeat, NumberPlate?, PaymentMethod?, List<string> PickupPoints, PassengerUserId, PassengerEmail, PassengerFullName, DriverUserId, DriverEmail, DriverFullName, SeatsCount, TotalPrice, BookedAt` |
 | `BookingCancelledEvent` | `TripId, From, To, DepartureTime?, PassengerUserId, PassengerFullName, PassengerEmail, DriverUserId, DriverEmail, DriverFullName, SeatsCount, CancelledAt` |
 | `TripCancelledForPassengerEvent` | `TripId, PassengerUserId, From, To, DepartureTime?, DriverFullName, PassengerEmail, PassengerFullName, SeatsCount, Reason?, CancelledAt` |
+| `TripRatingRequestedEvent` | `BookingId, PassengerEmail, PassengerFullName, DriverFullName, DriverId, From, To, DepartureTime?, RatingToken` — published by Booking.Api's `TripRatingEmailService` 2 days after departure |
 | `UserNotificationEvent` | `UserId, Title, Message, CreatedAt` — published by Notification.Api to `user-notification` after each email send; intended for future in-app notification consumers |
 | `UserRegisteredEvent` | `UserId, FirstName, LastName, Email, VerificationToken` |
 | `UserProfileUpdatedEvent` | `UserId, FullName, Email?` — `Email` is nullable for backwards compatibility with old Kafka messages |
@@ -272,6 +274,13 @@ Vertical Slice Architecture, same auth pattern (copy of `Auth/` folder, same JWT
 | `POST /trips/{id}/book` | ApiKeyAndJwt | Book seats; prevents self-booking, duplicate booking, overbooking; publishes `TripBookedEvent` |
 | `DELETE /trips/{id}/book` | ApiKeyAndJwt | Cancel own booking |
 | `GET /trips/{id}/my-booking` | ApiKeyAndJwt | Returns `TripBookingStatusResponse(SeatsCount)` or 404 |
+| `GET /rate/{bookingId}?token=` | ApiKeyOnly | Returns `RatingInfoResponse(DriverFullName, DriverId, From, To, DepartureTime?, AlreadyRated)` for the rating page; 404 if token invalid |
+| `POST /rate/{bookingId}` | ApiKeyOnly | Body: `{Token, Stars(1-5), Comment?}` — saves rating; 409 if already rated |
+| `GET /drivers/{driverId}/ratings` | ApiKeyOnly | Returns `DriverRatingSummary(AverageRating, RatingCount, Recent[RatingEntry])` |
+
+**`TripRatingEmailService`** (`Services/`, registered as `IHostedService`): BackgroundService that polls every 30 minutes for `PassengerBooking` rows where `Trip.DepartureTime + 2 days <= DateTime.Now` and `RatingEmailSentAt is null`. Generates a Guid `RatingToken`, sets `RatingEmailSentAt`, then publishes `TripRatingRequestedEvent` to `trip-rating-requested`. Notification.Api sends an email with a one-time link: `{WebApp:BaseUrl}/rate/{bookingId}?token={token}`.
+
+**Rating fields on `PassengerBooking`:** `RatingToken (Guid?)`, `RatingEmailSentAt (DateTime?)`, `DriverRating (int?)`, `DriverRatingComment (string?, max 500)`, `RatedAt (DateTime?)`.
 
 **Response types** (`Features/Common/TripSummaryResponse.cs`):
 - `TripSummaryResponse` — browse list: `Id, From, To, TotalSeats, AvailableSeats, PricePerSeat, DepartureTime, NumberPlate, DriverFullName`
@@ -293,6 +302,7 @@ All email sending is event-driven — no HTTP endpoints. Six `BackgroundService`
 | `TripBookedConsumer` | `trip-booked` | `notification-trip-booked` | Latest | Two emails via `TripBookedHandler` |
 | `BookingCancelledConsumer` | `booking-cancelled` | `notification-booking-cancelled` | Latest | `BookingCancelledEmail.html` → driver |
 | `TripCancelledConsumer` | `trip-cancelled-for-passenger` | `notification-trip-cancelled-for-passenger` | Latest | `TripCancelledEmail.html` → passenger |
+| `TripRatingRequestedConsumer` | `trip-rating-requested` | `notification-trip-rating-requested` | Latest | `TripRatingEmail.html` → passenger with one-time rating link |
 
 All consumers use `AutoOffsetReset.Latest` — transactional emails are only sent for new events, never replayed.
 
@@ -386,7 +396,8 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 | `BrowseTrips.razor` | `/browse-trips` | `[Authorize]` | Passenger trip search; mobile card layout / desktop table; client-side From/To filter |
 | `PassengerTripDetails.razor` | `/passenger/trips/{Id:guid}` | `[Authorize]` | Passenger trip detail; shows available seats, book/cancel UI; `NotificationModal` on booking success → navigates to `/my-booked-trips` on OK; `ConfirmModal` for cancel booking → stays on page on both confirm and Cancel (reloads booking status on confirm) |
 | `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Passenger's bookings; mobile card layout / desktop table; driver name links to driver profile |
-| `DriverProfile.razor` | `/driver/{Id:guid}` | `[Authorize]` | Public driver profile; shows photo (or initial avatar), name, member since, phone |
+| `DriverProfile.razor` | `/driver/{Id:guid}` | `[Authorize]` | Public driver profile; shows photo (or initial avatar), name, member since, phone, average star rating + last 10 reviews (loaded in parallel with user data) |
+| `RateTrip.razor` | `/rate/{BookingId:guid}?token=` | Public | One-time driver rating page; token-authenticated (no JWT); shows trip details + 5-star selector + optional comment; redirects to thank-you state after submit; "Already Rated" state if rating was already submitted |
 
 #### Trip status
 

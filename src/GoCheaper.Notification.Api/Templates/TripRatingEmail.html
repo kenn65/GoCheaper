@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rate Your Driver</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:32px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#1a237e 0%,#3949ab 100%);padding:32px 40px;text-align:center;">
+              <p style="margin:0 0 4px;font-size:13px;color:rgba(255,255,255,0.8);letter-spacing:1px;text-transform:uppercase;">GoCheaper</p>
+              <img src="data:image/png;base64,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" width="48" height="48" alt="GoCheaper" style="display:block;margin:8px auto 4px;" />
+              <h1 style="margin:0;font-size:26px;font-weight:700;color:#ffffff;">How was your trip?</h1>
+              <p style="margin:10px 0 0;font-size:14px;color:rgba(255,255,255,0.85);">Rate your driver and help the GoCheaper community</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:36px 40px;">
+
+              <p style="margin:0 0 16px;font-size:15px;color:#333;">Hi <strong>{{PassengerFullName}}</strong>,</p>
+              <p style="margin:0 0 28px;font-size:15px;color:#555;line-height:1.6;">
+                Your trip with <strong>{{DriverFullName}}</strong> is now complete. Share your experience and help
+                other passengers in the community make informed choices.
+              </p>
+
+              <!-- Trip card -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#eef2ff;border:1px solid #c5cae9;border-radius:6px;margin-bottom:28px;">
+                <tr>
+                  <td style="padding:18px 20px;">
+                    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#3949ab;letter-spacing:1px;text-transform:uppercase;">Completed Trip</p>
+                    <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#333;">{{From}} &rarr; {{To}}</p>
+                    <p style="margin:0 0 4px;font-size:14px;color:#555;">&#128197; <strong>{{DepartureTime}}</strong></p>
+                    <p style="margin:0;font-size:14px;color:#555;">&#128100; Driver: <strong>{{DriverFullName}}</strong></p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Stars preview (decorative) -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;text-align:center;">
+                <tr>
+                  <td style="font-size:36px;letter-spacing:4px;color:#ffc107;">&#9733;&#9733;&#9733;&#9733;&#9733;</td>
+                </tr>
+                <tr>
+                  <td style="padding-top:8px;font-size:14px;color:#888;">Tap the button below to leave your rating</td>
+                </tr>
+              </table>
+
+              <!-- CTA button -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
+                <tr>
+                  <td align="center">
+                    <a href="{{RatingLink}}"
+                       style="display:inline-block;background:linear-gradient(135deg,#1a237e 0%,#3949ab 100%);color:#ffffff;text-decoration:none;font-size:16px;font-weight:700;padding:14px 40px;border-radius:8px;letter-spacing:0.3px;">
+                      Rate {{DriverFullName}} &rarr;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Note -->
+              <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8f9fa;border-left:4px solid #dee2e6;border-radius:4px;margin-bottom:8px;">
+                <tr>
+                  <td style="padding:12px 16px;font-size:13px;color:#888;line-height:1.5;">
+                    The rating link is personal to you and can only be used once. If you have already rated this trip, the link will show that the rating has been submitted.
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8f9fa;padding:20px 40px;text-align:center;border-top:1px solid #e9ecef;">
+              <p style="margin:0;font-size:12px;color:#999;">This is an automated notification from GoCheaper. Please do not reply to this email.</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

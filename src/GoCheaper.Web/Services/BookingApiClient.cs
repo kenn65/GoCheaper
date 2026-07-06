@@ -51,6 +51,21 @@ public record GetMyBookingsResult(List<PassengerBookingResponse>? Bookings, stri
 public record BookingActionResult(string? Error, bool Success);
 public record GetBookingStatusResult(BookingStatusResponse? Booking, bool Found, string? Error);
 
+public record RatingInfoResponse(
+    string    DriverFullName,
+    Guid      DriverId,
+    string    From,
+    string    To,
+    DateTime? DepartureTime,
+    bool      AlreadyRated);
+
+public record RatingEntry(int Stars, string? Comment, DateTime RatedAt);
+
+public record DriverRatingSummary(double AverageRating, int RatingCount, List<RatingEntry> Recent);
+
+public record GetRatingInfoResult(RatingInfoResponse? Info, string? Error, bool Success);
+public record GetDriverRatingsResult(DriverRatingSummary? Summary, string? Error, bool Success);
+
 public class BookingApiClient(
     IHttpClientFactory httpClientFactory,
     IConfiguration configuration,
@@ -207,5 +222,62 @@ public class BookingApiClient(
         }
 
         return new GetBookingStatusResult(null, false, $"Error {(int)response.StatusCode}");
+    }
+
+    public async Task<GetRatingInfoResult> GetRatingInfoAsync(Guid bookingId, Guid token)
+    {
+        using var request = BuildRequest(HttpMethod.Get, $"/api/bookings/rate/{bookingId}?token={token}");
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return new GetRatingInfoResult(null, $"Could not reach the booking service: {ex.Message}", false); }
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return new GetRatingInfoResult(null, "This rating link is invalid or has already been used.", false);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var info = await response.Content.ReadFromJsonAsync<RatingInfoResponse>();
+            return new GetRatingInfoResult(info, null, true);
+        }
+
+        return new GetRatingInfoResult(null, $"Error {(int)response.StatusCode}", false);
+    }
+
+    public async Task<BookingActionResult> SubmitRatingAsync(Guid bookingId, Guid token, int stars, string? comment)
+    {
+        using var request = BuildRequest(HttpMethod.Post, $"/api/bookings/rate/{bookingId}");
+        request.Content = JsonContent.Create(new { Token = token, Stars = stars, Comment = comment });
+
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return new BookingActionResult($"Could not reach the booking service: {ex.Message}", false); }
+
+        if (response.IsSuccessStatusCode)
+            return new BookingActionResult(null, true);
+
+        if (response.StatusCode == HttpStatusCode.Conflict)
+            return new BookingActionResult("This trip has already been rated.", false);
+
+        var error = await response.Content.ReadAsStringAsync();
+        return new BookingActionResult(string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
+    }
+
+    public async Task<GetDriverRatingsResult> GetDriverRatingsAsync(Guid driverId)
+    {
+        using var request = BuildRequest(HttpMethod.Get, $"/api/bookings/drivers/{driverId}/ratings");
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return new GetDriverRatingsResult(null, $"Could not reach the booking service: {ex.Message}", false); }
+
+        if (response.IsSuccessStatusCode)
+        {
+            var summary = await response.Content.ReadFromJsonAsync<DriverRatingSummary>();
+            return new GetDriverRatingsResult(summary, null, true);
+        }
+
+        return new GetDriverRatingsResult(null, $"Error {(int)response.StatusCode}", false);
     }
 }

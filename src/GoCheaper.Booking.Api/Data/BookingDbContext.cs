@@ -29,6 +29,7 @@ public class BookingDbContext(DbContextOptions<BookingDbContext> options) : DbCo
         {
             e.HasKey(b => b.Id);
             e.Property(b => b.PassengerFullName).HasMaxLength(200).IsRequired();
+            e.Property(b => b.DriverRatingComment).HasMaxLength(500);
             e.HasIndex(b => new { b.TripId, b.PassengerUserId }).IsUnique();
         });
 

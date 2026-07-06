@@ -17,6 +17,7 @@ builder.Services.AddSingleton<AuthCodeHandler>();
 builder.Services.AddSingleton<TripBookedHandler>();
 builder.Services.AddSingleton<BookingCancelledHandler>();
 builder.Services.AddSingleton<TripCancelledHandler>();
+builder.Services.AddSingleton<TripRatingRequestedHandler>();
 
 builder.Services.AddHostedService<KafkaTopicInitializer>();
 builder.Services.AddHostedService<UserRegisteredConsumer>();
@@ -25,6 +26,7 @@ builder.Services.AddHostedService<AuthCodeConsumer>();
 builder.Services.AddHostedService<TripBookedConsumer>();
 builder.Services.AddHostedService<BookingCancelledConsumer>();
 builder.Services.AddHostedService<TripCancelledConsumer>();
+builder.Services.AddHostedService<TripRatingRequestedConsumer>();
 
 var app = builder.Build();
 

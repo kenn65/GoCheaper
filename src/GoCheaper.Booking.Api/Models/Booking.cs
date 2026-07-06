@@ -10,5 +10,11 @@ public class PassengerBooking
     public int      SeatsCount        { get; set; } = 1;
     public DateTime BookedAt          { get; set; }
 
+    public Guid?     RatingToken         { get; set; }
+    public DateTime? RatingEmailSentAt   { get; set; }
+    public int?      DriverRating        { get; set; }
+    public string?   DriverRatingComment { get; set; }
+    public DateTime? RatedAt             { get; set; }
+
     public TripSnapshot Trip { get; set; } = null!;
 }

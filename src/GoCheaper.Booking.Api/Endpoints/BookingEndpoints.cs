@@ -2,10 +2,13 @@ using System.Security.Claims;
 using GoCheaper.Booking.Api.Features.BookTrip;
 using GoCheaper.Booking.Api.Features.BrowseTrips;
 using GoCheaper.Booking.Api.Features.Common;
+using GoCheaper.Booking.Api.Features.GetDriverRatings;
 using GoCheaper.Booking.Api.Features.GetMyBooking;
 using GoCheaper.Booking.Api.Features.GetMyBookings;
+using GoCheaper.Booking.Api.Features.GetRatingInfo;
 using GoCheaper.Booking.Api.Features.GetTripBookedSeats;
 using GoCheaper.Booking.Api.Features.GetTripDetail;
+using GoCheaper.Booking.Api.Features.RateDriver;
 
 namespace GoCheaper.Booking.Api.Endpoints;
 
@@ -75,5 +78,33 @@ public static class BookingEndpoints
             .Produces<TripBookingStatusResponse>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/rate/{bookingId:guid}",
+            (Guid bookingId, Guid token, GetRatingInfoHandler h, CancellationToken ct) =>
+                h.HandleAsync(bookingId, token, ct))
+            .RequireAuthorization("ApiKeyOnly")
+            .WithName("GetRatingInfo")
+            .WithSummary("Get trip and driver info for the rating page (token-authenticated)")
+            .Produces<RatingInfoResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapPost("/rate/{bookingId:guid}",
+            (Guid bookingId, RateDriverRequest req, RateDriverHandler h, CancellationToken ct) =>
+                h.HandleAsync(bookingId, req, ct))
+            .RequireAuthorization("ApiKeyOnly")
+            .WithName("RateDriver")
+            .WithSummary("Submit a driver rating for a completed trip")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status400BadRequest)
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status409Conflict);
+
+        group.MapGet("/drivers/{driverId:guid}/ratings",
+            (Guid driverId, GetDriverRatingsHandler h, CancellationToken ct) =>
+                h.HandleAsync(driverId, ct))
+            .RequireAuthorization("ApiKeyOnly")
+            .WithName("GetDriverRatings")
+            .WithSummary("Get aggregated ratings for a driver")
+            .Produces<DriverRatingSummary>(StatusCodes.Status200OK);
     }
 }

@@ -3,6 +3,7 @@
 @attribute [Authorize]
 @using GoCheaper.Web.Services
 @inject IdentityApiClient IdentityClient
+@inject BookingApiClient BookingClient
 
 <PageTitle>Driver Profile - GoCheaper</PageTitle>
 
@@ -17,7 +18,7 @@
     }
     else if (_user is not null)
     {
-        <div class="card shadow-sm">
+        <div class="card shadow-sm mb-3">
             <div class="card-body text-center">
                 @if (!string.IsNullOrWhiteSpace(_user.DriverPictureBase64))
                 {
@@ -41,23 +42,87 @@
                 }
             </div>
         </div>
+
+        <!-- Rating summary -->
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-3">Driver Rating</h6>
+
+                @if (_ratings is null)
+                {
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                }
+                else if (_ratings.RatingCount == 0)
+                {
+                    <p class="text-muted small mb-0">No ratings yet.</p>
+                }
+                else
+                {
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <span class="fw-bold" style="font-size:2.2rem;color:#ffc107;">@_ratings.AverageRating.ToString("F1")</span>
+                        <div>
+                            <div>
+                                @for (var i = 1; i <= 5; i++)
+                                {
+                                    <span style="color:@(i <= Math.Round(_ratings.AverageRating) ? "#ffc107" : "#dee2e6");font-size:1.4rem;">&#9733;</span>
+                                }
+                            </div>
+                            <div class="text-muted small">@_ratings.RatingCount rating(s)</div>
+                        </div>
+                    </div>
+
+                    @if (_ratings.Recent.Count > 0)
+                    {
+                        <hr class="my-2" />
+                        @foreach (var r in _ratings.Recent)
+                        {
+                            <div class="mb-3">
+                                <div>
+                                    @for (var i = 1; i <= 5; i++)
+                                    {
+                                        <span style="color:@(i <= r.Stars ? "#ffc107" : "#dee2e6");font-size:1rem;">&#9733;</span>
+                                    }
+                                    <span class="text-muted small ms-2">@r.RatedAt.ToString("dd MMM yyyy")</span>
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(r.Comment))
+                                {
+                                    <p class="text-muted small mb-0 mt-1" style="font-style:italic;">&ldquo;@r.Comment&rdquo;</p>
+                                }
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        </div>
     }
 </div>
 
 @code {
     [Parameter] public Guid Id { get; set; }
 
-    private RegisterResponse? _user;
+    private RegisterResponse?   _user;
+    private DriverRatingSummary? _ratings;
     private bool    _loading = true;
     private string? _error;
 
     protected override async Task OnInitializedAsync()
     {
-        var result = await IdentityClient.GetUserAsync(Id);
-        if (result.Success)
-            _user = result.User;
+        var userTask    = IdentityClient.GetUserAsync(Id);
+        var ratingsTask = BookingClient.GetDriverRatingsAsync(Id);
+
+        await Task.WhenAll(userTask, ratingsTask);
+
+        var userResult    = userTask.Result;
+        var ratingsResult = ratingsTask.Result;
+
+        if (userResult.Success)
+            _user = userResult.User;
         else
-            _error = result.Error ?? "Driver not found.";
+            _error = userResult.Error ?? "Driver not found.";
+
+        if (ratingsResult.Success)
+            _ratings = ratingsResult.Summary;
+
         _loading = false;
     }
 

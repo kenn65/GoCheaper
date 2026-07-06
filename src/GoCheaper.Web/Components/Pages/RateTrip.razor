@@ -1,0 +1,191 @@
+@page "/rate/{BookingId:guid}"
+@rendermode InteractiveServer
+@using GoCheaper.Web.Services
+@inject BookingApiClient BookingClient
+
+<PageTitle>Rate Your Driver - GoCheaper</PageTitle>
+
+<div class="container py-5" style="max-width:520px;">
+
+    @if (_loading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
+    }
+    else if (_error is not null)
+    {
+        <div class="card shadow-sm text-center p-4">
+            <div style="font-size:3rem;color:#dc3545;">&#9888;</div>
+            <h4 class="mt-3">Link Unavailable</h4>
+            <p class="text-muted">@_error</p>
+            <a href="/" class="btn btn-outline-primary mt-2">Go to GoCheaper</a>
+        </div>
+    }
+    else if (_submitted)
+    {
+        <div class="card shadow-sm text-center p-5">
+            <div style="font-size:3.5rem;color:#ffc107;">
+                @for (var i = 0; i < _selectedRating; i++)
+                {
+                    <span>&#9733;</span>
+                }
+            </div>
+            <h4 class="mt-3 fw-bold">Thank you!</h4>
+            <p class="text-muted">Your rating for <strong>@_info!.DriverFullName</strong> has been submitted. It helps other passengers make informed choices.</p>
+            <a href="/browse-trips" class="btn btn-primary mt-2">Browse Trips</a>
+        </div>
+    }
+    else if (_info is not null)
+    {
+        @if (_info.AlreadyRated)
+        {
+            <div class="card shadow-sm text-center p-4">
+                <div style="font-size:3rem;color:#ffc107;">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <h4 class="mt-3">Already Rated</h4>
+                <p class="text-muted">You have already submitted a rating for this trip. Thank you!</p>
+                <a href="/browse-trips" class="btn btn-outline-primary mt-2">Browse Trips</a>
+            </div>
+        }
+        else
+        {
+            <div class="card shadow-sm">
+                <div class="card-header text-center py-3"
+                     style="background:linear-gradient(135deg,#1a237e 0%,#3949ab 100%);">
+                    <p class="mb-0 small" style="color:rgba(255,255,255,0.75);letter-spacing:1px;text-transform:uppercase;">GoCheaper</p>
+                    <h4 class="text-white fw-bold mb-0 mt-1">Rate Your Driver</h4>
+                </div>
+
+                <div class="card-body p-4">
+
+                    <!-- Trip summary -->
+                    <div class="rounded mb-4 p-3" style="background:#eef2ff;border:1px solid #c5cae9;">
+                        <div class="fw-semibold fs-5">@_info.From &rarr; @_info.To</div>
+                        <div class="text-muted small mt-1">
+                            &#128197; @(_info.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")
+                        </div>
+                        <div class="text-muted small mt-1">
+                            &#128100; Driver: <strong class="text-body">@_info.DriverFullName</strong>
+                        </div>
+                    </div>
+
+                    <!-- Star selector -->
+                    <div class="text-center mb-3">
+                        <p class="fw-semibold mb-2">How many stars for @_info.DriverFullName?</p>
+                        <div>
+                            @for (var i = 1; i <= 5; i++)
+                            {
+                                var star = i;
+                                var filled = star <= (_hoverRating > 0 ? _hoverRating : _selectedRating);
+                                <span style="cursor:pointer;font-size:2.8rem;color:@(filled ? "#ffc107" : "#dee2e6");transition:color .1s;user-select:none;"
+                                      @onclick="() => _selectedRating = star"
+                                      @onmouseenter="() => _hoverRating = star"
+                                      @onmouseleave="() => _hoverRating = 0">&#9733;</span>
+                            }
+                        </div>
+                        @if (_selectedRating > 0)
+                        {
+                            <p class="text-muted small mt-1">@RatingLabel(_selectedRating)</p>
+                        }
+                    </div>
+
+                    <!-- Comment -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Comment <span class="text-muted fw-normal">(optional)</span></label>
+                        <textarea class="form-control" rows="3" maxlength="500"
+                                  placeholder="Share a few words about your experience..."
+                                  @bind="_comment"></textarea>
+                        <div class="text-muted small text-end mt-1">@(_comment?.Length ?? 0) / 500</div>
+                    </div>
+
+                    @if (_submitError is not null)
+                    {
+                        <div class="alert alert-danger py-2">@_submitError</div>
+                    }
+
+                    <button class="btn btn-primary w-100 fw-bold py-2"
+                            style="background:linear-gradient(135deg,#1a237e 0%,#3949ab 100%);border:none;"
+                            @onclick="SubmitAsync"
+                            disabled="@(_selectedRating == 0 || _busy)">
+                        @if (_busy)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Submitting&hellip;</span>
+                        }
+                        else
+                        {
+                            <span>Submit Rating</span>
+                        }
+                    </button>
+
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public Guid BookingId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "token")]
+    public Guid? Token { get; set; }
+
+    private RatingInfoResponse? _info;
+    private bool    _loading  = true;
+    private string? _error;
+    private bool    _submitted;
+    private bool    _busy;
+    private string? _submitError;
+
+    private int _selectedRating;
+    private int _hoverRating;
+    private string? _comment;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        if (Token is null)
+        {
+            _error   = "Rating link is missing the required token.";
+            _loading = false;
+            StateHasChanged();
+            return;
+        }
+
+        var result = await BookingClient.GetRatingInfoAsync(BookingId, Token.Value);
+        if (result.Success)
+            _info = result.Info;
+        else
+            _error = result.Error;
+
+        _loading = false;
+        StateHasChanged();
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (_selectedRating == 0 || Token is null) return;
+
+        _busy        = true;
+        _submitError = null;
+
+        var result = await BookingClient.SubmitRatingAsync(BookingId, Token.Value, _selectedRating, _comment);
+        if (result.Success)
+            _submitted = true;
+        else
+            _submitError = result.Error;
+
+        _busy = false;
+    }
+
+    private static string RatingLabel(int stars) => stars switch
+    {
+        1 => "Poor",
+        2 => "Fair",
+        3 => "Good",
+        4 => "Very Good",
+        5 => "Excellent!",
+        _ => ""
+    };
+}

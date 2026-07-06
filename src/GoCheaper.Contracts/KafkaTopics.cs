@@ -14,4 +14,5 @@ public static class KafkaTopics
     public const string TripCancelledForPassenger     = "trip-cancelled-for-passenger";
     public const string UserDeleted                   = "user-deleted";
     public const string UserNotification              = "user-notification";
+    public const string TripRatingRequested           = "trip-rating-requested";
 }
