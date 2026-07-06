@@ -8,7 +8,7 @@
         if (state.User.Identity?.IsAuthenticated == true)
         {
             // Authenticated but not authorised for this page (e.g. non-driver hitting a driver-only route)
-            Nav.NavigateTo("/my-profile");
+            Nav.NavigateTo("/");
         }
         else
         {

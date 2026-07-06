@@ -85,7 +85,7 @@
                 var key = Guid.NewGuid().ToString("N");
                 Cache.Set(key, result.Tokens, TimeSpan.FromSeconds(30));
 
-                var destination = string.IsNullOrEmpty(ReturnUrl) ? "/my-profile" : ReturnUrl;
+                var destination = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
                 Nav.NavigateTo(
                     $"/auth/complete?key={key}&returnUrl={Uri.EscapeDataString(destination)}",
                     forceLoad: true);
