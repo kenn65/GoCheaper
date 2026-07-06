@@ -4,7 +4,6 @@ var builder = DistributedApplication.CreateBuilder(args);
 var dbPassword = builder.AddParameter("sql-password", secret: true);
 
 // ── Application secrets ───────────────────────────────────────────────────────
-var aspnetEnv          = builder.AddParameter("aspnet-environment", secret: true);
 var jwtKey             = builder.AddParameter("jwt-key",              secret: true);
 var identityApiKey     = builder.AddParameter("identity-api-key",     secret: true);
 var tripsApiKey        = builder.AddParameter("trips-api-key",        secret: true);
@@ -38,7 +37,6 @@ if (builder.Environment.EnvironmentName == "Development")
 // ── Services ──────────────────────────────────────────────────────────────────
 var identityApi = builder.AddProject<Projects.GoCheaper_Identity_Api>("identity-api")
     .WithUrlForEndpoint("https", url => url.Url = "/scalar/v1")
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", aspnetEnv)
     .WithEnvironment("Jwt__Key",        jwtKey)
     .WithEnvironment("ApiKey__Value",   identityApiKey)
     .WithReference(identityDb)
@@ -46,8 +44,7 @@ var identityApi = builder.AddProject<Projects.GoCheaper_Identity_Api>("identity-
     .WaitFor(sql)
     .WaitFor(kafka);
 
-builder.AddProject<Projects.GoCheaper_Notification_Api>("notification-api")
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", aspnetEnv)
+var notificationApi = builder.AddProject<Projects.GoCheaper_Notification_Api>("notification-api")
     .WithEnvironment("ApiKey__Value",    notificationApiKey)
     .WithEnvironment("Smtp__Username",   smtpUsername)
     .WithEnvironment("Smtp__Password",   smtpPassword)
@@ -57,7 +54,6 @@ builder.AddProject<Projects.GoCheaper_Notification_Api>("notification-api")
 
 var tripsApi = builder.AddProject<Projects.GoCheaper_Trips_Api>("trips-api")
     .WithUrlForEndpoint("https", url => url.Url = "/scalar/v1")
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", aspnetEnv)
     .WithEnvironment("Jwt__Key",        jwtKey)
     .WithEnvironment("ApiKey__Value",   tripsApiKey)
     .WithReference(tripsDb)
@@ -67,7 +63,6 @@ var tripsApi = builder.AddProject<Projects.GoCheaper_Trips_Api>("trips-api")
 
 var bookingApi = builder.AddProject<Projects.GoCheaper_Booking_Api>("booking-api")
     .WithUrlForEndpoint("https", url => url.Url = "/scalar/v1")
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT", aspnetEnv)
     .WithEnvironment("Jwt__Key",        jwtKey)
     .WithEnvironment("ApiKey__Value",   bookingApiKey)
     .WithReference(bookingDb)
@@ -75,9 +70,8 @@ var bookingApi = builder.AddProject<Projects.GoCheaper_Booking_Api>("booking-api
     .WaitFor(sql)
     .WaitFor(kafka);
 
-builder.AddProject<Projects.GoCheaper_Web>("web")
+var web = builder.AddProject<Projects.GoCheaper_Web>("web")
     .WithExternalHttpEndpoints()
-    .WithEnvironment("ASPNETCORE_ENVIRONMENT",  aspnetEnv)
     .WithEnvironment("ApiKey__IdentityApi",     identityApiKey)
     .WithEnvironment("ApiKey__TripsApi",        tripsApiKey)
     .WithEnvironment("ApiKey__BookingApi",      bookingApiKey)
@@ -87,5 +81,17 @@ builder.AddProject<Projects.GoCheaper_Web>("web")
     .WaitFor(identityApi)
     .WaitFor(tripsApi)
     .WaitFor(bookingApi);
+
+// ASPNETCORE_ENVIRONMENT is injected as a literal string only during publish so
+// each service loads appsettings.AzureTest.json in Azure Container Apps.
+// A parameter reference causes "unsupported resource type: annotated.string".
+if (builder.ExecutionContext.IsPublishMode)
+{
+    identityApi.WithEnvironment("ASPNETCORE_ENVIRONMENT",     "AzureTest");
+    notificationApi.WithEnvironment("ASPNETCORE_ENVIRONMENT", "AzureTest");
+    tripsApi.WithEnvironment("ASPNETCORE_ENVIRONMENT",        "AzureTest");
+    bookingApi.WithEnvironment("ASPNETCORE_ENVIRONMENT",      "AzureTest");
+    web.WithEnvironment("ASPNETCORE_ENVIRONMENT",             "AzureTest");
+}
 
 builder.Build().Run();
