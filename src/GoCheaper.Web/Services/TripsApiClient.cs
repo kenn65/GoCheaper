@@ -46,7 +46,7 @@ public class TripsApiClient(
     AuthCookieService authCookieService,
     IdentityApiClient identityApiClient)
 {
-    private readonly string _apiKey = configuration["ApiKey:Value"] ?? "";
+    private readonly string _apiKey = configuration["ApiKey:TripsApi"] ?? "";
 
     private HttpClient CreateClient() => httpClientFactory.CreateClient("trips-api");
 

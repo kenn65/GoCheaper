@@ -16,18 +16,30 @@ dotnet tool install --global dotnet-ef          # install once if missing
 dotnet-ef migrations add <Name> --project src/GoCheaper.Identity.Api --output-dir Data/Migrations
 dotnet-ef migrations add <Name> --project src/GoCheaper.Trips.Api    --output-dir Data/Migrations
 dotnet-ef migrations add <Name> --project src/GoCheaper.Booking.Api  --output-dir Data/Migrations
-
-# Notification.Api — SMTP/Gmail (only email sender — ACS has been removed)
-dotnet user-secrets set "Smtp:Host"      "smtp.gmail.com" --project src/GoCheaper.Notification.Api
-dotnet user-secrets set "Smtp:Port"      "587"            --project src/GoCheaper.Notification.Api
-dotnet user-secrets set "Smtp:Username"  "..."            --project src/GoCheaper.Notification.Api
-dotnet user-secrets set "Smtp:Password"  "..."            --project src/GoCheaper.Notification.Api
-dotnet user-secrets set "Smtp:FromEmail" "..."            --project src/GoCheaper.Notification.Api
-dotnet user-secrets set "Smtp:FromName"  "GoCheaper"      --project src/GoCheaper.Notification.Api
-
-# AppHost SQL Server password
-dotnet user-secrets set "Parameters:sql-password" "..." --project src/GoCheaper.AppHost
 ```
+
+## Local secrets
+
+All secrets for local development are in `src/GoCheaper.AppHost/appsettings.Development.json` (git-ignored). This file is the single source of truth for local parameter values — do not use `dotnet user-secrets` for new secrets. The file contains:
+
+```json
+{
+  "Parameters": {
+    "sql-password":        "...",
+    "aspnet-environment":  "Development",
+    "jwt-key":             "...",
+    "identity-api-key":    "...",
+    "trips-api-key":       "...",
+    "booking-api-key":     "...",
+    "notification-api-key":"...",
+    "smtp-username":       "...",
+    "smtp-password":       "...",
+    "smtp-from-email":     "..."
+  }
+}
+```
+
+Aspire injects these as environment variables into each service at startup, overriding anything in the service's own `appsettings.Development.json`.
 
 ## Architecture
 
@@ -47,8 +59,10 @@ src/
 
 ### Aspire resource wiring (`AppHost/AppHost.cs`)
 
-- **SQL Server** — Docker container, `ContainerLifetime.Persistent`, port 1455, named volumes `gocheaper-sqlserver-data` / `gocheaper-sqlserver-backup`. SA password is an Aspire secret parameter (`sql-password`); local value lives in `AppHost/appsettings.Development.json` under `Parameters:sql-password`.
-- **Kafka** — Docker container, `ContainerLifetime.Persistent`, KafkaUI sidecar available at the Aspire dashboard link.
+- **SQL Server** — Docker container, `ContainerLifetime.Persistent`, port 1455, named volumes `gocheaper-sqlserver-data` / `gocheaper-sqlserver-backup`. SA password via `sql-password` Aspire parameter.
+- **Kafka** — Docker container, `ContainerLifetime.Persistent`. KafkaUI sidecar is added only in Development (`builder.Environment.IsDevelopment()`).
+- **All application secrets** (`jwt-key`, per-service API keys, SMTP) are Aspire parameters defined in AppHost and injected as environment variables into each service. Local values live in `AppHost/appsettings.Development.json`; Azure values are entered in the publish wizard.
+- `web` is the only service with `.WithExternalHttpEndpoints()` — all backend APIs have internal-only ingress when deployed to Azure Container Apps.
 - `identity-api` references `identitydb` and `kafka`; waits for both.
 - `notification-api` references `kafka`; waits for Kafka.
 - `trips-api` references `tripsdb` and `kafka`; waits for both.
@@ -389,11 +403,11 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 
 **`UserSession` (Scoped):** In-memory auth state for the lifetime of one SignalR circuit. Properties: `IsLoggedIn`, `UserId`, `Email`, `FullName`, `IsDriver`, `IsPassenger`, `AccessToken`, `AccessTokenExpiry`, `RefreshToken`, `RefreshTokenExpiry`, `IsAccessTokenExpired` (true when within 30 s of expiry). `LoadFromClaims(ClaimsPrincipal)` populates it from the cookie on circuit start (called from `Routes.razor`). `NotifyChange()` / `OnChange` event lets `NavMenu` re-render live.
 
-**`IdentityApiClient` (Scoped):** Named `HttpClient` (`"identity-api"`) with Aspire service discovery. Attaches `X-API-Key` and `Authorization: Bearer` to every request. Calls `EnsureFreshTokenAsync()` before any JWT-gated method — if `UserSession.IsAccessTokenExpired`, it calls `RefreshTokenAsync` and updates `UserSession` + cookie via `AuthCookieService.UpdateTokensAsync`. If the refresh token is also expired, `userSession.Clear()` is called and the next page render forces re-login.
+**`IdentityApiClient` (Scoped):** Named `HttpClient` (`"identity-api"`) with Aspire service discovery. Attaches `X-API-Key` (from `ApiKey:IdentityApi`) and `Authorization: Bearer` to every request. Calls `EnsureFreshTokenAsync()` before any JWT-gated method — if `UserSession.IsAccessTokenExpired`, it calls `RefreshTokenAsync` and updates `UserSession` + cookie via `AuthCookieService.UpdateTokensAsync`. If the refresh token is also expired, `userSession.Clear()` is called and the next page render forces re-login.
 
-**`TripsApiClient` (Scoped):** Named `HttpClient` (`"trips-api"`) with Aspire service discovery. Same `X-API-Key` + Bearer auth pattern. Calls `EnsureFreshTokenAsync()` via `IdentityApiClient.RefreshTokenAsync`. Methods: `GetMyTripsAsync`, `GetTripDetailsAsync`, `CreateTripAsync`, `UpdateTripAsync`, `DeleteTripAsync`.
+**`TripsApiClient` (Scoped):** Named `HttpClient` (`"trips-api"`) with Aspire service discovery. Uses `ApiKey:TripsApi` for the `X-API-Key` header. Calls `EnsureFreshTokenAsync()` via `IdentityApiClient.RefreshTokenAsync`. Methods: `GetMyTripsAsync`, `GetTripDetailsAsync`, `CreateTripAsync`, `UpdateTripAsync`, `DeleteTripAsync`.
 
-**`BookingApiClient` (Scoped):** Named `HttpClient` (`"booking-api"`) with Aspire service discovery. Same auth pattern. Methods:
+**`BookingApiClient` (Scoped):** Named `HttpClient` (`"booking-api"`) with Aspire service discovery. Uses `ApiKey:BookingApi` for the `X-API-Key` header. Each backend API has its own independent key — the Web reads `ApiKey:IdentityApi`, `ApiKey:TripsApi`, and `ApiKey:BookingApi` separately. Methods:
 - `BrowseTripsAsync(from?, to?)` — browse available trips
 - `GetTripDetailAsync(id)` — passenger trip detail
 - `GetMyBookingsAsync()` — current user's bookings (excludes trips where user is the driver)
@@ -470,12 +484,37 @@ All list pages (MyTrips, MyBookedTrips, BrowseTrips) render a **Bootstrap card l
 
 ---
 
+---
+
+### Deployment (Azure Container Apps)
+
+**Build configuration:** `AzureTest` is defined in `GoCheaper.slnx`. Use it when publishing via the Visual Studio Aspire publish wizard.
+
+**`appsettings.AzureTest.json`** exists for all five service projects (not AppHost). These files are committed to git and contain only non-sensitive values (JWT issuer/audience, SMTP host/port/from-name, logging levels). Secrets never go in these files.
+
+**Configuration layering in Azure:**
+```
+appsettings.json  →  appsettings.AzureTest.json  →  env vars injected by Aspire parameters
+```
+
+**Publish wizard parameters** — when publishing, the wizard prompts for all Aspire parameters. Enter `AzureTest` for `aspnet-environment` and a new strong password for `sql-password` (different from the dev value). All other values can be copied from `AppHost/appsettings.Development.json`.
+
+**After first deploy:** Update `WebApp:BaseUrl` in `src/GoCheaper.Notification.Api/appsettings.AzureTest.json` with the actual web Container App URL (e.g. `https://web.xxx.region.azurecontainerapps.io`). Until this is done, rating/verification email links point to localhost. Set `WebApp__BaseUrl` as an environment variable on `notification-api` in the Azure Portal immediately after first deploy without waiting for a code push.
+
+**Network:** Only `web` has external ingress. All four API services are internal — reachable only within the Container Apps environment via Aspire service discovery.
+
+**Kafka in Azure:** Runs as a container app — message history is not persisted across redeployments. Acceptable for the test environment.
+
+---
+
 ### Adding a new microservice
 
 1. `dotnet new webapi -n GoCheaper.<Name>.Api -o src/GoCheaper.<Name>.Api --framework net10.0`
 2. `dotnet sln add src/GoCheaper.<Name>.Api`
 3. Add project reference to `GoCheaper.ServiceDefaults` and call `builder.AddServiceDefaults()` in `Program.cs`
-4. Register in `AppHost.cs` with required `.WithReference(...)` and `.WaitFor(...)` calls
-5. Follow the `Auth/`, `Data/`, `Features/`, `Endpoints/` layout from Identity.Api
-6. To publish Kafka events, add `builder.AddKafkaProducer<string, string>("kafka")` and reference `GoCheaper.Contracts`
-7. Endpoints requiring a logged-in user: `.RequireAuthorization("ApiKeyAndJwt")`
+4. Register in `AppHost.cs` with required `.WithReference(...)`, `.WaitFor(...)`, and `.WithEnvironment(...)` calls — wire `aspnet-environment`, `jwt-key`, and a new per-service API key parameter
+5. Add the new API key parameter and its local value to `AppHost/appsettings.Development.json` under `Parameters`
+6. Create `appsettings.AzureTest.json` with non-sensitive overrides (JWT issuer/audience, logging)
+7. Follow the `Auth/`, `Data/`, `Features/`, `Endpoints/` layout from Identity.Api
+8. To publish Kafka events, add `builder.AddKafkaProducer<string, string>("kafka")` and reference `GoCheaper.Contracts`
+9. Endpoints requiring a logged-in user: `.RequireAuthorization("ApiKeyAndJwt")`

@@ -1,8 +1,11 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/GoCheaper.Booking.Api/GoCheaper.Booking.Api.csproj" />
-  </Folder>
+  <Configurations>
+    <BuildType Name="AzureTest" />
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+  </Configurations>
   <Project Path="src/GoCheaper.AppHost/GoCheaper.AppHost.csproj" />
+  <Project Path="src/GoCheaper.Booking.Api/GoCheaper.Booking.Api.csproj" />
   <Project Path="src/GoCheaper.Contracts/GoCheaper.Contracts.csproj" />
   <Project Path="src/GoCheaper.Identity.Api/GoCheaper.Identity.Api.csproj" />
   <Project Path="src/GoCheaper.Notification.Api/GoCheaper.Notification.Api.csproj" />

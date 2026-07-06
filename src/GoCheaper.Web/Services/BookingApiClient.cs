@@ -73,7 +73,7 @@ public class BookingApiClient(
     AuthCookieService authCookieService,
     IdentityApiClient identityApiClient)
 {
-    private readonly string _apiKey = configuration["ApiKey:Value"] ?? "";
+    private readonly string _apiKey = configuration["ApiKey:BookingApi"] ?? "";
 
     private HttpClient CreateClient() => httpClientFactory.CreateClient("booking-api");
 

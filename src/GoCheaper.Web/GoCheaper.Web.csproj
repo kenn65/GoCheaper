@@ -9,6 +9,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+    <Configurations>Debug;Release;AzureTest</Configurations>
   </PropertyGroup>
 
 </Project>

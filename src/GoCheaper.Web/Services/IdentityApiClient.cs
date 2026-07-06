@@ -37,7 +37,7 @@ public class IdentityApiClient(
     UserSession userSession,
     AuthCookieService authCookieService)
 {
-    private readonly string _apiKey = configuration["ApiKey:Value"] ?? "";
+    private readonly string _apiKey = configuration["ApiKey:IdentityApi"] ?? "";
 
     private HttpClient CreateClient() => httpClientFactory.CreateClient("identity-api");
 

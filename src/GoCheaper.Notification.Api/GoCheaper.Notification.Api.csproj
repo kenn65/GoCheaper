@@ -19,6 +19,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>667dc2ba-f011-4075-bf9c-2e460c9d3687</UserSecretsId>
+    <Configurations>Debug;Release;AzureTest</Configurations>
   </PropertyGroup>
 
 </Project>
