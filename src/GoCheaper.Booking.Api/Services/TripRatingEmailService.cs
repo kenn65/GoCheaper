@@ -24,7 +24,7 @@ public class TripRatingEmailService(
         }
     }
 
-    private async Task ProcessAsync(CancellationToken ct)
+    public async Task ProcessAsync(CancellationToken ct)
     {
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<BookingDbContext>();

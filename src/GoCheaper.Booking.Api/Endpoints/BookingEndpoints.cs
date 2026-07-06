@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GoCheaper.Booking.Api.Features.BookTrip;
+using GoCheaper.Booking.Api.Services;
 using GoCheaper.Booking.Api.Features.BrowseTrips;
 using GoCheaper.Booking.Api.Features.Common;
 using GoCheaper.Booking.Api.Features.GetDriverRatings;
@@ -98,6 +99,17 @@ public static class BookingEndpoints
             .Produces(StatusCodes.Status400BadRequest)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status409Conflict);
+
+        // Dev-only: manually trigger the rating email service
+        group.MapPost("/dev/trigger-rating-emails",
+            async (TripRatingEmailService svc, CancellationToken ct) =>
+            {
+                await svc.ProcessAsync(ct);
+                return Results.Ok("Rating email processing triggered.");
+            })
+            .RequireAuthorization("ApiKeyOnly")
+            .WithName("TriggerRatingEmails")
+            .WithSummary("Dev helper: immediately run the rating email background service");
 
         group.MapGet("/drivers/{driverId:guid}/ratings",
             (Guid driverId, GetDriverRatingsHandler h, CancellationToken ct) =>
