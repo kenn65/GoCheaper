@@ -20,7 +20,8 @@ public class KafkaTopicInitializer(IConfiguration configuration, ILogger<KafkaTo
             KafkaTopics.UserProfileUpdated,
             KafkaTopics.TripCreated,
             KafkaTopics.TripUpdated,
-            KafkaTopics.TripDeleted
+            KafkaTopics.TripDeleted,
+            KafkaTopics.UserDeleted
         };
 
         var specs = topics.Select(t => new TopicSpecification

@@ -12,4 +12,5 @@ public static class KafkaTopics
     public const string TripBooked              = "trip-booked";
     public const string BookingCancelled              = "booking-cancelled";
     public const string TripCancelledForPassenger     = "trip-cancelled-for-passenger";
+    public const string UserDeleted                   = "user-deleted";
 }

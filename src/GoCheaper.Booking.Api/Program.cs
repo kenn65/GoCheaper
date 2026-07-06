@@ -73,6 +73,7 @@ builder.Services.AddHostedService<TripUpdatedConsumer>();
 builder.Services.AddHostedService<TripDeletedConsumer>();
 builder.Services.AddHostedService<UserRegisteredConsumer>();
 builder.Services.AddHostedService<UserProfileUpdatedConsumer>();
+builder.Services.AddHostedService<UserDeletedConsumer>();
 
 builder.Services.AddOpenApi(options =>
 {

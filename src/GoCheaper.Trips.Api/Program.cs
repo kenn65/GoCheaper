@@ -70,6 +70,7 @@ builder.Services.AddHostedService<UserEmailPatchService>();
 builder.Services.AddHostedService<TripBootstrapPublisher>();
 builder.Services.AddHostedService<UserRegisteredConsumer>();
 builder.Services.AddHostedService<UserProfileUpdatedConsumer>();
+builder.Services.AddHostedService<UserDeletedConsumer>();
 
 builder.Services.AddOpenApi(options =>
 {

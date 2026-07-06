@@ -27,6 +27,7 @@ public record VerifyAuthCodeResult(AuthTokenResponse? Tokens, string? Error, boo
 public record RefreshResult(AuthTokenResponse? Tokens, string? Error, bool Success);
 public record GetUserResult(RegisterResponse? User, string? Error, bool Success);
 public record UpdateProfileResult(RegisterResponse? User, string? Error, bool Success);
+public record DeleteAccountResult(string? Error, bool Success);
 
 // ── Client ──────────────────────────────────────────────────────────────────
 
@@ -208,6 +209,25 @@ public class IdentityApiClient(
 
         var error = await response.Content.ReadAsStringAsync();
         return new UpdateProfileResult(null, string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
+    }
+
+    // ── Delete account ── (JWT required) ────────────────────────────────────
+
+    public async Task<DeleteAccountResult> DeleteAccountAsync(Guid userId)
+    {
+        await EnsureFreshTokenAsync();
+        using var request = BuildRequest(HttpMethod.Delete, $"/api/auth/users/{userId}");
+
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return new DeleteAccountResult($"Could not reach the identity service: {ex.Message}", false); }
+
+        if (response.StatusCode == HttpStatusCode.NoContent)
+            return new DeleteAccountResult(null, true);
+
+        var error = await response.Content.ReadAsStringAsync();
+        return new DeleteAccountResult(string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
     }
 
     // ── Refresh JWT ──────────────────────────────────────────────────────────
