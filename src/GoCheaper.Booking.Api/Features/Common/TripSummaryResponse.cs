@@ -7,6 +7,7 @@ public record TripSummaryResponse(
     int       TotalSeats,
     int       AvailableSeats,
     decimal   PricePerSeat,
+    string?   Currency,
     DateTime? DepartureTime,
     string?   NumberPlate,
     string    DriverFullName);
@@ -19,6 +20,7 @@ public record TripDetailResponse(
     int          TotalSeats,
     int          AvailableSeats,
     decimal      PricePerSeat,
+    string?      Currency,
     DateTime?    DepartureTime,
     string       DriverFullName,
     string?      Note,
@@ -33,6 +35,7 @@ public record MyBookingResponse(
     string    To,
     DateTime? DepartureTime,
     decimal   PricePerSeat,
+    string?   Currency,
     string    DriverFullName,
     int       SeatsCount);
 

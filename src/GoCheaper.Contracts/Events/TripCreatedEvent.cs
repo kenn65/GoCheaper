@@ -12,6 +12,7 @@ public record TripCreatedEvent(
     DateTime? DepartureTime,
     string? Note,
     string? PaymentMethod,
+    string? Currency,
     string? NumberPlate,
     List<string> PickupPoints,
     DateTime CreatedAt);

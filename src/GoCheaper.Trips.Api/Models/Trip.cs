@@ -11,6 +11,7 @@ public class Trip
     public DateTime? DepartureTime   { get; set; }
     public string?  Note             { get; set; }
     public string?  PaymentMethod    { get; set; }
+    public string?  Currency         { get; set; }
     public string?  CarPictureBase64 { get; set; }
     public string?  NumberPlate      { get; set; }
     public DateTime CreatedAt        { get; set; }

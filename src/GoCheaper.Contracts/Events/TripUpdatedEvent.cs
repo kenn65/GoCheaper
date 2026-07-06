@@ -11,5 +11,6 @@ public record TripUpdatedEvent(
     DateTime? DepartureTime,
     string? Note,
     string? PaymentMethod,
+    string? Currency,
     string? NumberPlate,
     List<string> PickupPoints);

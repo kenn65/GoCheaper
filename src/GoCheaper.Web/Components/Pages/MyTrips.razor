@@ -53,7 +53,7 @@
                         </div>
                         <div class="row row-cols-2 g-1 small">
                             <div class="col text-muted">Seats booked: <span class="text-body fw-semibold">@booked / @trip.TotalSeats</span></div>
-                            <div class="col text-muted">Price: <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") DKK</span></div>
+                            <div class="col text-muted">Price: <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") @(trip.Currency ?? "DKK")</span></div>
                         </div>
                     </div>
                 </div>
@@ -71,7 +71,7 @@
                             <th>To</th>
                             <th>Departure</th>
                             <th>Seats (booked / total)</th>
-                            <th>Price (DKK)</th>
+                            <th>Price</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -85,7 +85,7 @@
                                 <td>@trip.To</td>
                                 <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
                                 <td>@booked / @trip.TotalSeats</td>
-                                <td>@trip.PricePerSeat.ToString("N2")</td>
+                                <td>@trip.PricePerSeat.ToString("N2") @(trip.Currency ?? "DKK")</td>
                                 <td>
                                     <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
                                 </td>

@@ -90,6 +90,9 @@ namespace GoCheaper.Booking.Api.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Currency")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime?>("DepartureTime")
                         .HasColumnType("datetime2");
 

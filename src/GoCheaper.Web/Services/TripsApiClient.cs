@@ -12,7 +12,8 @@ public record TripSummaryResponse(
     int       BookedSeats,
     decimal   PricePerSeat,
     DateTime? DepartureTime,
-    string    DriverFullName);
+    string    DriverFullName,
+    string?   Currency = null);
 
 public record TripDetailsResponse(
     Guid         Id,
@@ -28,7 +29,8 @@ public record TripDetailsResponse(
     string?      PaymentMethod,
     string?      CarPictureBase64,
     string?      NumberPlate,
-    List<string> PickupPoints);
+    List<string> PickupPoints,
+    string?      Currency = null);
 
 public record GetMyTripsResult(List<TripSummaryResponse>? Trips, string? Error, bool Success);
 public record GetTripDetailsResult(TripDetailsResponse? Trip, string? Error, bool Success);

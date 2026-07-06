@@ -21,7 +21,7 @@ public class GetTripDetailHandler(BookingDbContext db)
         return Results.Ok(new TripDetailResponse(
             trip.TripId, trip.DriverId, trip.From, trip.To,
             trip.TotalSeats, trip.TotalSeats - booked,
-            trip.PricePerSeat, trip.DepartureTime, trip.DriverFullName,
+            trip.PricePerSeat, trip.Currency, trip.DepartureTime, trip.DriverFullName,
             trip.Note, trip.PaymentMethod, trip.NumberPlate, pickupPoints));
     }
 }

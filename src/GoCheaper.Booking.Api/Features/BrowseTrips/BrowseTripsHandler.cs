@@ -32,7 +32,7 @@ public class BrowseTripsHandler(BookingDbContext db)
                 var available = t.TotalSeats - booked;
                 return new TripSummaryResponse(
                     t.TripId, t.From, t.To, t.TotalSeats, available,
-                    t.PricePerSeat, t.DepartureTime, t.NumberPlate, t.DriverFullName);
+                    t.PricePerSeat, t.Currency, t.DepartureTime, t.NumberPlate, t.DriverFullName);
             })
             .Where(t => t.AvailableSeats > 0)
             .ToList();

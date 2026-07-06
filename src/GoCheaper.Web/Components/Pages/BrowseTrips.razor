@@ -71,7 +71,7 @@
                             </div>
                             <div class="row row-cols-2 g-1 small">
                                 <div class="col text-muted">Available: <span class="text-body fw-semibold">@trip.AvailableSeats / @trip.TotalSeats</span></div>
-                                <div class="col text-muted">Price: <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") DKK</span></div>
+                                <div class="col text-muted">Price: <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") @(trip.Currency ?? "DKK")</span></div>
                                 @if (!string.IsNullOrWhiteSpace(trip.NumberPlate))
                                 {
                                     <div class="col text-muted">Plate: <span class="text-body">@trip.NumberPlate</span></div>
@@ -92,7 +92,7 @@
                                 <th>To</th>
                                 <th>Departure</th>
                                 <th>Seats Available</th>
-                                <th>Price (DKK)</th>
+                                <th>Price</th>
                                 <th>Number Plate</th>
                                 <th>Driver</th>
                                 <th></th>
@@ -106,7 +106,7 @@
                                     <td>@trip.To</td>
                                     <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
                                     <td>@trip.AvailableSeats / @trip.TotalSeats</td>
-                                    <td>@trip.PricePerSeat.ToString("N2")</td>
+                                    <td>@trip.PricePerSeat.ToString("N2") @(trip.Currency ?? "DKK")</td>
                                     <td>@(trip.NumberPlate ?? "—")</td>
                                     <td>@trip.DriverFullName</td>
                                     <td>

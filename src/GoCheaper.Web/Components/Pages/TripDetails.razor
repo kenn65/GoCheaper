@@ -91,8 +91,18 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label fw-semibold">Currency</label>
+                            <InputSelect class="form-select" @bind-Value="_edit.Currency" disabled="@(_bookedSeats > 0)">
+                                <option value="DKK">DKK – Danish Krone</option>
+                                <option value="NOK">NOK – Norwegian Krone</option>
+                                <option value="SEK">SEK – Swedish Krona</option>
+                            </InputSelect>
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label fw-semibold">Payment Method</label>
-                            <InputText class="form-control" @bind-Value="_edit.PaymentMethod" placeholder="e.g. MobilePay, Cash, Bank Transfer" />
+                            <InputText class="form-control" @bind-Value="_edit.PaymentMethod"
+                                       placeholder="e.g. Cash, MobilePay (DK), Vipps (NO), Swish (SE)" />
                         </div>
 
                         <div class="mb-3">
@@ -194,7 +204,7 @@
                         <dd class="col-sm-8">@_bookedSeats booked / @_trip.TotalSeats total &nbsp;<span class="text-muted small">(@(_trip.TotalSeats - _bookedSeats) available)</span></dd>
 
                         <dt class="col-sm-4">Price per Seat</dt>
-                        <dd class="col-sm-8">@_trip.PricePerSeat.ToString("N2") DKK</dd>
+                        <dd class="col-sm-8">@_trip.PricePerSeat.ToString("N2") @(_trip.Currency ?? "DKK")</dd>
 
                         @if (_trip.NumberPlate is not null && string.IsNullOrEmpty(_trip.CarPictureBase64))
                         {
@@ -303,6 +313,7 @@
         _edit.DepartureTime = _trip.DepartureTime;
         _edit.Note          = _trip.Note;
         _edit.PaymentMethod = _trip.PaymentMethod;
+        _edit.Currency      = _trip.Currency ?? "DKK";
         _edit.NumberPlate   = _trip.NumberPlate;
         _editPickupPoints.Clear();
         _editPickupPoints.AddRange(_trip.PickupPoints);
@@ -340,6 +351,7 @@
             DepartureTime = locked ? (DateTime?)null : _edit.DepartureTime,
             _edit.Note,
             _edit.PaymentMethod,
+            Currency      = locked ? null : _edit.Currency,
             _edit.NumberPlate,
             PickupPoints  = validPickupPoints
         });
@@ -379,5 +391,6 @@
         [Required(ErrorMessage = "Number plate is required.")] public string? NumberPlate { get; set; }
         public string? Note          { get; set; }
         public string? PaymentMethod { get; set; }
+        public string  Currency      { get; set; } = "DKK";
     }
 }

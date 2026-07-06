@@ -68,9 +68,18 @@
             </div>
 
             <div class="mb-3">
+                <label class="form-label fw-semibold">Currency</label>
+                <InputSelect class="form-select" @bind-Value="_model.Currency">
+                    <option value="DKK">DKK – Danish Krone</option>
+                    <option value="NOK">NOK – Norwegian Krone</option>
+                    <option value="SEK">SEK – Swedish Krona</option>
+                </InputSelect>
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label fw-semibold">Payment Method (optional)</label>
                 <InputText class="form-control" @bind-Value="_model.PaymentMethod"
-                           placeholder="e.g. MobilePay, Cash, Bank Transfer" />
+                           placeholder="e.g. Cash, MobilePay (DK), Vipps (NO), Swish (SE)" />
             </div>
 
             <div class="mb-3">
@@ -144,6 +153,7 @@
             DepartureTime = _model.DepartureTime,
             _model.Note,
             _model.PaymentMethod,
+            _model.Currency,
             _model.NumberPlate,
             PickupPoints = validPickupPoints,
             DriverFullName = UserSession.FullName
@@ -168,8 +178,10 @@
         [Range(1, 50, ErrorMessage = "Seats must be between 1 and 50.")]
         public int TotalSeats { get; set; } = 1;
 
-        [Range(1, 99999, ErrorMessage = "Price per seat must be at least 1 DKK.")]
+        [Range(1, 99999, ErrorMessage = "Price per seat must be at least 1.")]
         public decimal PricePerSeat { get; set; }
+
+        public string Currency { get; set; } = "DKK";
 
         [Required(ErrorMessage = "Departure date and time is required.")]
         public DateTime? DepartureTime { get; set; }

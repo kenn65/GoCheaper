@@ -32,6 +32,7 @@ public class UpdateTripHandler(TripsDbContext db, IProducer<string, string> prod
         if (req.DepartureTime.HasValue) trip.DepartureTime = req.DepartureTime.Value;
         if (req.Note          is not null) trip.Note          = req.Note;
         if (req.PaymentMethod is not null) trip.PaymentMethod = req.PaymentMethod;
+        if (req.Currency      is not null) trip.Currency      = req.Currency;
         if (req.CarPictureBase64 is not null) trip.CarPictureBase64 = req.CarPictureBase64;
         if (req.NumberPlate      is not null) trip.NumberPlate      = req.NumberPlate;
 
@@ -64,7 +65,7 @@ public class UpdateTripHandler(TripsDbContext db, IProducer<string, string> prod
 
         await PublishAsync(new TripUpdatedEvent(
             trip.Id, driverName, snapshot?.Email ?? "", trip.From, trip.To, trip.TotalSeats, trip.PricePerSeat,
-            trip.DepartureTime, trip.Note, trip.PaymentMethod, trip.NumberPlate,
+            trip.DepartureTime, trip.Note, trip.PaymentMethod, trip.Currency, trip.NumberPlate,
             pickupPoints), ct);
 
         return Results.Ok(trip.ToSummary(driverName));

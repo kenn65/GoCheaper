@@ -38,7 +38,7 @@
                     <dd class="col-sm-8">@_trip.AvailableSeats of @_trip.TotalSeats</dd>
 
                     <dt class="col-sm-4">Price per Seat</dt>
-                    <dd class="col-sm-8">@_trip.PricePerSeat.ToString("N2") DKK</dd>
+                    <dd class="col-sm-8">@_trip.PricePerSeat.ToString("N2") @(_trip.Currency ?? "DKK")</dd>
 
                     @if (!string.IsNullOrWhiteSpace(_trip.NumberPlate))
                     {

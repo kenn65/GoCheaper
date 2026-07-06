@@ -13,7 +13,8 @@ public record BrowseTripSummary(
     decimal   PricePerSeat,
     DateTime? DepartureTime,
     string?   NumberPlate,
-    string    DriverFullName);
+    string    DriverFullName,
+    string?   Currency = null);
 
 public record BrowseTripDetail(
     Guid         Id,
@@ -28,7 +29,8 @@ public record BrowseTripDetail(
     string?      Note,
     string?      PaymentMethod,
     string?      NumberPlate,
-    List<string> PickupPoints);
+    List<string> PickupPoints,
+    string?      Currency = null);
 
 public record PassengerBookingResponse(
     Guid      TripId,
@@ -38,7 +40,8 @@ public record PassengerBookingResponse(
     DateTime? DepartureTime,
     decimal   PricePerSeat,
     string    DriverFullName,
-    int       SeatsCount);
+    int       SeatsCount,
+    string?   Currency = null);
 
 public record BookingStatusResponse(int SeatsCount);
 

@@ -68,6 +68,7 @@ public class TripCreatedConsumer(
                     DepartureTime    = @event.DepartureTime,
                     Note             = @event.Note,
                     PaymentMethod    = @event.PaymentMethod,
+                    Currency         = @event.Currency,
                     NumberPlate      = @event.NumberPlate,
                     PickupPointsJson = JsonSerializer.Serialize(@event.PickupPoints),
                     CreatedAt        = @event.CreatedAt,

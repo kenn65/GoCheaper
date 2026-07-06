@@ -27,6 +27,7 @@ public class GetMyBookingsHandler(BookingDbContext db)
                 b.Trip.To,
                 b.Trip.DepartureTime,
                 b.Trip.PricePerSeat,
+                b.Trip.Currency,
                 b.Trip.DriverFullName,
                 b.SeatsCount))
             .ToList();

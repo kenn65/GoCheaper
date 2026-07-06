@@ -13,6 +13,7 @@ public class TripSnapshot
     public DateTime? DepartureTime    { get; set; }
     public string?   Note             { get; set; }
     public string?   PaymentMethod    { get; set; }
+    public string?   Currency         { get; set; }
     public string?   NumberPlate      { get; set; }
     public string    PickupPointsJson { get; set; } = "[]";
     public DateTime  CreatedAt        { get; set; }

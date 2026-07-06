@@ -53,7 +53,7 @@ public class TripBootstrapPublisher(
                 var @event = new TripCreatedEvent(
                     trip.Id, trip.DriverId, driverName, driverEmail, trip.From, trip.To,
                     trip.TotalSeats, trip.PricePerSeat, trip.DepartureTime,
-                    trip.Note, trip.PaymentMethod, trip.NumberPlate,
+                    trip.Note, trip.PaymentMethod, trip.Currency, trip.NumberPlate,
                     pickupPoints, trip.CreatedAt);
 
                 try

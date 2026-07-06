@@ -55,6 +55,7 @@ public class TripUpdatedConsumer(
                 snapshot.DepartureTime    = @event.DepartureTime;
                 snapshot.Note             = @event.Note;
                 snapshot.PaymentMethod    = @event.PaymentMethod;
+                snapshot.Currency         = @event.Currency ?? snapshot.Currency;
                 snapshot.NumberPlate      = @event.NumberPlate;
                 snapshot.PickupPointsJson = JsonSerializer.Serialize(@event.PickupPoints);
                 snapshot.UpdatedAt        = DateTime.UtcNow;

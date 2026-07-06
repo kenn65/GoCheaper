@@ -8,6 +8,7 @@ public record CreateTripRequest(
     DateTime?     DepartureTime,
     string?       Note,
     string?       PaymentMethod,
+    string?       Currency,
     string?       CarPictureBase64,
     string?       NumberPlate,
     List<string>? PickupPoints,

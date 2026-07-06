@@ -37,6 +37,7 @@ public class CreateTripHandler(TripsDbContext db, IProducer<string, string> prod
             DepartureTime    = req.DepartureTime,
             Note             = req.Note,
             PaymentMethod    = req.PaymentMethod,
+            Currency         = req.Currency,
             CarPictureBase64 = req.CarPictureBase64,
             NumberPlate      = req.NumberPlate,
             CreatedAt        = DateTime.UtcNow
@@ -79,7 +80,7 @@ public class CreateTripHandler(TripsDbContext db, IProducer<string, string> prod
         await PublishCreatedAsync(new TripCreatedEvent(
             trip.Id, trip.DriverId, driverName, snapshot?.Email ?? "", trip.From, trip.To,
             trip.TotalSeats, trip.PricePerSeat, trip.DepartureTime,
-            trip.Note, trip.PaymentMethod, trip.NumberPlate,
+            trip.Note, trip.PaymentMethod, trip.Currency, trip.NumberPlate,
             pickupAddresses, trip.CreatedAt), ct);
 
         return Results.Created($"/api/trips/{trip.Id}", trip.ToSummary(driverName));
