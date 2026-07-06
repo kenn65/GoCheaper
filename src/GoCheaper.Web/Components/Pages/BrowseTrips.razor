@@ -67,7 +67,10 @@
                                     <small class="text-muted">@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</small>
                                     <div class="small mt-1">Driver: <span class="text-body">@trip.DriverFullName</span></div>
                                 </div>
-                                <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">Details</a>
+                                <div class="d-flex flex-column gap-1 ms-2 flex-shrink-0">
+                                    <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                    <a href="/passenger/trips/@trip.Id#book" class="btn btn-sm btn-primary">Book</a>
+                                </div>
                             </div>
                             <div class="row row-cols-2 g-1 small">
                                 <div class="col text-muted">Available: <span class="text-body fw-semibold">@trip.AvailableSeats / @trip.TotalSeats</span></div>
@@ -110,7 +113,10 @@
                                     <td>@(trip.NumberPlate ?? "—")</td>
                                     <td>@trip.DriverFullName</td>
                                     <td>
-                                        <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                        <div class="d-flex gap-1">
+                                            <a href="/passenger/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                            <a href="/passenger/trips/@trip.Id#book" class="btn btn-sm btn-primary">Book</a>
+                                        </div>
                                     </td>
                                 </tr>
                             }
