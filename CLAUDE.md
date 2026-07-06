@@ -93,6 +93,7 @@ Shared library with no external dependencies. Referenced by any service that pro
 | `TripBooked` | `trip-booked` |
 | `BookingCancelled` | `booking-cancelled` |
 | `TripCancelledForPassenger` | `trip-cancelled-for-passenger` |
+| `UserDeleted` | `user-deleted` |
 | `UserNotification` | `user-notification` |
 | `TripRatingRequested` | `trip-rating-requested` |
 
@@ -200,6 +201,12 @@ options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(90); // must be >
 ```
 `SamplingDuration` must be at least double `AttemptTimeout` — the framework throws `OptionsValidationException` if this constraint is violated.
 
+**Host startup timeout** — raised to 3 minutes so `KafkaTopicInitializer.StartAsync` retry loops have time to succeed before the Generic Host gives up:
+```csharp
+builder.Services.Configure<HostOptions>(options =>
+    options.StartupTimeout = TimeSpan.FromSeconds(180));
+```
+
 ### OpenAPI / Scalar
 
 `Microsoft.AspNetCore.OpenApi` 10.x uses **Microsoft.OpenApi 2.0** — all types are in the `Microsoft.OpenApi` namespace, **not** `Microsoft.OpenApi.Models`. Scalar UI is at `/scalar/v1`.
@@ -232,7 +239,7 @@ Vertical Slice Architecture, same auth pattern as Identity.Api (copy of `Auth/` 
 
 **`UserEmailPatchService`** (`Services/`, registered as `IHostedService` before `TripBootstrapPublisher`): One-shot BackgroundService. Checks if any `DriverSnapshot.Email` is empty; if so, creates a fresh Kafka consumer (group `trips-user-email-patch-v1`, `AutoOffsetReset.Earliest`, `EnablePartitionEof = true`) to replay historical `user-registered` events and patch emails. Exits when done or if all emails already set.
 
-`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates `user-registered`, `user-profile-updated`, `trip-created`, `trip-updated`, and `trip-deleted` topics.
+`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates `user-registered`, `user-profile-updated`, `trip-created`, `trip-updated`, `trip-deleted`, and `user-deleted` topics. Retries every 5 seconds until successful, catching all exceptions — `CreateTopicsException` results where every code is `TopicAlreadyExists` or `NoError` are treated as success. The `adminClient` is re-created each attempt.
 
 **REST endpoints** (`/api/trips/`):
 
@@ -286,7 +293,7 @@ Vertical Slice Architecture, same auth pattern (copy of `Auth/` folder, same JWT
 | `UserProfileUpdatedConsumer` | `user-profile-updated` | `booking-user-profile-updated` | Earliest | Upserts `DriverSnapshot.FullName` and `DriverSnapshot.Email` (if non-null in event) |
 | `UserDeletedConsumer` | `user-deleted` | `booking-user-deleted` | Earliest | GDPR cascade: deletes all `PassengerBooking` rows and `DriverSnapshot` for the deleted user |
 
-`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics including `trip-booked`, `booking-cancelled`, and `trip-cancelled-for-passenger`.
+`KafkaTopicInitializer` (registered as `IHostedService` **before** consumers) pre-creates all topics including `trip-booked`, `booking-cancelled`, `trip-cancelled-for-passenger`, and `user-deleted`. Retries every 5 seconds until successful, catching all exceptions — `CreateTopicsException` results where every code is `TopicAlreadyExists` or `NoError` are treated as success. The `adminClient` is re-created each attempt.
 
 **`UserEmailPatchService`** (`Services/`, registered as `IHostedService`): Startup BackgroundService that checks whether any `TripSnapshot.DriverEmail` is empty. If so, replays historical `user-registered` events (group `booking-user-email-patch-v1`, `AutoOffsetReset.Earliest`) and **upserts** `DriverSnapshot` rows — creates them if missing (handles drivers who registered before Booking.Api was deployed), patches email if empty. Then sweeps `TripSnapshot` and fills `DriverEmail` from the now-populated `DriverSnapshot`. Retries the sweep every 10 seconds for up to 2 minutes to handle the case where `UserProfileUpdatedConsumer` is still processing bootstrap events from Identity.Api's `UserProfileBootstrapPublisher`.
 
@@ -402,6 +409,8 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 
 **`/auth/signout` POST endpoint:** Clears the `gc_auth` cookie.
 
+**`/auth/verify-redirect` GET endpoint:** Signs out any existing session and does a clean server-side redirect to `/`. Used by `VerifyEmail.razor`'s "Go to Home" button to ensure the home page always loads fresh and anonymous after email verification, bypassing Blazor circuit state entirely. This avoids a broken logged-in state that could appear if a previously active session's cookie was present when the verification email link was opened.
+
 **`AuthCookieService` (Scoped, `IAsyncDisposable`):** Lazy-loads `wwwroot/js/auth.js` as an ES module via `IJSRuntime`. All JS interop calls catch `JSDisconnectedException` (including `DisposeAsync`) because the circuit may be disconnecting during navigation. Methods: `UpdateTokensAsync`, `UpdateRolesAsync`, `SignOutAsync`.
 
 **`UserSession` (Scoped):** In-memory auth state for the lifetime of one SignalR circuit. Properties: `IsLoggedIn`, `UserId`, `Email`, `FullName`, `IsDriver`, `IsPassenger`, `AccessToken`, `AccessTokenExpiry`, `RefreshToken`, `RefreshTokenExpiry`, `IsAccessTokenExpired` (true when within 30 s of expiry). `LoadFromClaims(ClaimsPrincipal)` populates it from the cookie on circuit start (called from `Routes.razor`). `NotifyChange()` / `OnChange` event lets `NavMenu` re-render live.
@@ -437,7 +446,8 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 | `Home.razor` | `/` | Public | Landing page with logo, stats dashboard (total trips/users counts), and sign-in/sign-up CTAs |
 | `Login.razor` | `/login` | Public | Email + password → OTP; on success shows `NotificationModal` ("Login Code Sent") then navigates to `/verify-code` after OK |
 | `VerifyCode.razor` | `/verify-code` | Public | 6-digit OTP → `/auth/complete` redirect |
-| `Register.razor` | `/register` | Public | Registration form; includes GDPR consent checkbox (must be checked before submit) |
+| `Register.razor` | `/register` | Public | Registration form; profile picture (JPEG/PNG ≤ 5 MB), MobilePhone, and GDPR consent are all required; on success shows an inline success card on the same page (no modal) |
+| `VerifyEmail.razor` | `/verify-email` | Public | `prerender: false`; reads `?userId=&token=` query params; calls `VerifyEmailAsync`; "Go to Home" navigates to `/auth/verify-redirect` (server redirect that signs out any stale session before returning to `/`) |
 | `PrivacyPolicy.razor` | `/privacy-policy` | Public | GDPR privacy policy page linked from registration and footer |
 | `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature; `NotificationModal` on save success; `ConfirmModal` with "Type DELETE" input for account delete; GDPR data export button downloads a ZIP containing PDF summary + JSON raw data |
 | `MyTrips.razor` | `/my-trips` | `DriverOnly` | Driver's trips; mobile card layout / desktop table; calls `BookingApiClient.GetBookedSeatsAsync` to merge real booked seat counts |
@@ -487,6 +497,7 @@ All list pages (MyTrips, MyBookedTrips, BrowseTrips) render a **Bootstrap card l
 - **`prerender: false`** — use `@rendermode @(new InteractiveServerRenderMode(prerender: false))` on pages that must not run during SSR (e.g. `MyProfile` which checks `UserSession.IsLoggedIn`).
 - **`forceLoad: true` + JS interop** — never call JS interop after `Nav.NavigateTo(url, forceLoad: true)`; the circuit disconnects and the call throws `JSDisconnectedException`. Use the `/auth/complete` server-redirect pattern instead.
 - **`gc_auth` cookie is encrypted** — the refresh token and all other claims are stored inside this HttpOnly encrypted blob. They are not visible in browser DevTools — that is expected and correct.
+- **`OperationCanceledException` disconnects the circuit** — Polly's resilience handler cancels timed-out requests with `OperationCanceledException` (or `TaskCanceledException`), which does NOT inherit from `HttpRequestException`. If an API client method only catches `HttpRequestException`, a timeout propagates uncaught through the Blazor event handler and disconnects the SignalR circuit. The component resets silently — the user sees "nothing happens." Rule: every API client method must explicitly `catch (OperationCanceledException)`, and every Blazor event handler that calls external services must have an outer `catch (Exception)` as a final safety net.
 
 ---
 
@@ -526,3 +537,5 @@ appsettings.json  →  appsettings.AzureTest.json  →  env vars injected by Asp
 7. Follow the `Auth/`, `Data/`, `Features/`, `Endpoints/` layout from Identity.Api
 8. To publish Kafka events, add `builder.AddKafkaProducer<string, string>("kafka")` and reference `GoCheaper.Contracts`
 9. Endpoints requiring a logged-in user: `.RequireAuthorization("ApiKeyAndJwt")`
+10. If the service uses SQL Server: add `Azure.Identity` NuGet package and add the `ManagedIdentitySqlAuthProvider` class + `SqlAuthenticationProvider.SetProvider(...)` call before `var builder` in `Program.cs` — see the Azure SQL + Managed Identity note in the Deployment section
+11. If the service uses Kafka: add `KafkaTopicInitializer` as the first `IHostedService` registration with the catch-all retry pattern — see the `KafkaTopicInitializer` retry pattern note in the Deployment section
