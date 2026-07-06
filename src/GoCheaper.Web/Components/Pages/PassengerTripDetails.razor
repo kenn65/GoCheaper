@@ -4,6 +4,7 @@
 @using GoCheaper.Web.Services
 @inject BookingApiClient BookingClient
 @inject UserSession UserSession
+@inject NavigationManager Nav
 
 <PageTitle>Trip Details - GoCheaper</PageTitle>
 
@@ -114,7 +115,7 @@
 <NotificationModal Show="_showBookingModal"
                    Title="Booking Confirmed"
                    Message="Your seat is reserved. A booking confirmation has been emailed to you."
-                   OnClose="() => _showBookingModal = false" />
+                   OnClose="() => Nav.NavigateTo("/my-booked-trips")" />
 
 <ConfirmModal Show="_confirmCancel"
               Title="Cancel Booking"
@@ -186,7 +187,7 @@
         if (result.Success)
         {
             _confirmCancel = false;
-            await LoadAsync();
+            Nav.NavigateTo("/browse-trips");
         }
         else
         {

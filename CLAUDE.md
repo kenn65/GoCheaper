@@ -384,7 +384,7 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 | `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; passes `DriverFullName` for DriverSnapshot bootstrap; price per seat min 1 DKK |
 | `TripDetails.razor` | `/trips/{Id:guid}` | `DriverOnly` | Driver view; inline edit form; when bookings exist only Note, Pickup Points, Payment Method and Number Plate are editable (From/To/Seats/Price/Departure are disabled); delete opens `ConfirmModal` with optional reason textarea (sent to passengers via `TripCancelledForPassengerEvent`) |
 | `BrowseTrips.razor` | `/browse-trips` | `[Authorize]` | Passenger trip search; mobile card layout / desktop table; client-side From/To filter |
-| `PassengerTripDetails.razor` | `/passenger/trips/{Id:guid}` | `[Authorize]` | Passenger trip detail; shows available seats, book/cancel UI; `NotificationModal` on booking success; `ConfirmModal` for cancel booking |
+| `PassengerTripDetails.razor` | `/passenger/trips/{Id:guid}` | `[Authorize]` | Passenger trip detail; shows available seats, book/cancel UI; `NotificationModal` on booking success → navigates to `/my-booked-trips` on OK; `ConfirmModal` for cancel booking → navigates to `/browse-trips` on confirm |
 | `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Passenger's bookings; mobile card layout / desktop table; driver name links to driver profile |
 | `DriverProfile.razor` | `/driver/{Id:guid}` | `[Authorize]` | Public driver profile; shows photo (or initial avatar), name, member since, phone |
 
