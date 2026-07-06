@@ -4,7 +4,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 var dbPassword = builder.AddParameter("sql-password", secret: true);
 
 // ── Application secrets ───────────────────────────────────────────────────────
-var aspnetEnv          = builder.AddParameter("aspnet-environment");
+var aspnetEnv          = builder.AddParameter("aspnet-environment", secret: true);
 var jwtKey             = builder.AddParameter("jwt-key",              secret: true);
 var identityApiKey     = builder.AddParameter("identity-api-key",     secret: true);
 var tripsApiKey        = builder.AddParameter("trips-api-key",        secret: true);
