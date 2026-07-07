@@ -39,14 +39,23 @@
                 <ValidationMessage For="() => _model.To" />
             </div>
 
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Total Seats</label>
+                <InputNumber class="form-control" @bind-Value="_model.TotalSeats" />
+                <ValidationMessage For="() => _model.TotalSeats" />
+            </div>
+
             <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Total Seats</label>
-                    <InputNumber class="form-control" @bind-Value="_model.TotalSeats" />
-                    <ValidationMessage For="() => _model.TotalSeats" />
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Currency</label>
+                    <InputSelect class="form-select" @bind-Value="_model.Currency">
+                        <option value="DKK">DKK – Danish Krone</option>
+                        <option value="NOK">NOK – Norwegian Krone</option>
+                        <option value="SEK">SEK – Swedish Krona</option>
+                    </InputSelect>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Price per Seat (DKK)</label>
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold">Price per Seat</label>
                     <InputNumber class="form-control" @bind-Value="_model.PricePerSeat" />
                     <ValidationMessage For="() => _model.PricePerSeat" />
                 </div>
@@ -68,15 +77,6 @@
                 <label class="form-label fw-semibold">Note (optional)</label>
                 <InputTextArea class="form-control" @bind-Value="_model.Note" rows="3"
                                placeholder="e.g. Luggage space available, no smoking..." />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Currency</label>
-                <InputSelect class="form-select" @bind-Value="_model.Currency">
-                    <option value="DKK">DKK – Danish Krone</option>
-                    <option value="NOK">NOK – Norwegian Krone</option>
-                    <option value="SEK">SEK – Swedish Krona</option>
-                </InputSelect>
             </div>
 
             <div class="mb-3">
