@@ -9,95 +9,105 @@
 <PageTitle>My Trips - GoCheaper</PageTitle>
 
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
-        <h1 class="h3 mb-0">My Trips</h1>
-        @if (UserSession.IsDriver)
-        {
-            <a href="/trips/create" class="btn btn-primary">+ New Trip</a>
-        }
-    </div>
-
     @if (_loading)
     {
-        <div class="spinner-border text-primary" role="status"></div>
-    }
-    else if (_error is not null)
-    {
-        <div class="alert alert-danger">@_error</div>
-    }
-    else if (_trips is { Count: 0 })
-    {
-        <div class="alert alert-info">
-            You have not posted any trips yet.
-            @if (UserSession.IsDriver)
-            {
-                <a href="/trips/create" class="alert-link ms-1">Post your first trip.</a>
-            }
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
         </div>
     }
     else
     {
-        <!-- Mobile cards -->
-        <div class="d-md-none">
-            @foreach (var trip in _trips!)
-            {
-                var booked = _bookedSeats.GetValueOrDefault(trip.Id, 0);
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                                <div class="fw-semibold">@trip.From &rarr; @trip.To</div>
-                                <small class="text-muted">@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</small>
-                                <div class="mt-1">
-                                    <span class="badge @TripStatus.BadgeClass(trip.DepartureTime)">@TripStatus.Compute(trip.DepartureTime)</span>
-                                </div>
-                            </div>
-                            <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">Details</a>
-                        </div>
-                        <div class="row row-cols-2 g-1 small">
-                            <div class="col text-muted">Seats booked: <span class="text-body fw-semibold">@booked / @trip.TotalSeats</span></div>
-                            <div class="col text-muted">Price: <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") @(trip.Currency ?? "DKK")</span></div>
-                        </div>
-                    </div>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">My Trips</h4>
+                    @if (UserSession.IsDriver)
+                    {
+                        <a href="/trips/create" class="btn btn-light btn-sm">+ New Trip</a>
+                    }
                 </div>
-            }
-        </div>
-
-        <!-- Desktop table -->
-        <div class="d-none d-md-block">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Driver</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Departure</th>
-                            <th>Status</th>
-                            <th>Seats (booked / total)</th>
-                            <th>Price</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            </div>
+            <div class="card-body">
+                @if (_error is not null)
+                {
+                    <div class="alert alert-danger">@_error</div>
+                }
+                else if (_trips is { Count: 0 })
+                {
+                    <div class="alert alert-info">
+                        You have not posted any trips yet.
+                        @if (UserSession.IsDriver)
+                        {
+                            <a href="/trips/create" class="alert-link ms-1">Post your first trip.</a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <!-- Mobile cards -->
+                    <div class="d-md-none">
                         @foreach (var trip in _trips!)
                         {
                             var booked = _bookedSeats.GetValueOrDefault(trip.Id, 0);
-                            <tr>
-                                <td>@(trip.DriverFullName == "Unknown Driver" ? (UserSession.FullName ?? trip.DriverFullName) : trip.DriverFullName)</td>
-                                <td>@trip.From</td>
-                                <td>@trip.To</td>
-                                <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
-                                <td><span class="badge @TripStatus.BadgeClass(trip.DepartureTime)">@TripStatus.Compute(trip.DepartureTime)</span></td>
-                                <td>@booked / @trip.TotalSeats</td>
-                                <td>@trip.PricePerSeat.ToString("N2") @(trip.Currency ?? "DKK")</td>
-                                <td>
-                                    <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
-                                </td>
-                            </tr>
+                            <div class="card mb-3 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <div class="fw-semibold">@trip.From &rarr; @trip.To</div>
+                                            <small class="text-muted">@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</small>
+                                            <div class="mt-1">
+                                                <span class="badge @TripStatus.BadgeClass(trip.DepartureTime)">@TripStatus.Compute(trip.DepartureTime)</span>
+                                            </div>
+                                        </div>
+                                        <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">Details</a>
+                                    </div>
+                                    <div class="row row-cols-2 g-1 small">
+                                        <div class="col text-muted">Seats booked: <span class="text-body fw-semibold">@booked / @trip.TotalSeats</span></div>
+                                        <div class="col text-muted">Price: <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") @(trip.Currency ?? "DKK")</span></div>
+                                    </div>
+                                </div>
+                            </div>
                         }
-                    </tbody>
-                </table>
+                    </div>
+
+                    <!-- Desktop table -->
+                    <div class="d-none d-md-block">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Driver</th>
+                                        <th>From</th>
+                                        <th>To</th>
+                                        <th>Departure</th>
+                                        <th>Status</th>
+                                        <th>Seats (booked / total)</th>
+                                        <th>Price</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var trip in _trips!)
+                                    {
+                                        var booked = _bookedSeats.GetValueOrDefault(trip.Id, 0);
+                                        <tr>
+                                            <td>@(trip.DriverFullName == "Unknown Driver" ? (UserSession.FullName ?? trip.DriverFullName) : trip.DriverFullName)</td>
+                                            <td>@trip.From</td>
+                                            <td>@trip.To</td>
+                                            <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                                            <td><span class="badge @TripStatus.BadgeClass(trip.DepartureTime)">@TripStatus.Compute(trip.DepartureTime)</span></td>
+                                            <td>@booked / @trip.TotalSeats</td>
+                                            <td>@trip.PricePerSeat.ToString("N2") @(trip.Currency ?? "DKK")</td>
+                                            <td>
+                                                <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     }

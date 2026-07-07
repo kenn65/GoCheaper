@@ -10,7 +10,9 @@
 <div class="container py-4" style="max-width: 480px;">
     @if (_loading)
     {
-        <div class="spinner-border text-primary" role="status"></div>
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
     }
     else if (_error is not null)
     {
@@ -19,6 +21,9 @@
     else if (_user is not null)
     {
         <div class="card shadow-sm mb-3">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0">Driver</h4>
+            </div>
             <div class="card-body text-center">
                 @if (!string.IsNullOrWhiteSpace(_user.DriverPictureBase64))
                 {

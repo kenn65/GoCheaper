@@ -15,7 +15,9 @@
 
     @if (_loading)
     {
-        <div class="spinner-border text-primary" role="status"></div>
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
     }
     else if (_error is not null)
     {
@@ -29,9 +31,9 @@
         {
             <!-- ── Driver: edit form ── -->
             <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <span class="fw-semibold">Edit Trip</span>
-                    <button class="btn btn-sm btn-outline-secondary" @onclick="CancelEdit">Cancel</button>
+                <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Edit Trip</h4>
+                    <button class="btn btn-sm btn-outline-light" @onclick="CancelEdit">Cancel</button>
                 </div>
                 <div class="card-body">
                     @if (_bookedSeats > 0)
@@ -144,14 +146,14 @@
         {
             <!-- ── Read-only view (driver + passenger) ── -->
             <div class="card shadow-sm">
-                <div class="card-header py-3">
+                <div class="card-header bg-primary text-white py-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
                         <div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <h2 class="h5 mb-0 fw-semibold">@_trip.From &rarr; @_trip.To</h2>
+                                <h4 class="mb-0">@_trip.From &rarr; @_trip.To</h4>
                                 <span class="badge @TripStatus.BadgeClass(_trip.DepartureTime)">@TripStatus.Compute(_trip.DepartureTime)</span>
                             </div>
-                            <span class="text-muted small">Driver: <strong>@(_trip.DriverFullName == "Unknown Driver" && isOwner ? (UserSession.FullName ?? _trip.DriverFullName) : _trip.DriverFullName)</strong></span>
+                            <span class="text-white opacity-75 small">Driver: <strong>@(_trip.DriverFullName == "Unknown Driver" && isOwner ? (UserSession.FullName ?? _trip.DriverFullName) : _trip.DriverFullName)</strong></span>
                         </div>
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             @if (!string.IsNullOrEmpty(_trip.CarPictureBase64))
@@ -162,15 +164,15 @@
                                          style="height:56px;object-fit:cover;border-radius:6px;" />
                                     @if (_trip.NumberPlate is not null)
                                     {
-                                        <div class="text-center"><small class="text-muted">@_trip.NumberPlate</small></div>
+                                        <div class="text-center"><small class="text-white opacity-75">@_trip.NumberPlate</small></div>
                                     }
                                 </div>
                             }
                             @if (isOwner)
                             {
                                 <div class="d-flex flex-wrap gap-2">
-                                    <button class="btn btn-sm btn-outline-primary" @onclick="StartEdit">Edit Trip</button>
-                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => _confirmDelete = true">Delete Trip</button>
+                                    <button class="btn btn-sm btn-outline-light" @onclick="StartEdit">Edit Trip</button>
+                                    <button class="btn btn-sm btn-outline-light" @onclick="() => _confirmDelete = true">Delete Trip</button>
                                 </div>
                             }
                         </div>

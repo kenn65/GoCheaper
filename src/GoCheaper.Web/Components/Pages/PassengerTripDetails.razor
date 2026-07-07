@@ -13,7 +13,9 @@
 
     @if (_loading)
     {
-        <div class="spinner-border text-primary" role="status"></div>
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
     }
     else if (_error is not null)
     {
@@ -22,14 +24,14 @@
     else if (_trip is not null)
     {
         <div class="card shadow-sm">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
                 <div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <h5 class="mb-0">@_trip.From &rarr; @_trip.To</h5>
                         <span class="badge @TripStatus.BadgeClass(_trip.DepartureTime)">@TripStatus.Compute(_trip.DepartureTime)</span>
                     </div>
-                    <small class="text-muted">
-                        Driver: <a href="/driver/@_trip.DriverId">@_trip.DriverFullName</a>
+                    <small class="text-white opacity-75">
+                        Driver: <a href="/driver/@_trip.DriverId" class="text-white">@_trip.DriverFullName</a>
                     </small>
                 </div>
             </div>

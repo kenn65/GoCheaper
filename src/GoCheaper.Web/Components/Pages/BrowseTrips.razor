@@ -7,21 +7,27 @@
 <PageTitle>Browse Trips - GoCheaper</PageTitle>
 
 <div class="container py-4">
-    <h1 class="h3 mb-4">Browse Available Trips</h1>
-
     @if (_loading)
     {
-        <div class="spinner-border text-primary" role="status"></div>
-    }
-    else if (_error is not null)
-    {
-        <div class="alert alert-danger">@_error</div>
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+        </div>
     }
     else
     {
-        <div class="card mb-4 shadow-sm">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0">Browse Available Trips</h4>
+            </div>
             <div class="card-body">
-                <div class="row g-2 align-items-end">
+                @if (_error is not null)
+                {
+                    <div class="alert alert-danger">@_error</div>
+                }
+                else
+                {
+        <div class="mb-4 pb-3 border-bottom">
+            <div class="row g-2 align-items-end">
                     <div class="col-sm-5">
                         <label class="form-label small fw-semibold">From</label>
                         <select class="form-select" @bind="_filterFrom" @bind:after="ApplyFilter">
@@ -47,7 +53,6 @@
                     </div>
                 </div>
             </div>
-        </div>
 
         @if (_filtered is { Count: 0 })
         {
@@ -126,6 +131,9 @@
                 </div>
             </div>
         }
+                }
+            </div>
+        </div>
     }
 </div>
 

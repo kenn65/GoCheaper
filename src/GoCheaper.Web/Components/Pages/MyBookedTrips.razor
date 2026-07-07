@@ -7,24 +7,31 @@
 <PageTitle>My Booked Trips - GoCheaper</PageTitle>
 
 <div class="container py-4">
-    <h1 class="h3 mb-4">My Booked Trips</h1>
-
     @if (_loading)
     {
-        <div class="spinner-border text-primary" role="status"></div>
-    }
-    else if (_error is not null)
-    {
-        <div class="alert alert-danger">@_error</div>
-    }
-    else if (_bookings is { Count: 0 })
-    {
-        <div class="alert alert-info">
-            You have not booked any trips yet. <a href="/browse-trips">Browse available trips</a>.
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
         </div>
     }
     else
     {
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0">My Booked Trips</h4>
+            </div>
+            <div class="card-body">
+                @if (_error is not null)
+                {
+                    <div class="alert alert-danger">@_error</div>
+                }
+                else if (_bookings is { Count: 0 })
+                {
+                    <div class="alert alert-info">
+                        You have not booked any trips yet. <a href="/browse-trips">Browse available trips</a>.
+                    </div>
+                }
+                else
+                {
         <!-- Mobile cards -->
         <div class="d-md-none">
             @foreach (var b in _bookings!)
@@ -85,6 +92,9 @@
                         }
                     </tbody>
                 </table>
+            </div>
+        </div>
+                }
             </div>
         </div>
     }
