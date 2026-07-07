@@ -3,6 +3,7 @@
 @using GoCheaper.Web.Models
 @using GoCheaper.Web.Services
 @inject IdentityApiClient IdentityApi
+@inject IWebHostEnvironment Env
 
 <PageTitle>Register - GoCheaper</PageTitle>
 
@@ -25,7 +26,7 @@
                             A verification link will be sent to <strong>@registrationResult.Email</strong>.
                             Please check your inbox to activate your account.
                         </p>
-                        @if (registrationResult.EmailVerificationToken is not null)
+                        @if (Env.IsDevelopment() && registrationResult.EmailVerificationToken is not null)
                         {
                             <div class="alert alert-warning text-start small">
                                 <strong>Dev only &mdash; verification token:</strong><br />
