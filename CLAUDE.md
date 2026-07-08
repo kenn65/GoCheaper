@@ -494,6 +494,8 @@ Both modals use pure Blazor conditional rendering (`show d-block` CSS class) —
 
 **Sticky footer:** `wwwroot/app.css` sets `html { height: 100% }` and `body { display: flex; flex-direction: column; min-height: 100% }`. Blazor SSR wrapper elements (`#blazor-server-rendered`, `app-root`, `div[blazor-ssr-unique-id]`) get `display: contents` so they don't break the flex chain. The content wrapper `<div class="container-fluid py-4">` in `MainLayout.razor` has `style="flex:1"` so it expands to fill all available space between the navbar and footer. Do not remove `display: contents` from the Blazor SSR selectors — without it the footer floats up on short pages.
 
+**Footer links:** The Privacy Policy and Open Source links in `MainLayout.razor` must NOT have `text-muted` or `text-decoration-none` — they should render as standard blue underlined links so users can clearly identify them as clickable. The app-wide `a { color: #006bb7 }` in `app.css` provides the correct blue.
+
 #### Responsive design
 
 All list pages (MyTrips, MyBookedTrips, BrowseTrips) render a **Bootstrap card list** on mobile (`d-md-none`) and the standard **table** on desktop (`d-none d-md-block`). Detail/form pages use Bootstrap grid (`col-md-6`) which stacks automatically. Pickup point editors use a stacked label+input layout (number badge + Remove button on one row, full-width input below) instead of `input-group` so the address is always fully visible.
