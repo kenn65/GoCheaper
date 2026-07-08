@@ -13,7 +13,7 @@ public record TripSummaryResponse(
     decimal   PricePerSeat,
     DateTime? DepartureTime,
     string    DriverFullName,
-    string?   Currency = null);
+    string    Currency = "DKK");
 
 public record TripDetailsResponse(
     Guid         Id,
@@ -30,7 +30,7 @@ public record TripDetailsResponse(
     string?      CarPictureBase64,
     string?      NumberPlate,
     List<string> PickupPoints,
-    string?      Currency = null);
+    string       Currency = "DKK");
 
 public record GetMyTripsResult(List<TripSummaryResponse>? Trips, string? Error, bool Success);
 public record GetTripDetailsResult(TripDetailsResponse? Trip, string? Error, bool Success);

@@ -50,7 +50,7 @@
                             <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">Details</a>
                         </div>
                         <div class="row row-cols-2 g-1 small">
-                            <div class="col text-muted">Price: <span class="text-body fw-semibold">@b.PricePerSeat.ToString("N2") @(b.Currency ?? "DKK")</span></div>
+                            <div class="col text-muted">Price: <span class="text-body fw-semibold">@b.PricePerSeat.ToString("N2") @b.Currency</span></div>
                             <div class="col text-muted">Seats: <span class="text-body fw-semibold">@b.SeatsCount</span></div>
                         </div>
                     </div>
@@ -69,7 +69,7 @@
                             <th>To</th>
                             <th>Departure</th>
                             <th>Status</th>
-                            <th>Price</th>
+                            <th>Price per Seat</th>
                             <th>Seats</th>
                             <th></th>
                         </tr>
@@ -83,7 +83,7 @@
                                 <td>@b.To</td>
                                 <td>@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
                                 <td><span class="badge @TripStatus.BadgeClass(b.DepartureTime)">@TripStatus.Compute(b.DepartureTime)</span></td>
-                                <td>@b.PricePerSeat.ToString("N2") @(b.Currency ?? "DKK")</td>
+                                <td>@b.PricePerSeat.ToString("N2") @b.Currency</td>
                                 <td>@b.SeatsCount</td>
                                 <td>
                                     <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary">Details</a>

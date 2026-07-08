@@ -14,7 +14,7 @@ public record BrowseTripSummary(
     DateTime? DepartureTime,
     string?   NumberPlate,
     string    DriverFullName,
-    string?   Currency = null);
+    string    Currency = "DKK");
 
 public record BrowseTripDetail(
     Guid         Id,
@@ -30,7 +30,7 @@ public record BrowseTripDetail(
     string?      PaymentMethod,
     string?      NumberPlate,
     List<string> PickupPoints,
-    string?      Currency = null);
+    string       Currency = "DKK");
 
 public record PassengerBookingResponse(
     Guid      TripId,
@@ -41,7 +41,7 @@ public record PassengerBookingResponse(
     decimal   PricePerSeat,
     string    DriverFullName,
     int       SeatsCount,
-    string?   Currency = null);
+    string    Currency = "DKK");
 
 public record BookingStatusResponse(int SeatsCount);
 
@@ -65,6 +65,9 @@ public record DriverRatingSummary(double AverageRating, int RatingCount, List<Ra
 
 public record GetRatingInfoResult(RatingInfoResponse? Info, string? Error, bool Success);
 public record GetDriverRatingsResult(DriverRatingSummary? Summary, string? Error, bool Success);
+
+public record TripPassengerEntry(string PassengerFullName, int SeatsCount, DateTime BookedAt);
+public record GetTripPassengersResult(List<TripPassengerEntry>? Passengers, string? Error, bool Success);
 
 public class BookingApiClient(
     IHttpClientFactory httpClientFactory,
@@ -279,5 +282,23 @@ public class BookingApiClient(
         }
 
         return new GetDriverRatingsResult(null, $"Error {(int)response.StatusCode}", false);
+    }
+
+    public async Task<GetTripPassengersResult> GetTripPassengersAsync(Guid tripId)
+    {
+        await EnsureFreshTokenAsync();
+        using var request = BuildRequest(HttpMethod.Get, $"/api/bookings/trips/{tripId}/passengers");
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return new GetTripPassengersResult(null, $"Could not reach the booking service: {ex.Message}", false); }
+
+        if (response.IsSuccessStatusCode)
+        {
+            var passengers = await response.Content.ReadFromJsonAsync<List<TripPassengerEntry>>();
+            return new GetTripPassengersResult(passengers, null, true);
+        }
+
+        return new GetTripPassengersResult(null, $"Error {(int)response.StatusCode}", false);
     }
 }

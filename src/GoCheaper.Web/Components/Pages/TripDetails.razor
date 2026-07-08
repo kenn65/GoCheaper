@@ -58,14 +58,23 @@
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Total Seats</label>
+                            <InputNumber class="form-control" @bind-Value="_edit.TotalSeats" disabled="@(_bookedSeats > 0)" />
+                            <ValidationMessage For="() => _edit.TotalSeats" />
+                        </div>
+
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Total Seats</label>
-                                <InputNumber class="form-control" @bind-Value="_edit.TotalSeats" disabled="@(_bookedSeats > 0)" />
-                                <ValidationMessage For="() => _edit.TotalSeats" />
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Currency</label>
+                                <InputSelect class="form-select" @bind-Value="_edit.Currency" disabled="@(_bookedSeats > 0)">
+                                    <option value="DKK">DKK – Danish Krone</option>
+                                    <option value="NOK">NOK – Norwegian Krone</option>
+                                    <option value="SEK">SEK – Swedish Krona</option>
+                                </InputSelect>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Price per Seat (DKK)</label>
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Price per Seat (@_edit.Currency)</label>
                                 <InputNumber class="form-control" @bind-Value="_edit.PricePerSeat" disabled="@(_bookedSeats > 0)" />
                                 <ValidationMessage For="() => _edit.PricePerSeat" />
                             </div>
@@ -86,15 +95,6 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Note</label>
                             <InputTextArea class="form-control" @bind-Value="_edit.Note" rows="3" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Currency</label>
-                            <InputSelect class="form-select" @bind-Value="_edit.Currency" disabled="@(_bookedSeats > 0)">
-                                <option value="DKK">DKK – Danish Krone</option>
-                                <option value="NOK">NOK – Norwegian Krone</option>
-                                <option value="SEK">SEK – Swedish Krona</option>
-                            </InputSelect>
                         </div>
 
                         <div class="mb-3">
@@ -186,8 +186,8 @@
                         <dt class="col-sm-4">Seats</dt>
                         <dd class="col-sm-8">@_bookedSeats booked / @_trip.TotalSeats total &nbsp;<span class="text-muted small">(@(_trip.TotalSeats - _bookedSeats) available)</span></dd>
 
-                        <dt class="col-sm-4">Price per Seat</dt>
-                        <dd class="col-sm-8">@_trip.PricePerSeat.ToString("N2") @(_trip.Currency ?? "DKK")</dd>
+                        <dt class="col-sm-4">Price per Seat (@_trip.Currency)</dt>
+                        <dd class="col-sm-8">@_trip.PricePerSeat.ToString("N2") @_trip.Currency</dd>
 
                         @if (_trip.NumberPlate is not null && string.IsNullOrEmpty(_trip.CarPictureBase64))
                         {
@@ -224,6 +224,72 @@
             </div>
         }
     }
+
+    @* ── Passengers card (driver view — only shown when this user owns the trip) ── *@
+    @if (_trip is not null && UserSession.UserId.HasValue && UserSession.UserId.Value == _trip.DriverId && !_editing)
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-primary text-white py-3">
+                <h4 class="mb-0">Passengers</h4>
+            </div>
+            <div class="card-body">
+                @if (_passengersError is not null)
+                {
+                    <div class="alert alert-danger">@_passengersError</div>
+                }
+                else if (_passengers is { Count: 0 })
+                {
+                    <p class="text-muted mb-0">No bookings yet for this trip.</p>
+                }
+                else if (_passengers is not null)
+                {
+                    <!-- Mobile cards -->
+                    <div class="d-md-none">
+                        @foreach (var p in _passengers)
+                        {
+                            <div class="card mb-2 shadow-sm">
+                                <div class="card-body py-2">
+                                    <div class="fw-semibold">@p.PassengerFullName</div>
+                                    <div class="small text-muted">@p.SeatsCount seat(s) &nbsp;·&nbsp; booked @p.BookedAt.ToString("dd MMM yyyy HH:mm")</div>
+                                </div>
+                            </div>
+                        }
+                        <div class="text-muted small mt-2">Total: @_passengers.Sum(p => p.SeatsCount) seat(s) booked</div>
+                    </div>
+
+                    <!-- Desktop table -->
+                    <div class="d-none d-md-block">
+                        <table class="table table-hover align-middle mb-1">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Passenger</th>
+                                    <th>Seats Booked</th>
+                                    <th>Booked At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in _passengers)
+                                {
+                                    <tr>
+                                        <td>@p.PassengerFullName</td>
+                                        <td>@p.SeatsCount</td>
+                                        <td>@p.BookedAt.ToString("dd MMM yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light fw-semibold">
+                                    <td>Total</td>
+                                    <td>@_passengers.Sum(p => p.SeatsCount)</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 </div>
 
 <ConfirmModal Show="_confirmDelete"
@@ -247,8 +313,10 @@
 @code {
     [Parameter] public Guid Id { get; set; }
 
-    private TripDetailsResponse? _trip;
-    private int     _bookedSeats;
+    private TripDetailsResponse?    _trip;
+    private int                     _bookedSeats;
+    private List<TripPassengerEntry>? _passengers;
+    private string?                 _passengersError;
     private bool    _loading = true;
     private string? _error;
 
@@ -275,6 +343,12 @@
             _trip = result.Trip;
             var counts = await BookingClient.GetBookedSeatsAsync([Id]);
             _bookedSeats = counts.GetValueOrDefault(Id, 0);
+
+            var passengersResult = await BookingClient.GetTripPassengersAsync(Id);
+            if (passengersResult.Success)
+                _passengers = passengersResult.Passengers;
+            else
+                _passengersError = passengersResult.Error;
         }
         else
         {
@@ -314,7 +388,7 @@
         _edit.DepartureTime = _trip.DepartureTime;
         _edit.Note          = _trip.Note;
         _edit.PaymentMethod = _trip.PaymentMethod;
-        _edit.Currency      = _trip.Currency ?? "DKK";
+        _edit.Currency      = _trip.Currency;
         _edit.NumberPlate   = _trip.NumberPlate;
         _editPickupPoints.Clear();
         _editPickupPoints.AddRange(_trip.PickupPoints);

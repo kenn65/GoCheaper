@@ -14,6 +14,7 @@ using GoCheaper.Booking.Api.Features.GetDriverRatings;
 using GoCheaper.Booking.Api.Features.GetRatingInfo;
 using GoCheaper.Booking.Api.Features.GetTripBookedSeats;
 using GoCheaper.Booking.Api.Features.GetTripDetail;
+using GoCheaper.Booking.Api.Features.GetTripPassengers;
 using GoCheaper.Booking.Api.Features.RateDriver;
 using GoCheaper.Booking.Api.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -78,6 +79,7 @@ builder.Services.AddScoped<GetMyBookingHandler>();
 builder.Services.AddScoped<GetRatingInfoHandler>();
 builder.Services.AddScoped<RateDriverHandler>();
 builder.Services.AddScoped<GetDriverRatingsHandler>();
+builder.Services.AddScoped<GetTripPassengersHandler>();
 
 builder.Services.AddHostedService<KafkaTopicInitializer>();
 builder.Services.AddSingleton<TripRatingEmailService>();

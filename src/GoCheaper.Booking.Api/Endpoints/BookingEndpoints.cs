@@ -10,6 +10,7 @@ using GoCheaper.Booking.Api.Features.GetMyBookings;
 using GoCheaper.Booking.Api.Features.GetRatingInfo;
 using GoCheaper.Booking.Api.Features.GetTripBookedSeats;
 using GoCheaper.Booking.Api.Features.GetTripDetail;
+using GoCheaper.Booking.Api.Features.GetTripPassengers;
 using GoCheaper.Booking.Api.Features.RateDriver;
 
 namespace GoCheaper.Booking.Api.Endpoints;
@@ -70,6 +71,16 @@ public static class BookingEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .Produces(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status401Unauthorized);
+
+        group.MapGet("/trips/{id:guid}/passengers",
+            (Guid id, ClaimsPrincipal user, GetTripPassengersHandler h, CancellationToken ct) =>
+                h.HandleAsync(id, user, ct))
+            .RequireAuthorization("ApiKeyAndJwt")
+            .WithName("GetTripPassengers")
+            .WithSummary("Get the passenger list for a trip (driver only)")
+            .Produces<List<TripPassengerResponse>>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
 
         group.MapGet("/trips/{id:guid}/my-booking",
             (Guid id, ClaimsPrincipal user, GetMyBookingHandler h, CancellationToken ct) =>

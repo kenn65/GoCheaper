@@ -117,7 +117,7 @@
                                         <td>@t.To</td>
                                         <td>@(t.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
                                         <td>@t.TotalSeats</td>
-                                        <td>@t.PricePerSeat.ToString("N2") @(t.Currency ?? "DKK")</td>
+                                        <td>@t.PricePerSeat.ToString("N2") @t.Currency</td>
                                     </tr>
                                 }
                             </tbody>
@@ -162,7 +162,7 @@
                                         <td>@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
                                         <td>@b.DriverFullName</td>
                                         <td>@b.SeatsCount</td>
-                                        <td>@b.PricePerSeat.ToString("N2") @(b.Currency ?? "DKK")</td>
+                                        <td>@b.PricePerSeat.ToString("N2") @b.Currency</td>
                                     </tr>
                                 }
                             </tbody>

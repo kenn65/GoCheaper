@@ -18,14 +18,14 @@
             @if (UserSession.IsLoggedIn)
             {
                 <li class="nav-item">
-                    <NavLink class="nav-link" href="my-profile" Match="NavLinkMatch.Prefix">
+                    <NavLink class="nav-link" href="/my-profile" Match="NavLinkMatch.Prefix">
                         My Profile
                     </NavLink>
                 </li>
                 @if (UserSession.IsDriver)
                 {
                     <li class="nav-item">
-                        <NavLink class="nav-link" href="my-trips" Match="NavLinkMatch.Prefix">
+                        <NavLink class="nav-link" href="/my-trips" Match="NavLinkMatch.Prefix">
                             My Trips
                         </NavLink>
                     </li>
@@ -33,12 +33,12 @@
                 @if (UserSession.IsPassenger)
                 {
                     <li class="nav-item">
-                        <NavLink class="nav-link" href="browse-trips" Match="NavLinkMatch.Prefix">
+                        <NavLink class="nav-link" href="/browse-trips" Match="NavLinkMatch.Prefix">
                             Browse Trips
                         </NavLink>
                     </li>
                     <li class="nav-item">
-                        <NavLink class="nav-link" href="my-booked-trips" Match="NavLinkMatch.Prefix">
+                        <NavLink class="nav-link" href="/my-booked-trips" Match="NavLinkMatch.Prefix">
                             My Booked Trips
                         </NavLink>
                     </li>
@@ -61,7 +61,7 @@
             else
             {
                 <li class="nav-item">
-                    <NavLink class="btn btn-outline-light btn-sm" href="login" Match="NavLinkMatch.Prefix">
+                    <NavLink class="btn btn-outline-light btn-sm" href="/login" Match="NavLinkMatch.Prefix">
                         Sign In
                     </NavLink>
                 </li>

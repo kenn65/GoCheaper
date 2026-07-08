@@ -307,6 +307,7 @@ Vertical Slice Architecture, same auth pattern (copy of `Auth/` folder, same JWT
 | `GET /mine` | ApiKeyAndJwt | All trips booked by the current user, excluding trips where they are the driver |
 | `POST /trips/{id}/book` | ApiKeyAndJwt | Book seats; prevents self-booking, duplicate booking, overbooking; publishes `TripBookedEvent` |
 | `DELETE /trips/{id}/book` | ApiKeyAndJwt | Cancel own booking |
+| `GET /trips/{id}/passengers` | ApiKeyAndJwt | Driver-only: returns `List<TripPassengerResponse>` (name, seats booked, booking date) for a trip; 403 if JWT sub ≠ `TripSnapshot.DriverId`; 404 if trip unknown |
 | `GET /trips/{id}/my-booking` | ApiKeyAndJwt | Returns `TripBookingStatusResponse(SeatsCount)` or 404 |
 | `GET /rate/{bookingId}?token=` | ApiKeyOnly | Returns `RatingInfoResponse(DriverFullName, DriverId, From, To, DepartureTime?, AlreadyRated)` for the rating page; 404 if token invalid |
 | `POST /rate/{bookingId}` | ApiKeyOnly | Body: `{Token, Stars(1-5), Comment?}` — saves rating; 409 if already rated |
@@ -325,12 +326,13 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<TripRatingEmailSer
 **Rating fields on `PassengerBooking`:** `RatingToken (Guid?)`, `RatingEmailSentAt (DateTime?)`, `DriverRating (int?)`, `DriverRatingComment (string?, max 500)`, `RatedAt (DateTime?)`.
 
 **Response types** (`Features/Common/TripSummaryResponse.cs`):
-- `TripSummaryResponse` — browse list: `Id, From, To, TotalSeats, AvailableSeats, PricePerSeat, DepartureTime, NumberPlate, DriverFullName, Currency?`
+- `TripSummaryResponse` — browse list: `Id, From, To, TotalSeats, AvailableSeats, PricePerSeat, DepartureTime, NumberPlate, DriverFullName, Currency` (non-nullable `string`, default `"DKK"`)
 - `TripDetailResponse` — detail: adds `DriverId, Note, PaymentMethod, List<string> PickupPoints`
-- `MyBookingResponse` — passenger booking list: `TripId, DriverId, From, To, DepartureTime, PricePerSeat, DriverFullName, SeatsCount, Currency?`
+- `MyBookingResponse` — passenger booking list: `TripId, DriverId, From, To, DepartureTime, PricePerSeat, DriverFullName, SeatsCount, Currency` (non-nullable `string`, default `"DKK"`)
 - `TripBookingStatusResponse` — `SeatsCount`
+- `TripPassengerResponse` — `PassengerFullName, SeatsCount, BookedAt` — returned by `GET /trips/{id}/passengers`
 
-**Currency:** Trips carry an optional `Currency` field (DKK/NOK/SEK). Displayed alongside price on all trip views. Set by the driver when creating or editing a trip.
+**Currency:** Trips carry a `Currency` field (DKK/NOK/SEK). Non-nullable in all Web response records — declared as `string Currency = "DKK"` so JSON deserialization of old trips (created before the field existed) defaults to `"DKK"`. All views display the actual currency code in column headers ("Price per Seat") and detail labels (`Price per Seat (@trip.Currency)`). Set by the driver when creating or editing a trip; the form label updates dynamically to reflect the selected currency.
 
 ---
 
@@ -417,7 +419,7 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 
 **`IdentityApiClient` (Scoped):** Named `HttpClient` (`"identity-api"`) with Aspire service discovery. Attaches `X-API-Key` (from `ApiKey:IdentityApi`) and `Authorization: Bearer` to every request. Calls `EnsureFreshTokenAsync()` before any JWT-gated method — if `UserSession.IsAccessTokenExpired`, it calls `RefreshTokenAsync` and updates `UserSession` + cookie via `AuthCookieService.UpdateTokensAsync`. If the refresh token is also expired, `userSession.Clear()` is called and the next page render forces re-login.
 
-**`TripsApiClient` (Scoped):** Named `HttpClient` (`"trips-api"`) with Aspire service discovery. Uses `ApiKey:TripsApi` for the `X-API-Key` header. Calls `EnsureFreshTokenAsync()` via `IdentityApiClient.RefreshTokenAsync`. Methods: `GetMyTripsAsync`, `GetTripDetailsAsync`, `CreateTripAsync`, `UpdateTripAsync`, `DeleteTripAsync`.
+**`TripsApiClient` (Scoped):** Named `HttpClient` (`"trips-api"`) with Aspire service discovery. Uses `ApiKey:TripsApi` for the `X-API-Key` header. Calls `EnsureFreshTokenAsync()` via `IdentityApiClient.RefreshTokenAsync`. Methods: `GetMyTripsAsync`, `GetTripDetailsAsync`, `CreateTripAsync`, `UpdateTripAsync`, `DeleteTripAsync`. Response records `TripSummaryResponse` and `TripDetailsResponse` declare `string Currency = "DKK"` (non-nullable with default) so old trips without a currency field deserialize cleanly.
 
 **`BookingApiClient` (Scoped):** Named `HttpClient` (`"booking-api"`) with Aspire service discovery. Uses `ApiKey:BookingApi` for the `X-API-Key` header. Each backend API has its own independent key — the Web reads `ApiKey:IdentityApi`, `ApiKey:TripsApi`, and `ApiKey:BookingApi` separately. Methods:
 - `BrowseTripsAsync(from?, to?)` — browse available trips
@@ -430,6 +432,7 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 - `GetRatingInfoAsync(bookingId, token)` — fetch driver/trip info for the rating page (no JWT needed)
 - `SubmitRatingAsync(bookingId, token, stars, comment?)` — submit a rating (no JWT needed)
 - `GetDriverRatingsAsync(driverId)` — fetch `DriverRatingSummary` for DriverProfile display (no JWT needed)
+- `GetTripPassengersAsync(tripId)` — fetch passenger list for a driver's own trip; returns `GetTripPassengersResult(Passengers, Error, Success)` with `List<TripPassengerEntry>(PassengerFullName, SeatsCount, BookedAt)`
 
 #### Route authorization
 
@@ -451,8 +454,8 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 | `PrivacyPolicy.razor` | `/privacy-policy` | Public | GDPR privacy policy page linked from registration and footer |
 | `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature; `NotificationModal` on save success; `ConfirmModal` with "Type DELETE" input for account delete; GDPR data export button downloads a ZIP containing PDF summary + JSON raw data |
 | `MyTrips.razor` | `/my-trips` | `DriverOnly` | Driver's trips; mobile card layout / desktop table; calls `BookingApiClient.GetBookedSeatsAsync` to merge real booked seat counts |
-| `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; passes `DriverFullName` for DriverSnapshot bootstrap; price per seat min 1 DKK |
-| `TripDetails.razor` | `/trips/{Id:guid}` | `DriverOnly` | Driver view; inline edit form; when bookings exist only Note, Pickup Points, Payment Method and Number Plate are editable (From/To/Seats/Price/Departure are disabled); delete opens `ConfirmModal` with optional reason textarea (sent to passengers via `TripCancelledForPassengerEvent`) |
+| `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; passes `DriverFullName` for DriverSnapshot bootstrap; price per seat min 1. Currency dropdown (DKK/NOK/SEK) is placed before the price field; the price label reads `Price per Seat (@_model.Currency)` and updates dynamically as the currency changes |
+| `TripDetails.razor` | `/trips/{Id:guid}` | `DriverOnly` | Driver view; inline edit form; when bookings exist only Note, Pickup Points, Payment Method and Number Plate are editable (From/To/Seats/Price/Departure are disabled); delete opens `ConfirmModal` with optional reason textarea (sent to passengers via `TripCancelledForPassengerEvent`); below the trip card (when not editing) shows a "Passengers" card with the list of passengers who booked (mobile: one card per passenger; desktop: table with tfoot totals) — calls `BookingApiClient.GetTripPassengersAsync` |
 | `BrowseTrips.razor` | `/browse-trips` | `[Authorize]` | Passenger trip search; mobile card layout / desktop table; client-side From/To filter |
 | `PassengerTripDetails.razor` | `/passenger/trips/{Id:guid}` | `[Authorize]` | Passenger trip detail; shows available seats, book/cancel UI; `NotificationModal` on booking success → navigates to `/my-booked-trips` on OK; `ConfirmModal` for cancel booking → stays on page on both confirm and Cancel (reloads booking status on confirm) |
 | `MyBookedTrips.razor` | `/my-booked-trips` | `[Authorize]` | Passenger's bookings; mobile card layout / desktop table; driver name links to driver profile |
@@ -483,9 +486,13 @@ Both modals use pure Blazor conditional rendering (`show d-block` CSS class) —
 
 `NavMenu.razor` implements `IDisposable` and subscribes to `UserSession.OnChange` → `InvokeAsync(StateHasChanged)` for live updates. Left nav shows role-based items: My Profile (always); My Trips (if `IsDriver`); Browse Trips + My Booked Trips (if `IsPassenger`). Right nav shows `UserSession.FullName` + Sign Out when logged in, Sign In when logged out.
 
+**All `href` values must have a leading `/`** — e.g. `href="/my-trips"`, not `href="my-trips"`. Blazor resolves relative hrefs against the current URL's base path, not the app root, so a missing `/` causes navigation to break on deep routes (e.g. `/trips/some-id` + `href="my-trips"` resolves to `/trips/my-trips`). Driver+Passenger users see both the "My Trips" and the "Browse Trips"/"My Booked Trips" sets of menu items simultaneously.
+
 #### Blazor conventions
 
 **Loading state:** All pages that fetch data on load show `<div class="spinner-border text-primary" role="status"></div>` while `_loading` is true. Never use plain text like `<p>Loading...</p>`.
+
+**Sticky footer:** `wwwroot/app.css` sets `html { height: 100% }` and `body { display: flex; flex-direction: column; min-height: 100% }`. Blazor SSR wrapper elements (`#blazor-server-rendered`, `app-root`, `div[blazor-ssr-unique-id]`) get `display: contents` so they don't break the flex chain. The content wrapper `<div class="container-fluid py-4">` in `MainLayout.razor` has `style="flex:1"` so it expands to fill all available space between the navbar and footer. Do not remove `display: contents` from the Blazor SSR selectors — without it the footer floats up on short pages.
 
 #### Responsive design
 
@@ -498,6 +505,7 @@ All list pages (MyTrips, MyBookedTrips, BrowseTrips) render a **Bootstrap card l
 - **`forceLoad: true` + JS interop** — never call JS interop after `Nav.NavigateTo(url, forceLoad: true)`; the circuit disconnects and the call throws `JSDisconnectedException`. Use the `/auth/complete` server-redirect pattern instead.
 - **`gc_auth` cookie is encrypted** — the refresh token and all other claims are stored inside this HttpOnly encrypted blob. They are not visible in browser DevTools — that is expected and correct.
 - **`OperationCanceledException` disconnects the circuit** — Polly's resilience handler cancels timed-out requests with `OperationCanceledException` (or `TaskCanceledException`), which does NOT inherit from `HttpRequestException`. If an API client method only catches `HttpRequestException`, a timeout propagates uncaught through the Blazor event handler and disconnects the SignalR circuit. The component resets silently — the user sees "nothing happens." Rule: every API client method must explicitly `catch (OperationCanceledException)`, and every Blazor event handler that calls external services must have an outer `catch (Exception)` as a final safety net.
+- **Edit Trip form must match Create Trip layout** — Currency (col-md-4) and Price per Seat (col-md-8) must stay side by side on one row; Total Seats on its own full-width row above. The price label reads `Price per Seat (@_edit.Currency)` and updates dynamically. If these are separated, one form looks different from the other and the currency label becomes stale.
 - **Sticky sessions required in Azure Container Apps** — Blazor Server keeps all circuit state (component state, `UserSession`, etc.) on the specific server instance that owns the SignalR connection. Aspire 13.x does NOT configure `stickySessionsAffinity: sticky` on the web container app. Without it, ACA may route a WebSocket frame to a different replica that has no circuit — button clicks appear to do nothing, registrations succeed in the DB but the success card never appears. Fix by running `scripts/post-deploy-azure.ps1` after every deploy (it calls `az containerapp ingress sticky-sessions set --affinity sticky`).
 
 ---
@@ -521,11 +529,17 @@ appsettings.json  →  appsettings.AzureTest.json  →  env vars injected by Asp
 
 **Network:** Only `web` has external ingress. All four API services are internal — reachable only within the Container Apps environment via Aspire service discovery.
 
+**ACA cold starts (scale-to-zero):** Azure Container Apps scales containers to zero replicas after a few minutes of inactivity. The first request after the container has been stopped triggers a cold start — all five services must restart before the request can be served, which takes 30–90 seconds. Fix: after every deploy run `scripts/post-deploy-azure.ps1`, which sets `min-replicas 1` on all five application services (`identity-api`, `trips-api`, `booking-api`, `notification-api`, `web`). With `min-replicas 1`, ACA keeps at least one warm instance running at all times. This does incur a small always-on cost but eliminates the cold-start UX penalty.
+
 **Kafka in Azure — single-replica requirement:** Kafka runs in KRaft mode (no ZooKeeper). ACA's default `maxReplicas: 10` causes autoscaling to multiple Kafka instances; multiple KRaft controllers fight over state and crash each other, losing all topic metadata.
 
 **Blazor Server sticky sessions:** Blazor Server keeps circuit state server-side and requires the same server instance for the lifetime of a SignalR connection. Aspire 13.x does not configure `stickySessionsAffinity: sticky` for the web container app, so ACA may route WebSocket frames to different replicas — button clicks appear to do nothing, state updates never reach the browser.
 
-After **every** deploy via the Aspire publish wizard, run `scripts/post-deploy-azure.ps1` to fix both:
+After **every** deploy via the Aspire publish wizard, run `scripts/post-deploy-azure.ps1` to apply three fixes:
+1. Sets `stickySessionsAffinity: sticky` on the `web` container app (Blazor Server requirement)
+2. Sets `maxReplicas: 1` on the `kafka` container app (KRaft single-replica requirement)
+3. Sets `minReplicas: 1` on all five application services to prevent cold-start delays
+
 ```powershell
 .\scripts\post-deploy-azure.ps1         # defaults to rg-AzureTest
 # or for a different resource group:

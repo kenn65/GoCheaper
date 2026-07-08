@@ -9,6 +9,11 @@
 # to different replicas; the circuit never gets its state updates back to the browser,
 # so button clicks appear to do nothing. Aspire 13.x does not configure this automatically.
 #
+# WHY (min-replicas 1 on all services): ACA scales to zero replicas when idle, causing
+# 30-90 second cold starts the next time a user visits. Keeping one replica always
+# running eliminates this. At the consumption tier the cost impact is negligible for
+# a low-traffic environment.
+#
 # USAGE: .\scripts\post-deploy-azure.ps1
 #   Optional: override resource group with -ResourceGroup "rg-MyEnv"
 
@@ -44,6 +49,22 @@ if ($LASTEXITCODE -ne 0) {
     $allOk = $false
 } else {
     Write-Host "  OK - Sticky sessions enabled on web." -ForegroundColor Green
+}
+
+# ── 3. Keep all application services at min 1 replica (prevents cold starts) ─
+$services = @("identity-api", "trips-api", "booking-api", "notification-api", "web")
+foreach ($svc in $services) {
+    Write-Host "Setting min-replicas=1 on $svc..." -ForegroundColor Cyan
+    az containerapp update `
+        --name $svc `
+        --resource-group $ResourceGroup `
+        --min-replicas 1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "  FAILED (exit $LASTEXITCODE)" -ForegroundColor Red
+        $allOk = $false
+    } else {
+        Write-Host "  OK - $svc will always keep at least 1 replica running." -ForegroundColor Green
+    }
 }
 
 if ($allOk) {

@@ -63,7 +63,7 @@
                                     </div>
                                     <div class="row row-cols-2 g-1 small">
                                         <div class="col text-muted">Seats booked: <span class="text-body fw-semibold">@booked / @trip.TotalSeats</span></div>
-                                        <div class="col text-muted">Price: <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") @(trip.Currency ?? "DKK")</span></div>
+                                        <div class="col text-muted">Price: <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") @trip.Currency</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -82,7 +82,7 @@
                                         <th>Departure</th>
                                         <th>Status</th>
                                         <th>Seats (booked / total)</th>
-                                        <th>Price</th>
+                                        <th>Price per Seat</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -97,7 +97,7 @@
                                             <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
                                             <td><span class="badge @TripStatus.BadgeClass(trip.DepartureTime)">@TripStatus.Compute(trip.DepartureTime)</span></td>
                                             <td>@booked / @trip.TotalSeats</td>
-                                            <td>@trip.PricePerSeat.ToString("N2") @(trip.Currency ?? "DKK")</td>
+                                            <td>@trip.PricePerSeat.ToString("N2") @trip.Currency</td>
                                             <td>
                                                 <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
                                             </td>

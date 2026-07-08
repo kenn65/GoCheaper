@@ -1,5 +1,18 @@
-html, body {
+html {
+    height: 100%;
+}
+
+body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#blazor-server-rendered,
+app-root,
+div[blazor-ssr-unique-id] {
+    display: contents;
 }
 
 @media (max-width: 575.98px) {
