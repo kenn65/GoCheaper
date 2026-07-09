@@ -24,7 +24,7 @@ public record RegisterResult(RegisterResponse? User, string? Error, bool Success
 public record VerifyEmailResult(string? FirstName, string? Error, bool Success);
 public record LoginResult(string? Error, bool Success);
 public record VerifyAuthCodeResult(AuthTokenResponse? Tokens, string? Error, bool Success);
-public record RefreshResult(AuthTokenResponse? Tokens, string? Error, bool Success);
+public record RefreshResult(AuthTokenResponse? Tokens, string? Error, bool Success, bool IsTransient = false);
 public record GetUserResult(RegisterResponse? User, string? Error, bool Success);
 public record UpdateProfileResult(RegisterResponse? User, string? Error, bool Success);
 public record DeleteAccountResult(string? Error, bool Success);
@@ -62,8 +62,9 @@ public class IdentityApiClient(
         var result = await RefreshTokenAsync(userSession.UserId.Value, userSession.RefreshToken);
         if (result.Success && result.Tokens is not null)
             await authCookieService.UpdateTokensAsync(result.Tokens.AccessToken, result.Tokens.RefreshToken);
-        else
-            await authCookieService.SignOutAsync(); // refresh token expired — clears session + cookie
+        else if (!result.IsTransient)
+            await authCookieService.SignOutAsync(); // definitive 401 rejection — clear session + cookie
+        // Transient failures (timeout, network) leave the session intact; callers get a graceful error
     }
 
     // ── Register ─────────────────────────────────────────────────────────────
@@ -110,6 +111,8 @@ public class IdentityApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new VerifyEmailResult(null, $"Could not reach the identity service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new VerifyEmailResult(null, "The identity service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -132,6 +135,8 @@ public class IdentityApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new LoginResult($"Could not reach the identity service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new LoginResult("The identity service did not respond in time. Please try again.", false); }
 
         if (response.StatusCode == HttpStatusCode.NoContent)
             return new LoginResult(null, true);
@@ -151,6 +156,8 @@ public class IdentityApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new VerifyAuthCodeResult(null, $"Could not reach the identity service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new VerifyAuthCodeResult(null, "The identity service did not respond in time. Please try again.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -173,6 +180,8 @@ public class IdentityApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new GetUserResult(null, $"Could not reach the identity service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new GetUserResult(null, "The identity service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -202,6 +211,8 @@ public class IdentityApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new UpdateProfileResult(null, $"Could not reach the identity service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new UpdateProfileResult(null, "The identity service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -224,6 +235,8 @@ public class IdentityApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new DeleteAccountResult($"Could not reach the identity service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new DeleteAccountResult("The identity service did not respond in time.", false); }
 
         if (response.StatusCode == HttpStatusCode.NoContent)
             return new DeleteAccountResult(null, true);
@@ -242,7 +255,9 @@ public class IdentityApiClient(
         HttpResponseMessage response;
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
-            { return new RefreshResult(null, $"Could not reach the identity service: {ex.Message}", false); }
+            { return new RefreshResult(null, $"Could not reach the identity service: {ex.Message}", false, IsTransient: true); }
+        catch (OperationCanceledException)
+            { return new RefreshResult(null, "The identity service did not respond in time.", false, IsTransient: true); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -250,6 +265,7 @@ public class IdentityApiClient(
             return new RefreshResult(tokens, null, true);
         }
 
-        return new RefreshResult(null, $"Error {(int)response.StatusCode}", false);
+        // 401 = refresh token genuinely rejected (expired or rotated) — not transient
+        return new RefreshResult(null, $"Error {(int)response.StatusCode}", false, IsTransient: response.StatusCode != System.Net.HttpStatusCode.Unauthorized);
     }
 }

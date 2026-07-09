@@ -67,8 +67,8 @@ public class TripsApiClient(
         var result = await identityApiClient.RefreshTokenAsync(userSession.UserId.Value, userSession.RefreshToken);
         if (result.Success && result.Tokens is not null)
             await authCookieService.UpdateTokensAsync(result.Tokens.AccessToken, result.Tokens.RefreshToken);
-        else
-            userSession.Clear();
+        else if (!result.IsTransient)
+            userSession.Clear(); // definitive rejection only — transient errors leave session intact
     }
 
     public async Task<GetMyTripsResult> GetMyTripsAsync()
@@ -80,6 +80,8 @@ public class TripsApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new GetMyTripsResult(null, $"Could not reach the trips service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new GetMyTripsResult(null, "The trips service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -99,6 +101,8 @@ public class TripsApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new GetMyTripsResult(null, $"Could not reach the trips service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new GetMyTripsResult(null, "The trips service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -117,6 +121,8 @@ public class TripsApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new GetTripDetailsResult(null, $"Could not reach the trips service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new GetTripDetailsResult(null, "The trips service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -137,6 +143,8 @@ public class TripsApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new CreateTripResult(null, $"Could not reach the trips service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new CreateTripResult(null, "The trips service did not respond in time.", false); }
 
         if (response.StatusCode == HttpStatusCode.Created)
         {
@@ -158,6 +166,8 @@ public class TripsApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new UpdateTripResult(null, $"Could not reach the trips service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new UpdateTripResult(null, "The trips service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -178,6 +188,8 @@ public class TripsApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new BookTripResult($"Could not reach the trips service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new BookTripResult("The trips service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
             return new BookTripResult(null, true);
@@ -198,6 +210,8 @@ public class TripsApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new DeleteTripResult($"Could not reach the trips service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new DeleteTripResult("The trips service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
             return new DeleteTripResult(null, true);
@@ -215,6 +229,8 @@ public class TripsApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new BookTripResult($"Could not reach the trips service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new BookTripResult("The trips service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
             return new BookTripResult(null, true);

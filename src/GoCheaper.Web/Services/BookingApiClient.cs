@@ -97,8 +97,8 @@ public class BookingApiClient(
         var result = await identityApiClient.RefreshTokenAsync(userSession.UserId.Value, userSession.RefreshToken);
         if (result.Success && result.Tokens is not null)
             await authCookieService.UpdateTokensAsync(result.Tokens.AccessToken, result.Tokens.RefreshToken);
-        else
-            userSession.Clear();
+        else if (!result.IsTransient)
+            userSession.Clear(); // definitive rejection only — transient errors leave session intact
     }
 
     public async Task<BrowseTripsResult> BrowseTripsAsync(string? from = null, string? to = null)
@@ -114,6 +114,8 @@ public class BookingApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new BrowseTripsResult(null, $"Could not reach the booking service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new BrowseTripsResult(null, "The booking service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -131,6 +133,8 @@ public class BookingApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new GetBrowseTripDetailResult(null, $"Could not reach the booking service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new GetBrowseTripDetailResult(null, "The booking service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -149,6 +153,8 @@ public class BookingApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new GetMyBookingsResult(null, $"Could not reach the booking service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new GetMyBookingsResult(null, "The booking service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -169,6 +175,8 @@ public class BookingApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new BookingActionResult($"Could not reach the booking service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new BookingActionResult("The booking service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
             return new BookingActionResult(null, true);
@@ -185,6 +193,8 @@ public class BookingApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new BookingActionResult($"Could not reach the booking service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new BookingActionResult("The booking service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
             return new BookingActionResult(null, true);
@@ -214,6 +224,8 @@ public class BookingApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new GetBookingStatusResult(null, false, $"Could not reach the booking service: {ex.Message}"); }
+        catch (OperationCanceledException)
+            { return new GetBookingStatusResult(null, false, "The booking service did not respond in time."); }
 
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             return new GetBookingStatusResult(null, false, null);
@@ -234,6 +246,8 @@ public class BookingApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new GetRatingInfoResult(null, $"Could not reach the booking service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new GetRatingInfoResult(null, "The booking service did not respond in time.", false); }
 
         if (response.StatusCode == HttpStatusCode.NotFound)
             return new GetRatingInfoResult(null, "This rating link is invalid or has already been used.", false);
@@ -256,6 +270,8 @@ public class BookingApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new BookingActionResult($"Could not reach the booking service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new BookingActionResult("The booking service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
             return new BookingActionResult(null, true);
@@ -274,6 +290,8 @@ public class BookingApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new GetDriverRatingsResult(null, $"Could not reach the booking service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new GetDriverRatingsResult(null, "The booking service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
@@ -292,6 +310,8 @@ public class BookingApiClient(
         try { response = await CreateClient().SendAsync(request); }
         catch (HttpRequestException ex)
             { return new GetTripPassengersResult(null, $"Could not reach the booking service: {ex.Message}", false); }
+        catch (OperationCanceledException)
+            { return new GetTripPassengersResult(null, "The booking service did not respond in time.", false); }
 
         if (response.IsSuccessStatusCode)
         {
