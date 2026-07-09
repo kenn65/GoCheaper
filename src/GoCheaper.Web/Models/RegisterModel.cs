@@ -21,7 +21,6 @@ public class RegisterModel
         ErrorMessage = "Password must be at least 8 characters, contain 1 capital letter, and 2 digits.")]
     public string Password { get; set; } = "";
 
-    [Required(ErrorMessage = "Mobile phone is required.")]
     public string MobilePhone { get; set; } = "";
 
     public bool IsDriver { get; set; }

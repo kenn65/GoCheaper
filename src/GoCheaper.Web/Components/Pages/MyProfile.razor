@@ -96,9 +96,23 @@
                                                 <h6 class="text-muted text-uppercase small fw-semibold mb-3">Edit Profile</h6>
 
                         <div class="mb-3">
-                            <label class="form-label">Mobile Phone</label>
+                            <label class="form-label">
+                                Mobile Phone
+                                @if (model.IsDriver)
+                                {
+                                    <span class="text-danger"> *</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small fw-normal"> (optional for passengers)</span>
+                                }
+                            </label>
                             <input @bind="model.MobilePhone" class="form-control"
                                    placeholder="+45 12 34 56 78" type="tel" />
+                            @if (mobileError is not null)
+                            {
+                                <div class="text-danger small mt-1">@mobileError</div>
+                            }
                         </div>
 
                         <div class="mb-4">
@@ -128,7 +142,13 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Profile Picture</label>
+                            <label class="form-label">
+                                Profile Picture
+                                @if (!model.IsDriver)
+                                {
+                                    <span class="text-muted small fw-normal"> (optional for passengers)</span>
+                                }
+                            </label>
 
                             @{
                                 var previewBase64 = model.DriverPictureBase64 ?? user.DriverPictureBase64;
@@ -238,6 +258,7 @@
     private string? apiError;
     private string? saveError;
     private string? roleError;
+    private string? mobileError;
     private string? pictureError;
     private string pictureFileName = string.Empty;
 
@@ -299,13 +320,27 @@
 
     private async Task HandleSave()
     {
-        roleError   = null;
-        saveError   = null;
-        saveSuccess = false;
+        roleError    = null;
+        mobileError  = null;
+        pictureError = null;
+        saveError    = null;
+        saveSuccess  = false;
 
         if (model.IsDriver == false && model.IsPassenger == false)
         {
             roleError = "At least one of Driver or Passenger must remain selected.";
+            return;
+        }
+
+        if (model.IsDriver && string.IsNullOrWhiteSpace(model.MobilePhone))
+        {
+            mobileError = "Mobile phone is required for drivers.";
+            return;
+        }
+
+        if (model.IsDriver && string.IsNullOrEmpty(model.DriverPictureBase64) && string.IsNullOrEmpty(user?.DriverPictureBase64))
+        {
+            pictureError = "A profile picture is required for drivers.";
             return;
         }
 

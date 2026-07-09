@@ -42,7 +42,7 @@
                 <div class="card shadow-sm">
                     <div class="card-header bg-primary text-white py-3">
                         <h4 class="mb-0">Create your GoCheaper account</h4>
-                        <small class="opacity-75">All fields are required</small>
+                        <small class="opacity-75">Phone and picture are required for drivers, optional for passengers</small>
                     </div>
                     <div class="card-body p-4">
 
@@ -83,9 +83,22 @@
                             </div>
 
                             <div class="mb-4">
-                                <label class="form-label">Mobile Phone</label>
+                                <label class="form-label">
+                                    Mobile Phone
+                                    @if (model.IsDriver)
+                                    {
+                                        <span class="text-danger"> *</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small fw-normal"> (optional for passengers)</span>
+                                    }
+                                </label>
                                 <InputText @bind-Value="model.MobilePhone" class="form-control" placeholder="Mobile phone" />
-                                <ValidationMessage For="() => model.MobilePhone" class="text-danger small" />
+                                @if (mobileError is not null)
+                                {
+                                    <div class="text-danger small mt-1">@mobileError</div>
+                                }
                             </div>
 
                             <hr />
@@ -114,7 +127,13 @@
                             </div>
 
                             <hr />
-                            <h6 class="text-muted mb-3">Profile Picture</h6>
+                            <h6 class="text-muted mb-3">
+                                Profile Picture
+                                @if (!model.IsDriver)
+                                {
+                                    <span class="text-muted small fw-normal"> (optional for passengers)</span>
+                                }
+                            </h6>
 
                             <div class="mb-4">
                                 <InputFile OnChange="HandleImageUpload" accept="image/*" class="form-control" />
@@ -171,6 +190,7 @@
     private RegisterResponse? registrationResult;
     private string? apiError;
     private string? roleError;
+    private string? mobileError;
     private string? pictureError;
     private string? privacyError;
     private string pictureFileName = "";
@@ -207,6 +227,7 @@
     {
         roleError    = null;
         apiError     = null;
+        mobileError  = null;
         pictureError = null;
         privacyError = null;
 
@@ -216,9 +237,15 @@
             return;
         }
 
-        if (string.IsNullOrEmpty(model.DriverPictureBase64))
+        if (model.IsDriver && string.IsNullOrWhiteSpace(model.MobilePhone))
         {
-            pictureError = "A profile picture is required.";
+            mobileError = "Mobile phone is required for drivers.";
+            return;
+        }
+
+        if (model.IsDriver && string.IsNullOrEmpty(model.DriverPictureBase64))
+        {
+            pictureError = "A profile picture is required for drivers.";
             return;
         }
 
