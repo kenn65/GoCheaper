@@ -207,7 +207,19 @@
             if (result.Success && result.User is not null)
             {
                 var fullName = $"{result.User.FirstName} {result.User.LastName}".Trim();
+
+                // Mark profile complete in session first so the cookie write below picks up the new name
                 await AuthCookies.SetProfileCompletedAsync(fullName, result.User.IsDriver, result.User.IsPassenger);
+
+                // Force-refresh the JWT so the name claim is no longer empty.
+                // The JWT issued at login had an empty name because FirstName was blank then.
+                if (UserSession.RefreshToken is not null)
+                {
+                    var refresh = await IdentityApi.RefreshTokenAsync(UserSession.UserId!.Value, UserSession.RefreshToken);
+                    if (refresh.Success && refresh.Tokens is not null)
+                        await AuthCookies.UpdateTokensAsync(refresh.Tokens.AccessToken, refresh.Tokens.RefreshToken);
+                }
+
                 Nav.NavigateTo("/", forceLoad: true);
             }
             else
