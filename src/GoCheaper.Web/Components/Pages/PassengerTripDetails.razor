@@ -134,6 +134,11 @@
                    Message="Your seat is reserved. A booking confirmation has been emailed to you."
                    OnClose="GoToMyBookings" />
 
+<NotificationModal Show="_showCancelModal"
+                   Title="Booking Cancelled"
+                   Message="@($"Your booking has been cancelled. Redirecting to Browse Trips in {_cancelCountdown}…")"
+                   OnClose="() => Nav.NavigateTo("/browse-trips")" />
+
 <ConfirmModal Show="_confirmCancel"
               Title="Cancel Booking"
               Message="Are you sure you want to cancel your booking? The seats will be freed for other passengers."
@@ -155,6 +160,8 @@
     private bool    _actionBusy;
     private int     _seatsToBook      = 1;
     private bool    _showBookingModal;
+    private bool    _showCancelModal;
+    private int     _cancelCountdown  = 3;
     private bool    _confirmCancel;
 
     private void GoToMyBookings() => Nav.NavigateTo("/my-booked-trips");
@@ -205,12 +212,22 @@
         var result = await BookingClient.CancelBookingAsync(Id);
         if (result.Success)
         {
-            _confirmCancel = false;
-            await LoadAsync();
+            _confirmCancel   = false;
+            _cancelCountdown = 3;
+            _showCancelModal = true;
+            StateHasChanged();
+            while (_cancelCountdown > 0)
+            {
+                await Task.Delay(1000);
+                _cancelCountdown--;
+                StateHasChanged();
+            }
+            Nav.NavigateTo("/browse-trips");
         }
         else
         {
-            _cancelError = result.Error;
+            _confirmCancel = false;
+            _cancelError   = result.Error;
         }
         _actionBusy = false;
     }
