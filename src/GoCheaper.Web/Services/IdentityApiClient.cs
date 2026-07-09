@@ -72,14 +72,7 @@ public class IdentityApiClient(
 
     public async Task<RegisterResult> RegisterAsync(RegisterModel model)
     {
-        var payload = new
-        {
-            model.FirstName, model.LastName, model.Email, model.Password,
-            model.MobilePhone,
-            IsDriver    = (bool?)model.IsDriver,
-            IsPassenger = (bool?)model.IsPassenger,
-            model.DriverPictureBase64
-        };
+        var payload = new { model.Email, model.Password };
 
         using var request = BuildRequest(HttpMethod.Post, "/api/auth/register");
         request.Content = JsonContent.Create(payload);

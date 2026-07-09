@@ -98,7 +98,7 @@
                         <div class="mb-3">
                             <label class="form-label">
                                 Mobile Phone
-                                @if (model.IsDriver)
+                                @if (model.IsDriver == true)
                                 {
                                     <span class="text-danger"> *</span>
                                 }
@@ -120,7 +120,7 @@
                             <div class="d-flex flex-column flex-sm-row gap-2 gap-sm-4">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="chkDriver"
-                                           checked="@model.IsDriver"
+                                           checked="@(model.IsDriver == true)"
                                            @onchange="e => model.IsDriver = (bool)e.Value!" />
                                     <label class="form-check-label" for="chkDriver">
                                         <strong>Driver</strong> — I want to offer rides
@@ -128,7 +128,7 @@
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="chkPassenger"
-                                           checked="@model.IsPassenger"
+                                           checked="@(model.IsPassenger == true)"
                                            @onchange="e => model.IsPassenger = (bool)e.Value!" />
                                     <label class="form-check-label" for="chkPassenger">
                                         <strong>Passenger</strong> — I want to book rides
@@ -144,7 +144,7 @@
                         <div class="mb-4">
                             <label class="form-label">
                                 Profile Picture
-                                @if (!model.IsDriver)
+                                @if (model.IsDriver != true)
                                 {
                                     <span class="text-muted small fw-normal"> (optional for passengers)</span>
                                 }
@@ -332,13 +332,13 @@
             return;
         }
 
-        if (model.IsDriver && string.IsNullOrWhiteSpace(model.MobilePhone))
+        if (model.IsDriver == true && string.IsNullOrWhiteSpace(model.MobilePhone))
         {
             mobileError = "Mobile phone is required for drivers.";
             return;
         }
 
-        if (model.IsDriver && string.IsNullOrEmpty(model.DriverPictureBase64) && string.IsNullOrEmpty(user?.DriverPictureBase64))
+        if (model.IsDriver == true && string.IsNullOrEmpty(model.DriverPictureBase64) && string.IsNullOrEmpty(user?.DriverPictureBase64))
         {
             pictureError = "A profile picture is required for drivers.";
             return;
