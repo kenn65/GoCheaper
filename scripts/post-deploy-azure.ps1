@@ -1,18 +1,16 @@
 # Run this script after every Azure Container Apps deployment.
 #
-# WHY (Kafka): Aspire's default ACA bicep sets maxReplicas: 10 for all containers.
-# Multiple Kafka (KRaft-mode) instances fight over controller state and crash,
-# losing all topic metadata. Locking to exactly 1 replica prevents this.
-#
 # WHY (web sticky sessions): Blazor Server keeps circuit state on one server instance
 # per SignalR connection. Without sticky session affinity, ACA routes WebSocket frames
 # to different replicas; the circuit never gets its state updates back to the browser,
 # so button clicks appear to do nothing. Aspire 13.x does not configure this automatically.
+# Sticky sessions are NOT embedded in the Aspire deployment template and must be set
+# via CLI after every deploy.
 #
-# WHY (min-replicas 1 on all services): ACA scales to zero replicas when idle, causing
-# 30-90 second cold starts the next time a user visits. Keeping one replica always
-# running eliminates this. At the consumption tier the cost impact is negligible for
-# a low-traffic environment.
+# NOTE (min-replicas and Kafka max-replicas): These are now configured directly in
+# AppHost.cs via PublishAsAzureContainerApp and are embedded in every Aspire deployment
+# template — no longer requires CLI steps. The steps below are kept as a safety net
+# for environments deployed before this change.
 #
 # USAGE: .\scripts\post-deploy-azure.ps1
 #   Optional: override resource group with -ResourceGroup "rg-MyEnv"

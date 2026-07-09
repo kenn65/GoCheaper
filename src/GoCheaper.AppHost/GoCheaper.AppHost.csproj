@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Azure.AppContainers" Version="13.4.6" />
     <PackageReference Include="Aspire.Hosting.Azure.Sql" Version="13.4.6" />
     <PackageReference Include="Aspire.Hosting.Kafka" Version="13.4.6" />
     <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.4.6" />
