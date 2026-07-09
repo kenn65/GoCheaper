@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject UserSession UserSession
 @inject NavigationManager Nav
+@implements IDisposable
 
 <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
@@ -19,17 +20,27 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Nav.LocationChanged += OnLocationChanged;
+
         if (AuthState is not null)
         {
             var state = await AuthState;
             UserSession.LoadFromClaims(state.User);
-
-            if (UserSession.IsLoggedIn && !UserSession.IsProfileComplete)
-            {
-                var path = Nav.ToBaseRelativePath(Nav.Uri);
-                if (path != "complete-profile")
-                    Nav.NavigateTo("/complete-profile");
-            }
+            RedirectIfIncomplete(Nav.Uri);
         }
     }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+        => RedirectIfIncomplete(e.Location);
+
+    private void RedirectIfIncomplete(string uri)
+    {
+        if (!UserSession.IsLoggedIn || UserSession.IsProfileComplete) return;
+        var path = new Uri(uri).AbsolutePath.TrimStart('/');
+        if (path != "complete-profile")
+            Nav.NavigateTo("/complete-profile");
+    }
+
+    public void Dispose()
+        => Nav.LocationChanged -= OnLocationChanged;
 }
