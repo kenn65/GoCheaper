@@ -4,6 +4,7 @@
 @using GoCheaper.Web.Services
 @inject IdentityApiClient IdentityApi
 @inject IWebHostEnvironment Env
+@inject NavigationManager Nav
 
 <PageTitle>Register - GoCheaper</PageTitle>
 
@@ -33,7 +34,7 @@
                                 <code class="user-select-all">@registrationResult.EmailVerificationToken</code>
                             </div>
                         }
-                        <a href="/" class="btn btn-primary">Go to Home</a>
+                        <p class="text-muted small">Redirecting to home in @_countdown&hellip;</p>
                     </div>
                 </div>
             }
@@ -118,6 +119,7 @@
     private string? apiError;
     private string? privacyError;
     private bool isLoading;
+    private int _countdown = 3;
 
     private async Task HandleSubmit()
     {
@@ -135,9 +137,23 @@
         {
             var result = await IdentityApi.RegisterAsync(model);
             if (result.Success)
+            {
                 registrationResult = result.User;
+                isLoading = false;
+                StateHasChanged();
+                while (_countdown > 0)
+                {
+                    await Task.Delay(1000);
+                    _countdown--;
+                    StateHasChanged();
+                }
+                Nav.NavigateTo("/");
+                return;
+            }
             else
+            {
                 apiError = result.Error ?? "Registration failed. Please try again.";
+            }
         }
         catch (Exception)
         {
