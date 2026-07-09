@@ -7,10 +7,9 @@
 # Sticky sessions are NOT embedded in the Aspire deployment template and must be set
 # via CLI after every deploy.
 #
-# NOTE (min-replicas and Kafka max-replicas): These are now configured directly in
-# AppHost.cs via PublishAsAzureContainerApp and are embedded in every Aspire deployment
-# template — no longer requires CLI steps. The steps below are kept as a safety net
-# for environments deployed before this change.
+# NOTE (min-replicas and Kafka max-replicas): PublishAsAzureContainerApp requires
+# AddAzureContainerAppEnvironment which conflicts with the VS publish wizard and breaks
+# the deploy. These settings must be applied via CLI after every deploy (steps below).
 #
 # USAGE: .\scripts\post-deploy-azure.ps1
 #   Optional: override resource group with -ResourceGroup "rg-MyEnv"

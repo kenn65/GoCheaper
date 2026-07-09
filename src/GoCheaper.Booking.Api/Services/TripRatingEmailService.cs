@@ -45,9 +45,6 @@ public class TripRatingEmailService(
             try
             {
                 var token = Guid.NewGuid();
-                booking.RatingToken       = token;
-                booking.RatingEmailSentAt = DateTime.UtcNow;
-                await db.SaveChangesAsync(ct);
 
                 var @event = new TripRatingRequestedEvent(
                     BookingId:         booking.Id,
@@ -60,12 +57,18 @@ public class TripRatingEmailService(
                     DepartureTime:     booking.Trip.DepartureTime,
                     RatingToken:       token);
 
+                // Produce first — if Kafka or notification-api is unavailable, RatingEmailSentAt
+                // stays null so the next 30-minute poll retries rather than silently dropping.
                 await producer.ProduceAsync(KafkaTopics.TripRatingRequested,
                     new Message<string, string>
                     {
                         Key   = booking.Id.ToString(),
                         Value = JsonSerializer.Serialize(@event)
                     }, ct);
+
+                booking.RatingToken       = token;
+                booking.RatingEmailSentAt = DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
 
                 logger.LogInformation("Published rating request for booking {BookingId}", booking.Id);
             }

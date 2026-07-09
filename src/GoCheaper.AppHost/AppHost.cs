@@ -101,22 +101,9 @@ if (builder.ExecutionContext.IsPublishMode)
     bookingApi.WithEnvironment("ASPNETCORE_ENVIRONMENT",      "AzureTest");
     web.WithEnvironment("ASPNETCORE_ENVIRONMENT",             "AzureTest");
 
-    // Keep at least 1 replica so ACA never scales to zero between visits.
-    // Without this, every Aspire publish resets min-replicas to 0 (ACA default),
-    // causing 30-90 s cold starts. Baking it here makes it survive every redeploy.
-    identityApi.PublishAsAzureContainerApp((_, app)    => app.Template.Scale.MinReplicas = 1);
-    notificationApi.PublishAsAzureContainerApp((_, app) => app.Template.Scale.MinReplicas = 1);
-    tripsApi.PublishAsAzureContainerApp((_, app)       => app.Template.Scale.MinReplicas = 1);
-    bookingApi.PublishAsAzureContainerApp((_, app)     => app.Template.Scale.MinReplicas = 1);
-    web.PublishAsAzureContainerApp((_, app)            => app.Template.Scale.MinReplicas = 1);
-
-    // Kafka (KRaft mode) must never run more than 1 replica — multiple instances
-    // fight over controller state and lose topic metadata.
-    kafka.PublishAsAzureContainerApp((_, app) =>
-    {
-        app.Template.Scale.MinReplicas = 1;
-        app.Template.Scale.MaxReplicas = 1;
-    });
+    // min-replicas and Kafka max-replicas are enforced by scripts/post-deploy-azure.ps1
+    // which must be run after every deploy. PublishAsAzureContainerApp requires
+    // AddAzureContainerAppEnvironment which conflicts with the VS publish wizard.
 }
 
 builder.Build().Run();

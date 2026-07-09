@@ -323,7 +323,7 @@ builder.Services.AddSingleton<TripRatingEmailService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<TripRatingEmailService>());
 ```
 
-**`TripRatingEmailService`** (`Services/`, registered as above): BackgroundService that polls every 30 minutes for `PassengerBooking` rows where `Trip.DepartureTime + 2 days <= DateTime.Now` and `RatingEmailSentAt is null`. Generates a Guid `RatingToken`, sets `RatingEmailSentAt`, then publishes `TripRatingRequestedEvent` to `trip-rating-requested`. Notification.Api sends an email with a one-time link: `{WebApp:BaseUrl}/rate/{bookingId}?token={token}`.
+**`TripRatingEmailService`** (`Services/`, registered as above): BackgroundService that polls every 30 minutes for `PassengerBooking` rows where `Trip.DepartureTime + 2 days <= DateTime.Now` and `RatingEmailSentAt is null`. Generates a Guid `RatingToken`, produces `TripRatingRequestedEvent` to Kafka **first**, then sets `RatingEmailSentAt` and saves — so if the produce fails (Kafka down, notification-api sleeping) `RatingEmailSentAt` stays null and the next poll retries automatically. Notification.Api sends an email with a one-time link: `{WebApp:BaseUrl}/rate/{bookingId}?token={token}`.
 
 **Rating fields on `PassengerBooking`:** `RatingToken (Guid?)`, `RatingEmailSentAt (DateTime?)`, `DriverRating (int?)`, `DriverRatingComment (string?, max 500)`, `RatedAt (DateTime?)`.
 
@@ -372,7 +372,7 @@ All handlers skip sending (with a warning log) if the target email address is em
 
 **Email logo:** All templates embed the logo as a base64-encoded PNG `<img>` data URI (`data:image/png;base64,...`). Do **not** use inline SVG — Outlook.com strips SVG from emails.
 
-**Email button gotcha — Outlook strips CSS gradients:** Never use `background:linear-gradient(...)` on `<a>` tags in email templates. Outlook ignores it, leaving white text invisible on a white background. Always wrap the `<a>` in a `<td bgcolor="#xxxxxx">` (HTML attribute, not CSS) with a matching solid `background-color` on the link itself:
+**Email gradient gotcha — Outlook strips CSS gradients:** Never use `background:linear-gradient(...)` on any element in email templates — not on `<a>` tags and not on `<td>` header cells. Outlook ignores it entirely, leaving white backgrounds with invisible white text. All header `<td>` elements must use a solid `background-color`. Always wrap CTA `<a>` buttons in a `<td bgcolor="#xxxxxx">` (HTML attribute, not CSS) with a matching solid `background-color` on the link itself:
 ```html
 <td align="center" bgcolor="#3949ab" style="border-radius:8px;">
   <a href="{{Link}}" style="background-color:#3949ab;color:#ffffff;...">CTA text</a>
@@ -540,7 +540,9 @@ appsettings.json  →  appsettings.AzureTest.json  →  env vars injected by Asp
 
 **Network:** Only `web` has external ingress. All four API services are internal — reachable only within the Container Apps environment via Aspire service discovery.
 
-**ACA cold starts (scale-to-zero):** Azure Container Apps scales containers to zero replicas after a few minutes of inactivity. The first request after the container has been stopped triggers a cold start — all five services must restart before the request can be served, which takes 30–90 seconds. Fix: after every deploy run `scripts/post-deploy-azure.ps1`, which sets `min-replicas 1` on all five application services (`identity-api`, `trips-api`, `booking-api`, `notification-api`, `web`). With `min-replicas 1`, ACA keeps at least one warm instance running at all times. This does incur a small always-on cost but eliminates the cold-start UX penalty.
+**ACA cold starts (scale-to-zero):** Azure Container Apps scales containers to zero replicas after a few minutes of inactivity. The first request after the container has been stopped triggers a cold start — all five services must restart before the request can be served, which takes 30–90 seconds. Fix: after every deploy run `scripts/post-deploy-azure.ps1`, which sets `min-replicas 1` on all five application services. With `min-replicas 1`, ACA keeps at least one warm instance running at all times. `min-replicas` cannot be baked into `AppHost.cs` via `PublishAsAzureContainerApp` — that API requires `AddAzureContainerAppEnvironment` which conflicts with the VS publish wizard and breaks manifest generation. The post-deploy script is the only supported approach with the wizard.
+
+**Timezone fix — all services:** All five services set `TZ=Europe/Copenhagen` via `.WithEnvironment("TZ", "Europe/Copenhagen")` in `AppHost.cs`. Azure Container Apps runs Linux containers in UTC; without this, `DateTime.Now` returns UTC time. DepartureTime is stored as Danish local time (as entered by users), so all comparisons in `TripStatus.Compute` and `TripRatingEmailService` must use the same timezone. On Windows local dev, `TZ` is ignored — no impact.
 
 **Kafka in Azure — single-replica requirement:** Kafka runs in KRaft mode (no ZooKeeper). ACA's default `maxReplicas: 10` causes autoscaling to multiple Kafka instances; multiple KRaft controllers fight over state and crash each other, losing all topic metadata.
 
