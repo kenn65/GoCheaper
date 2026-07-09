@@ -27,16 +27,15 @@
 
               <p style="margin:0 0 16px;font-size:15px;color:#333;">Hi <strong>{{DriverFullName}}</strong>,</p>
               <p style="margin:0 0 28px;font-size:15px;color:#555;line-height:1.6;">
-                Great news &mdash; someone just booked a seat on your trip. Here is everything you need to know.
+                Great news &mdash; <strong>{{PassengerFullName}}</strong> just booked <strong>{{SeatsCount}}</strong> seat(s) on your trip. Here are the details.
               </p>
 
               <!-- Passenger card -->
               <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fff4;border:1px solid #a3cfbb;border-radius:6px;margin-bottom:24px;">
                 <tr>
                   <td style="padding:18px 20px;">
-                    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#198754;letter-spacing:1px;text-transform:uppercase;">Passenger</p>
-                    <p style="margin:0 0 6px;font-size:20px;font-weight:700;color:#333;">{{PassengerFullName}}</p>
-                    <p style="margin:0;font-size:14px;color:#555;">Booked <strong>{{SeatsCount}}</strong> seat(s) &mdash; confirmed at {{BookedAt}}</p>
+                    <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#198754;letter-spacing:1px;text-transform:uppercase;">New Passenger</p>
+                    <p style="margin:0;font-size:20px;font-weight:700;color:#333;">{{PassengerFullName}}</p>
                   </td>
                 </tr>
               </table>
