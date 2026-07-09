@@ -153,6 +153,7 @@ Models/
 - `DriverPictureBase64` — nullable; stored as NVARCHAR(MAX)
 - `MobilePhone` — nullable; **unique** across all users (checked on register and update)
 - `IsEmailVerified`, `EmailVerificationToken` — email verification flow
+- `IsProfileComplete` — false on registration; set to true by `UpdateUserHandler` once FirstName + LastName + at least one role are saved; existing users are migrated to true by `AddIsProfileComplete` migration
 - `AuthCode`, `AuthCodeExpiry` — 6-digit OTP; 5-minute TTL
 - `RefreshToken`, `RefreshTokenExpiry` — 90-day; rotated on every use
 
@@ -413,9 +414,9 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 
 **`/auth/verify-redirect` GET endpoint:** Signs out any existing session and does a clean server-side redirect to `/`. Used by `VerifyEmail.razor`'s "Go to Home" button to ensure the home page always loads fresh and anonymous after email verification, bypassing Blazor circuit state entirely. This avoids a broken logged-in state that could appear if a previously active session's cookie was present when the verification email link was opened.
 
-**`AuthCookieService` (Scoped, `IAsyncDisposable`):** Lazy-loads `wwwroot/js/auth.js` as an ES module via `IJSRuntime`. All JS interop calls catch `JSDisconnectedException` (including `DisposeAsync`) because the circuit may be disconnecting during navigation. Methods: `UpdateTokensAsync`, `UpdateRolesAsync`, `SignOutAsync`.
+**`AuthCookieService` (Scoped, `IAsyncDisposable`):** Lazy-loads `wwwroot/js/auth.js` as an ES module via `IJSRuntime`. All JS interop calls catch `JSDisconnectedException` (including `DisposeAsync`) because the circuit may be disconnecting during navigation. Methods: `UpdateTokensAsync`, `UpdateRolesAsync`, `SetProfileCompletedAsync(fullName, isDriver, isPassenger)`, `SignOutAsync`. All methods that call `signIn` pass `is_profile_complete` from `UserSession.IsProfileComplete` (or `"true"` for `SetProfileCompletedAsync`).
 
-**`UserSession` (Scoped):** In-memory auth state for the lifetime of one SignalR circuit. Properties: `IsLoggedIn`, `UserId`, `Email`, `FullName`, `IsDriver`, `IsPassenger`, `AccessToken`, `AccessTokenExpiry`, `RefreshToken`, `RefreshTokenExpiry`, `IsAccessTokenExpired` (true when within 30 s of expiry). `LoadFromClaims(ClaimsPrincipal)` populates it from the cookie on circuit start (called from `Routes.razor`). `NotifyChange()` / `OnChange` event lets `NavMenu` re-render live.
+**`UserSession` (Scoped):** In-memory auth state for the lifetime of one SignalR circuit. Properties: `IsLoggedIn`, `UserId`, `Email`, `FullName`, `IsDriver`, `IsPassenger`, `IsProfileComplete`, `AccessToken`, `AccessTokenExpiry`, `RefreshToken`, `RefreshTokenExpiry`, `IsAccessTokenExpired` (true when within 30 s of expiry). `LoadFromClaims(ClaimsPrincipal)` populates it from the cookie on circuit start (called from `Routes.razor`). `SetProfileComplete(fullName, isDriver, isPassenger)` flips `IsProfileComplete = true` and updates name+roles in-memory. `NotifyChange()` / `OnChange` event lets `NavMenu` re-render live.
 
 **`IdentityApiClient` (Scoped):** Named `HttpClient` (`"identity-api"`) with Aspire service discovery. Attaches `X-API-Key` (from `ApiKey:IdentityApi`) and `Authorization: Bearer` to every request. Calls `EnsureFreshTokenAsync()` before any JWT-gated method — if `UserSession.IsAccessTokenExpired`, it calls `RefreshTokenAsync` and updates `UserSession` + cookie via `AuthCookieService.UpdateTokensAsync`. If the refresh token is also expired, `userSession.Clear()` is called and the next page render forces re-login.
 
@@ -436,7 +437,7 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 
 #### Route authorization
 
-`Routes.razor` uses `AuthorizeRouteView` (not `RouteView`). The `<NotAuthorized>` template renders `RedirectToLogin.razor`, which checks `IsAuthenticated`: if true (authenticated but not authorised for that route), it redirects to `/my-profile`; if false, it redirects to `/login?returnUrl={current path}`.
+`Routes.razor` uses `AuthorizeRouteView` (not `RouteView`). The `<NotAuthorized>` template renders `RedirectToLogin.razor`, which checks `IsAuthenticated`: if true (authenticated but not authorised for that route), it redirects to `/my-profile`; if false, it redirects to `/login?returnUrl={current path}`. `Routes.razor` also enforces profile completion: in `OnInitializedAsync`, after loading claims, if `UserSession.IsLoggedIn && !UserSession.IsProfileComplete` and the current path is not `complete-profile`, it calls `Nav.NavigateTo("/complete-profile")`. This fires on both SSR and circuit phases — both are safe redirects.
 
 Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@attribute [Authorize(Policy = "DriverOnly")]` for driver-only pages. `_Imports.razor` already imports `Microsoft.AspNetCore.Authorization` and `Microsoft.AspNetCore.Components.Authorization` globally.
 
@@ -449,7 +450,8 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 | `Home.razor` | `/` | Public | Landing page with logo, stats dashboard (total trips/users counts), and sign-in/sign-up CTAs |
 | `Login.razor` | `/login` | Public | Email + password → OTP; on success shows `NotificationModal` ("Login Code Sent") then navigates to `/verify-code` after OK |
 | `VerifyCode.razor` | `/verify-code` | Public | 6-digit OTP → `/auth/complete` redirect |
-| `Register.razor` | `/register` | Public | Registration form; GDPR consent is always required; mobile phone and profile picture are required for drivers, optional for passenger-only users — enforced in `HandleSubmit` (not data annotations) so the label updates dynamically; on success shows an inline success card (no modal) |
+| `Register.razor` | `/register` | Public | Collects email + password + GDPR consent only. Name, role, phone, and picture are collected on the `/complete-profile` page after first login. On success shows inline success card directing user to sign in. |
+| `CompleteProfile.razor` | `/complete-profile` | `[Authorize]` | `prerender: false`; forced onboarding step — `Routes.razor` redirects any logged-in user with `IsProfileComplete=false` here before they can access any other page. Collects FirstName, LastName, account type (Driver/Passenger), and (if driver) MobilePhone + picture. On save: calls `UpdateProfileAsync`, then `AuthCookies.SetProfileCompletedAsync(fullName, isDriver, isPassenger)` to rewrite the cookie with `is_profile_complete=true`, then `Nav.NavigateTo("/", forceLoad: true)`. |
 | `VerifyEmail.razor` | `/verify-email` | Public | `prerender: false`; reads `?userId=&token=` query params; calls `VerifyEmailAsync`; "Go to Home" navigates to `/auth/verify-redirect` (server redirect that signs out any stale session before returning to `/`) |
 | `PrivacyPolicy.razor` | `/privacy-policy` | Public | GDPR privacy policy page linked from registration and footer |
 | `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; mobile phone and picture required only when `model.IsDriver` is true (optional for passenger-only) — validated in `HandleSave`; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature; `NotificationModal` on save success; `ConfirmModal` with "Type DELETE" input for account delete; GDPR data export button downloads a ZIP containing PDF summary + JSON raw data |
