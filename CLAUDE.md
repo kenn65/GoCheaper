@@ -134,13 +134,13 @@ Features/
   VerifyEmail/
   Login/                     # Validates credentials, stores 6-digit OTP, publishes auth-code-requested
   VerifyAuthCode/
-    AuthTokenResponse.cs     # AccessToken, RefreshToken, ExpiresIn, UserId, Email, FirstName, LastName, IsDriver, IsPassenger
+    AuthTokenResponse.cs     # AccessToken, RefreshToken, ExpiresIn, UserId, Email, FirstName, LastName, IsDriver, IsPassenger, IsProfileComplete
     VerifyAuthCodeHandler.cs # Validates OTP, issues JWT + 90-day refresh token
   RefreshToken/
     RefreshTokenHandler.cs   # Validates + rotates refresh token, issues new JWT
   GetUser/
     GetUserHandler.cs        # GET /api/auth/users/{id} — returns full UserResponse
-  UpdateUser/
+  UpdateUser/    # PATCH handler — patches FirstName, LastName, MobilePhone, IsDriver, IsPassenger, DriverPictureBase64; sets IsProfileComplete=true when FirstName+LastName+at least one role are non-empty
   DeleteUser/
   ForgotPassword/
   ResetPassword/
@@ -149,11 +149,12 @@ Models/
 ```
 
 **User model fields** (relevant additions beyond name/email/password):
-- `IsDriver`, `IsPassenger` — at least one must be true
+- `IsDriver`, `IsPassenger` — at least one must be true once profile is complete; both default to `false` on registration
+- `FirstName`, `LastName` — empty string on registration; populated by `UpdateUserHandler` when user completes profile
 - `DriverPictureBase64` — nullable; stored as NVARCHAR(MAX)
 - `MobilePhone` — nullable; **unique** across all users (checked on register and update)
 - `IsEmailVerified`, `EmailVerificationToken` — email verification flow
-- `IsProfileComplete` — false on registration; set to true by `UpdateUserHandler` once FirstName + LastName + at least one role are saved; existing users are migrated to true by `AddIsProfileComplete` migration
+- `IsProfileComplete` — `false` on registration; set to `true` by `UpdateUserHandler` once `FirstName` + `LastName` + at least one role are non-empty; existing users were back-filled to `true` by the `AddIsProfileComplete` migration (SQL: `UPDATE Users SET IsProfileComplete = 1 WHERE FirstName <> '' AND LastName <> '' AND (IsDriver = 1 OR IsPassenger = 1)`)
 - `AuthCode`, `AuthCodeExpiry` — 6-digit OTP; 5-minute TTL
 - `RefreshToken`, `RefreshTokenExpiry` — 90-day; rotated on every use
 
@@ -400,6 +401,7 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 | `ClaimTypes.Email` | User email |
 | `ClaimTypes.Name` | `"{FirstName} {LastName}"` |
 | `"is_driver"` / `"is_passenger"` | `"true"` / `"false"` |
+| `"is_profile_complete"` | `"true"` / `"false"` — set on every sign-in and cookie rewrite |
 | `"access_token"` | Current JWT (10-min) |
 | `"access_token_expiry"` | ISO-8601 UTC |
 | `"refresh_token"` | Current refresh token (90-day) |
@@ -412,7 +414,7 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 
 **`/auth/signout` POST endpoint:** Clears the `gc_auth` cookie.
 
-**`/auth/verify-redirect` GET endpoint:** Signs out any existing session and does a clean server-side redirect to `/`. Used by `VerifyEmail.razor`'s "Go to Home" button to ensure the home page always loads fresh and anonymous after email verification, bypassing Blazor circuit state entirely. This avoids a broken logged-in state that could appear if a previously active session's cookie was present when the verification email link was opened.
+**`/auth/verify-redirect` GET endpoint:** Signs out any existing session and does a clean server-side redirect to `/`. Ensures the home page always loads fresh and anonymous after email verification, bypassing Blazor circuit state entirely — avoids a broken logged-in state if a previously active session's cookie was present when the verification email link was opened.
 
 **`AuthCookieService` (Scoped, `IAsyncDisposable`):** Lazy-loads `wwwroot/js/auth.js` as an ES module via `IJSRuntime`. All JS interop calls catch `JSDisconnectedException` (including `DisposeAsync`) because the circuit may be disconnecting during navigation. Methods: `UpdateTokensAsync`, `UpdateRolesAsync`, `SetProfileCompletedAsync(fullName, isDriver, isPassenger)`, `SignOutAsync`. All methods that call `signIn` pass `is_profile_complete` from `UserSession.IsProfileComplete` (or `"true"` for `SetProfileCompletedAsync`).
 
@@ -437,7 +439,11 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 
 #### Route authorization
 
-`Routes.razor` uses `AuthorizeRouteView` (not `RouteView`). The `<NotAuthorized>` template renders `RedirectToLogin.razor`, which checks `IsAuthenticated`: if true (authenticated but not authorised for that route), it redirects to `/my-profile`; if false, it redirects to `/login?returnUrl={current path}`. `Routes.razor` also enforces profile completion: in `OnInitializedAsync`, after loading claims, if `UserSession.IsLoggedIn && !UserSession.IsProfileComplete` and the current path is not `complete-profile`, it calls `Nav.NavigateTo("/complete-profile")`. This fires on both SSR and circuit phases — both are safe redirects.
+`Routes.razor` uses `AuthorizeRouteView` (not `RouteView`). The `<NotAuthorized>` template renders `RedirectToLogin.razor`, which checks `IsAuthenticated`: if true (authenticated but not authorised for that route), it redirects to `/my-profile`; if false, it redirects to `/login?returnUrl={current path}`. `Routes.razor` also enforces profile completion via two hooks:
+1. **`OnInitializedAsync`** — after loading claims from the cookie, calls `RedirectIfIncomplete(Nav.Uri)` (handles circuit start and full-page loads).
+2. **`LocationChanged` event** — subscribed in `OnInitializedAsync`, unsubscribed in `Dispose()` — calls `RedirectIfIncomplete(e.Location)` on every in-circuit navigation (NavLink clicks, `Nav.NavigateTo`).
+
+`RedirectIfIncomplete` early-exits if `!UserSession.IsLoggedIn || UserSession.IsProfileComplete`; otherwise extracts `AbsolutePath` from the URI and redirects to `/complete-profile` if the path is not already `complete-profile`.
 
 Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@attribute [Authorize(Policy = "DriverOnly")]` for driver-only pages. `_Imports.razor` already imports `Microsoft.AspNetCore.Authorization` and `Microsoft.AspNetCore.Components.Authorization` globally.
 
@@ -450,11 +456,11 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 | `Home.razor` | `/` | Public | Landing page with logo, stats dashboard (total trips/users counts), and sign-in/sign-up CTAs |
 | `Login.razor` | `/login` | Public | Email + password → OTP; on success shows `NotificationModal` ("Login Code Sent") then navigates to `/verify-code` after OK |
 | `VerifyCode.razor` | `/verify-code` | Public | 6-digit OTP → `/auth/complete` redirect |
-| `Register.razor` | `/register` | Public | Collects email + password + GDPR consent only. Name, role, phone, and picture are collected on the `/complete-profile` page after first login. On success shows inline success card directing user to sign in. |
+| `Register.razor` | `/register` | Public | Collects email + password + GDPR consent only. Name, role, phone, and picture are collected on the `/complete-profile` page after first login. On success shows inline success card with a 3-second countdown then auto-navigates to `/`. |
 | `CompleteProfile.razor` | `/complete-profile` | `[Authorize]` | `prerender: false`; forced onboarding step — `Routes.razor` redirects any logged-in user with `IsProfileComplete=false` here before they can access any other page. Collects FirstName, LastName, account type (Driver/Passenger), and (if driver) MobilePhone + picture. On save: calls `UpdateProfileAsync`, then `AuthCookies.SetProfileCompletedAsync(fullName, isDriver, isPassenger)` to rewrite the cookie with `is_profile_complete=true`, then `Nav.NavigateTo("/", forceLoad: true)`. |
-| `VerifyEmail.razor` | `/verify-email` | Public | `prerender: false`; reads `?userId=&token=` query params; calls `VerifyEmailAsync`; "Go to Home" navigates to `/auth/verify-redirect` (server redirect that signs out any stale session before returning to `/`) |
+| `VerifyEmail.razor` | `/verify-email` | Public | `prerender: false`; reads `?userId=&token=` query params; calls `VerifyEmailAsync`; on success shows a 3-second countdown then auto-navigates to `/login` (no button — fully automatic) |
 | `PrivacyPolicy.razor` | `/privacy-policy` | Public | GDPR privacy policy page linked from registration and footer |
-| `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; mobile phone and picture required only when `model.IsDriver` is true (optional for passenger-only) — validated in `HandleSave`; `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature; `NotificationModal` on save success; `ConfirmModal` with "Type DELETE" input for account delete; GDPR data export button downloads a ZIP containing PDF summary + JSON raw data |
+| `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; mobile phone and picture are **required only when `model.IsDriver == true`** (shown as optional for passenger-only users); avatar initial falls back to `"?"` when `FirstName` is empty (guards `IndexOutOfRangeException` for newly-registered users); `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature; `NotificationModal` on save success; `ConfirmModal` with "Type DELETE" input for account delete; GDPR data export button downloads a ZIP containing PDF summary + JSON raw data |
 | `MyTrips.razor` | `/my-trips` | `DriverOnly` | Driver's trips; mobile card layout / desktop table; calls `BookingApiClient.GetBookedSeatsAsync` to merge real booked seat counts |
 | `CreateTrip.razor` | `/trips/create` | `[Authorize]` | Form to post a new trip with pickup points editor; passes `DriverFullName` for DriverSnapshot bootstrap; price per seat min 1. Currency dropdown (DKK/NOK/SEK) is placed before the price field; the price label reads `Price per Seat (@_model.Currency)` and updates dynamically as the currency changes |
 | `TripDetails.razor` | `/trips/{Id:guid}` | `DriverOnly` | Driver view; inline edit form; when bookings exist only Note, Pickup Points, Payment Method and Number Plate are editable (From/To/Seats/Price/Departure are disabled); delete opens `ConfirmModal` with optional reason textarea (sent to passengers via `TripCancelledForPassengerEvent`); below the trip card (when not editing) shows a "Passengers" card with the list of passengers who booked (mobile: one card per passenger; desktop: table with tfoot totals) — calls `BookingApiClient.GetTripPassengersAsync` |
@@ -486,7 +492,7 @@ Both modals use pure Blazor conditional rendering (`show d-block` CSS class) —
 
 #### NavMenu
 
-`NavMenu.razor` implements `IDisposable` and subscribes to `UserSession.OnChange` → `InvokeAsync(StateHasChanged)` for live updates. Left nav shows role-based items: My Profile (always); My Trips (if `IsDriver`); Browse Trips + My Booked Trips (if `IsPassenger`). Right nav shows `UserSession.FullName` + Sign Out when logged in, Sign In when logged out.
+`NavMenu.razor` implements `IDisposable` and subscribes to `UserSession.OnChange` → `InvokeAsync(StateHasChanged)` for live updates. Left nav items (My Profile, My Trips, Browse Trips, My Booked Trips) are hidden entirely when `!UserSession.IsProfileComplete` — the user sees a bare navbar during the `/complete-profile` onboarding step. Once profile is complete, the left nav shows role-based items: My Profile (always); My Trips (if `IsDriver`); Browse Trips + My Booked Trips (if `IsPassenger`). Right nav shows `UserSession.FullName` (falls back to `UserSession.Email` when FullName is empty, e.g. before profile completion) + Sign Out when logged in, Sign In when logged out.
 
 **All `href` values must have a leading `/`** — e.g. `href="/my-trips"`, not `href="my-trips"`. Blazor resolves relative hrefs against the current URL's base path, not the app root, so a missing `/` causes navigation to break on deep routes (e.g. `/trips/some-id` + `href="my-trips"` resolves to `/trips/my-trips`). Driver+Passenger users see both the "My Trips" and the "Browse Trips"/"My Booked Trips" sets of menu items simultaneously.
 
@@ -510,6 +516,7 @@ All list pages (MyTrips, MyBookedTrips, BrowseTrips) render a **Bootstrap card l
 - **`gc_auth` cookie is encrypted** — the refresh token and all other claims are stored inside this HttpOnly encrypted blob. They are not visible in browser DevTools — that is expected and correct.
 - **`OperationCanceledException` disconnects the circuit** — Polly's resilience handler cancels timed-out requests with `OperationCanceledException` (or `TaskCanceledException`), which does NOT inherit from `HttpRequestException`. If an API client method only catches `HttpRequestException`, a timeout propagates uncaught through the Blazor event handler and disconnects the SignalR circuit. The component resets silently — the user sees "nothing happens." Rule: every API client method must explicitly `catch (OperationCanceledException)`, and every Blazor event handler that calls external services must have an outer `catch (Exception)` as a final safety net.
 - **Edit Trip form must match Create Trip layout** — Currency (col-md-4) and Price per Seat (col-md-8) must stay side by side on one row; Total Seats on its own full-width row above. The price label reads `Price per Seat (@_edit.Currency)` and updates dynamically. If these are separated, one form looks different from the other and the currency label becomes stale.
+- **`bool?` nullable booleans in Razor** — `UpdateProfileModel.IsDriver` and `IsPassenger` are `bool?` (PATCH semantics: `null` = not supplied). In Razor, `@if (model.IsDriver)` fails CS0266 because `bool?` is not implicitly `bool`. Always use `model.IsDriver == true` / `model.IsDriver != true` comparisons. Checkbox `checked` attribute: `checked="@(model.IsDriver == true)"`. Validation guards: `if (model.IsDriver == true && ...)`.
 - **Sticky sessions required in Azure Container Apps** — Blazor Server keeps all circuit state (component state, `UserSession`, etc.) on the specific server instance that owns the SignalR connection. Aspire 13.x does NOT configure `stickySessionsAffinity: sticky` on the web container app. Without it, ACA may route a WebSocket frame to a different replica that has no circuit — button clicks appear to do nothing, registrations succeed in the DB but the success card never appears. Fix by running `scripts/post-deploy-azure.ps1` after every deploy (it calls `az containerapp ingress sticky-sessions set --affinity sticky`).
 
 ---
