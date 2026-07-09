@@ -38,7 +38,8 @@ public class AuthCookieService(IJSRuntime js, UserSession session) : IAsyncDispo
                 session.IsDriver.ToString().ToLowerInvariant(),
                 session.IsPassenger.ToString().ToLowerInvariant(),
                 accessToken,   accessTokenExpiry.ToString("O"),
-                refreshToken,  refreshTokenExpiry.ToString("O"));
+                refreshToken,  refreshTokenExpiry.ToString("O"),
+                session.IsProfileComplete.ToString().ToLowerInvariant());
         }
         catch (JSDisconnectedException) { }
     }
@@ -59,7 +60,30 @@ public class AuthCookieService(IJSRuntime js, UserSession session) : IAsyncDispo
                 isDriver.ToString().ToLowerInvariant(),
                 isPassenger.ToString().ToLowerInvariant(),
                 session.AccessToken,  session.AccessTokenExpiry?.ToString("O")  ?? "",
-                session.RefreshToken, session.RefreshTokenExpiry?.ToString("O") ?? "");
+                session.RefreshToken, session.RefreshTokenExpiry?.ToString("O") ?? "",
+                session.IsProfileComplete.ToString().ToLowerInvariant());
+        }
+        catch (JSDisconnectedException) { }
+    }
+
+    public async Task SetProfileCompletedAsync(string fullName, bool isDriver, bool isPassenger)
+    {
+        if (session.UserId is null || session.Email is null ||
+            session.AccessToken is null || session.RefreshToken is null) return;
+
+        session.SetProfileComplete(fullName, isDriver, isPassenger);
+
+        var module = await GetModuleAsync();
+        if (module is null) return;
+        try
+        {
+            await module.InvokeVoidAsync("signIn",
+                session.UserId.Value.ToString(), session.Email, fullName,
+                isDriver.ToString().ToLowerInvariant(),
+                isPassenger.ToString().ToLowerInvariant(),
+                session.AccessToken,  session.AccessTokenExpiry?.ToString("O")  ?? "",
+                session.RefreshToken, session.RefreshTokenExpiry?.ToString("O") ?? "",
+                "true");
         }
         catch (JSDisconnectedException) { }
     }

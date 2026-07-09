@@ -11,12 +11,13 @@ public record RegisterResponse(
     Guid Id, string FirstName, string LastName, string Email,
     bool IsDriver, bool IsPassenger, string? MobilePhone,
     bool IsEmailVerified, string? EmailVerificationToken,
-    string? DriverPictureBase64, DateTime CreatedAt);
+    string? DriverPictureBase64, DateTime CreatedAt,
+    bool IsProfileComplete = false);
 
 public record AuthTokenResponse(
     string AccessToken, string RefreshToken, int ExpiresIn,
     Guid UserId, string Email, string FirstName, string LastName,
-    bool IsDriver, bool IsPassenger);
+    bool IsDriver, bool IsPassenger, bool IsProfileComplete = false);
 
 // ── Result wrappers ─────────────────────────────────────────────────────────
 
@@ -201,6 +202,8 @@ public class IdentityApiClient(
         using var request = BuildRequest(HttpMethod.Patch, $"/api/auth/users/{userId}");
         request.Content = JsonContent.Create(new
         {
+            model.FirstName,
+            model.LastName,
             model.MobilePhone,
             model.IsDriver,
             model.IsPassenger,

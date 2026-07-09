@@ -11,6 +11,7 @@ public class UserSession
     public string? FullName         { get; private set; }
     public bool   IsDriver          { get; private set; }
     public bool   IsPassenger       { get; private set; }
+    public bool   IsProfileComplete { get; private set; }
     public string? AccessToken      { get; private set; }
     public DateTime? AccessTokenExpiry   { get; private set; }
     public string? RefreshToken     { get; private set; }
@@ -28,6 +29,7 @@ public class UserSession
         FullName    = principal.FindFirst(ClaimTypes.Name)?.Value;
         IsDriver    = principal.FindFirst("is_driver")?.Value  == "true";
         IsPassenger = principal.FindFirst("is_passenger")?.Value == "true";
+        IsProfileComplete = principal.FindFirst("is_profile_complete")?.Value == "true";
         AccessToken   = principal.FindFirst("access_token")?.Value;
         RefreshToken  = principal.FindFirst("refresh_token")?.Value;
 
@@ -59,6 +61,7 @@ public class UserSession
     public void Clear()
     {
         UserId = null; Email = null; FullName = null; IsDriver = false; IsPassenger = false;
+        IsProfileComplete = false;
         AccessToken = null; RefreshToken = null;
         AccessTokenExpiry = null; RefreshTokenExpiry = null;
         NotifyChange();
@@ -68,6 +71,15 @@ public class UserSession
     {
         IsDriver    = isDriver;
         IsPassenger = isPassenger;
+        NotifyChange();
+    }
+
+    public void SetProfileComplete(string fullName, bool isDriver, bool isPassenger)
+    {
+        FullName          = fullName;
+        IsDriver          = isDriver;
+        IsPassenger       = isPassenger;
+        IsProfileComplete = true;
         NotifyChange();
     }
 

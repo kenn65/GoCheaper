@@ -101,6 +101,7 @@ app.MapGet("/auth/complete", async (string key, string? returnUrl, IMemoryCache 
         new(ClaimTypes.Name,           $"{tokens.FirstName} {tokens.LastName}"),
         new("is_driver",               tokens.IsDriver.ToString().ToLowerInvariant()),
         new("is_passenger",            tokens.IsPassenger.ToString().ToLowerInvariant()),
+        new("is_profile_complete",     tokens.IsProfileComplete.ToString().ToLowerInvariant()),
         new("access_token",            tokens.AccessToken),
         new("access_token_expiry",     accessTokenExpiry.ToString("O")),
         new("refresh_token",           tokens.RefreshToken),
@@ -112,6 +113,10 @@ app.MapGet("/auth/complete", async (string key, string? returnUrl, IMemoryCache 
 
     await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal,
         new AuthenticationProperties { IsPersistent = true, ExpiresUtc = DateTimeOffset.UtcNow.AddDays(90) });
+
+    // Incomplete profiles must complete before accessing the app
+    if (!tokens.IsProfileComplete)
+        return Results.Redirect("/complete-profile");
 
     // Guard against open-redirect: only accept local paths (must start with /)
     var destination = !string.IsNullOrWhiteSpace(returnUrl) && returnUrl.StartsWith('/')
@@ -130,6 +135,7 @@ app.MapPost("/auth/signin", async (SignInRequest req, HttpContext ctx) =>
         new(ClaimTypes.Name,                 req.FullName),
         new("is_driver",                     req.IsDriver),
         new("is_passenger",                  req.IsPassenger),
+        new("is_profile_complete",           req.IsProfileComplete),
         new("access_token",                  req.AccessToken),
         new("access_token_expiry",           req.AccessTokenExpiry),
         new("refresh_token",                 req.RefreshToken),
@@ -225,4 +231,5 @@ record SignInRequest(
     string AccessToken,
     string AccessTokenExpiry,
     string RefreshToken,
-    string RefreshTokenExpiry);
+    string RefreshTokenExpiry,
+    string IsProfileComplete);

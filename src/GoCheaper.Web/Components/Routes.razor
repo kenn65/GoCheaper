@@ -1,6 +1,7 @@
 @using GoCheaper.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
 @inject UserSession UserSession
+@inject NavigationManager Nav
 
 <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
@@ -22,6 +23,13 @@
         {
             var state = await AuthState;
             UserSession.LoadFromClaims(state.User);
+
+            if (UserSession.IsLoggedIn && !UserSession.IsProfileComplete)
+            {
+                var path = Nav.ToBaseRelativePath(Nav.Uri);
+                if (path != "complete-profile")
+                    Nav.NavigateTo("/complete-profile");
+            }
         }
     }
 }

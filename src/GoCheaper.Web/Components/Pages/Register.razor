@@ -9,7 +9,7 @@
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
+        <div class="col-md-6 col-lg-5">
 
             @if (registrationResult is not null)
             {
@@ -20,7 +20,7 @@
                         </div>
                         <h4 class="text-success">Account Created!</h4>
                         <p class="mb-1">
-                            Welcome, <strong>@registrationResult.FirstName @registrationResult.LastName</strong>!
+                            Welcome to GoCheaper!
                         </p>
                         <p class="text-muted small mb-3">
                             A verification link will be sent to <strong>@registrationResult.Email</strong>.
@@ -33,7 +33,7 @@
                                 <code class="user-select-all">@registrationResult.EmailVerificationToken</code>
                             </div>
                         }
-                        <a href="/" class="btn btn-primary">Back to Home</a>
+                        <a href="/login" class="btn btn-primary">Sign In</a>
                     </div>
                 </div>
             }
@@ -42,7 +42,7 @@
                 <div class="card shadow-sm">
                     <div class="card-header bg-primary text-white py-3">
                         <h4 class="mb-0">Create your GoCheaper account</h4>
-                        <small class="opacity-75">Phone and picture are required for drivers, optional for passengers</small>
+                        <small class="opacity-75">You'll complete your profile after signing in</small>
                     </div>
                     <div class="card-body p-4">
 
@@ -54,98 +54,25 @@
                         <EditForm Model="model" OnValidSubmit="HandleSubmit">
                             <DataAnnotationsValidator />
 
-                            <h6 class="text-muted mb-3">Personal Information</h6>
-
-                            <div class="row mb-3">
-                                <div class="col-sm-6 mb-3 mb-sm-0">
-                                    <label class="form-label">First Name</label>
-                                    <InputText @bind-Value="model.FirstName" class="form-control" placeholder="First name" />
-                                    <ValidationMessage For="() => model.FirstName" class="text-danger small" />
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label">Last Name</label>
-                                    <InputText @bind-Value="model.LastName" class="form-control" placeholder="Last name" />
-                                    <ValidationMessage For="() => model.LastName" class="text-danger small" />
-                                </div>
-                            </div>
-
                             <div class="mb-3">
                                 <label class="form-label">Email Address</label>
-                                <InputText @bind-Value="model.Email" type="email" class="form-control" placeholder="Email address" />
+                                <InputText @bind-Value="model.Email" type="email" class="form-control"
+                                           placeholder="Email address" autocomplete="email" />
                                 <ValidationMessage For="() => model.Email" class="text-danger small" />
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Password</label>
                                 <InputText @bind-Value="model.Password" class="form-control" type="password"
-                                           placeholder="Min. 8 chars · 1 capital · 2 digits" />
+                                           placeholder="Min. 8 chars · 1 capital · 2 digits" autocomplete="new-password" />
                                 <ValidationMessage For="() => model.Password" class="text-danger small" />
                             </div>
 
                             <div class="mb-4">
-                                <label class="form-label">
-                                    Mobile Phone
-                                    @if (model.IsDriver)
-                                    {
-                                        <span class="text-danger"> *</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted small fw-normal"> (optional for passengers)</span>
-                                    }
-                                </label>
-                                <InputText @bind-Value="model.MobilePhone" class="form-control" placeholder="Mobile phone" />
-                                @if (mobileError is not null)
-                                {
-                                    <div class="text-danger small mt-1">@mobileError</div>
-                                }
-                            </div>
-
-                            <hr />
-                            <h6 class="text-muted mb-3">Account Type</h6>
-
-                            <div class="mb-3">
-                                <div class="d-flex gap-4">
-                                    <div class="form-check form-check-inline">
-                                        <InputCheckbox @bind-Value="model.IsDriver" class="form-check-input" id="chkDriver" />
-                                        <label class="form-check-label" for="chkDriver">
-                                            <strong>Driver</strong> &mdash; I want to offer rides
-                                        </label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <InputCheckbox @bind-Value="model.IsPassenger" class="form-check-input" id="chkPassenger" />
-                                        <label class="form-check-label" for="chkPassenger">
-                                            <strong>Passenger</strong> &mdash; I want to book rides
-                                        </label>
-                                    </div>
-                                </div>
-                                @if (roleError is not null)
-                                {
-                                    <div class="text-danger small mt-1">@roleError</div>
-                                }
-                                <div class="form-text">You can select both.</div>
-                            </div>
-
-                            <hr />
-                            <h6 class="text-muted mb-3">
-                                Profile Picture
-                                @if (!model.IsDriver)
-                                {
-                                    <span class="text-muted small fw-normal"> (optional for passengers)</span>
-                                }
-                            </h6>
-
-                            <div class="mb-4">
-                                <InputFile OnChange="HandleImageUpload" accept="image/*" class="form-control" />
-                                @if (!string.IsNullOrEmpty(pictureFileName))
-                                {
-                                    <div class="text-success small mt-1">&#10003; @pictureFileName</div>
-                                }
-                                @if (pictureError is not null)
-                                {
-                                    <div class="text-danger small mt-1">@pictureError</div>
-                                }
-                                <div class="form-text">JPEG or PNG, max 5 MB.</div>
+                                <label class="form-label">Confirm Password</label>
+                                <InputText @bind-Value="model.ConfirmPassword" class="form-control" type="password"
+                                           placeholder="Repeat password" autocomplete="new-password" />
+                                <ValidationMessage For="() => model.ConfirmPassword" class="text-danger small" />
                             </div>
 
                             <hr />
@@ -189,65 +116,13 @@
     private readonly RegisterModel model = new();
     private RegisterResponse? registrationResult;
     private string? apiError;
-    private string? roleError;
-    private string? mobileError;
-    private string? pictureError;
     private string? privacyError;
-    private string pictureFileName = "";
     private bool isLoading;
-
-    private async Task HandleImageUpload(InputFileChangeEventArgs e)
-    {
-        pictureError = null;
-        pictureFileName = "";
-        model.DriverPictureBase64 = "";
-
-        var file = e.File;
-        if (file.Size > 5 * 1024 * 1024)
-        {
-            pictureError = "Image must be smaller than 5 MB.";
-            return;
-        }
-
-        try
-        {
-            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
-            using var ms = new MemoryStream();
-            await stream.CopyToAsync(ms);
-            model.DriverPictureBase64 = Convert.ToBase64String(ms.ToArray());
-            pictureFileName = file.Name;
-        }
-        catch
-        {
-            pictureError = "Failed to read the image. Please try a different file.";
-        }
-    }
 
     private async Task HandleSubmit()
     {
-        roleError    = null;
         apiError     = null;
-        mobileError  = null;
-        pictureError = null;
         privacyError = null;
-
-        if (!model.IsDriver && !model.IsPassenger)
-        {
-            roleError = "Please select at least one account type (Driver or Passenger).";
-            return;
-        }
-
-        if (model.IsDriver && string.IsNullOrWhiteSpace(model.MobilePhone))
-        {
-            mobileError = "Mobile phone is required for drivers.";
-            return;
-        }
-
-        if (model.IsDriver && string.IsNullOrEmpty(model.DriverPictureBase64))
-        {
-            pictureError = "A profile picture is required for drivers.";
-            return;
-        }
 
         if (!model.AgreeToPrivacyPolicy)
         {

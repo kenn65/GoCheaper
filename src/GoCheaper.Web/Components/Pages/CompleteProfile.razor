@@ -1,0 +1,236 @@
+@page "/complete-profile"
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+@attribute [Authorize]
+@using GoCheaper.Web.Models
+@using GoCheaper.Web.Services
+@inject IdentityApiClient IdentityApi
+@inject AuthCookieService AuthCookies
+@inject UserSession UserSession
+@inject NavigationManager Nav
+
+<PageTitle>Complete Your Profile - GoCheaper</PageTitle>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0">Complete Your Profile</h4>
+                    <small class="opacity-75">Just a few details before you start</small>
+                </div>
+                <div class="card-body p-4">
+
+                    @if (!string.IsNullOrEmpty(apiError))
+                    {
+                        <div class="alert alert-danger">@apiError</div>
+                    }
+
+                    <div class="row mb-3">
+                        <div class="col-sm-6 mb-3 mb-sm-0">
+                            <label class="form-label">First Name <span class="text-danger">*</span></label>
+                            <input @bind="model.FirstName" class="form-control" placeholder="First name" />
+                            @if (firstNameError is not null)
+                            {
+                                <div class="text-danger small mt-1">@firstNameError</div>
+                            }
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                            <input @bind="model.LastName" class="form-control" placeholder="Last name" />
+                            @if (lastNameError is not null)
+                            {
+                                <div class="text-danger small mt-1">@lastNameError</div>
+                            }
+                        </div>
+                    </div>
+
+                    <hr />
+                    <h6 class="text-muted mb-3">Account Type <span class="text-danger">*</span></h6>
+
+                    <div class="mb-3">
+                        <div class="d-flex gap-4">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="chkDriver"
+                                       checked="@model.IsDriver"
+                                       @onchange="e => model.IsDriver = (bool)e.Value!" />
+                                <label class="form-check-label" for="chkDriver">
+                                    <strong>Driver</strong> &mdash; I want to offer rides
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="chkPassenger"
+                                       checked="@model.IsPassenger"
+                                       @onchange="e => model.IsPassenger = (bool)e.Value!" />
+                                <label class="form-check-label" for="chkPassenger">
+                                    <strong>Passenger</strong> &mdash; I want to book rides
+                                </label>
+                            </div>
+                        </div>
+                        @if (roleError is not null)
+                        {
+                            <div class="text-danger small mt-1">@roleError</div>
+                        }
+                        <div class="form-text">You can select both.</div>
+                    </div>
+
+                    @if (model.IsDriver == true)
+                    {
+                        <hr />
+
+                        <div class="mb-3">
+                            <label class="form-label">Mobile Phone <span class="text-danger">*</span></label>
+                            <input @bind="model.MobilePhone" class="form-control"
+                                   placeholder="+45 12 34 56 78" type="tel" />
+                            @if (mobileError is not null)
+                            {
+                                <div class="text-danger small mt-1">@mobileError</div>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Profile Picture <span class="text-danger">*</span></label>
+                            @if (!string.IsNullOrEmpty(model.DriverPictureBase64))
+                            {
+                                <div class="mb-2">
+                                    <img src="@ImageDataUrl(model.DriverPictureBase64)"
+                                         class="rounded border"
+                                         style="max-height:120px;max-width:100%;object-fit:contain;"
+                                         alt="Profile picture" />
+                                </div>
+                            }
+                            <InputFile OnChange="HandleImageUpload" accept="image/*" class="form-control" />
+                            @if (!string.IsNullOrEmpty(pictureFileName))
+                            {
+                                <div class="text-success small mt-1">&#10003; @pictureFileName</div>
+                            }
+                            @if (pictureError is not null)
+                            {
+                                <div class="text-danger small mt-1">@pictureError</div>
+                            }
+                            <div class="form-text">JPEG or PNG, max 5 MB.</div>
+                        </div>
+                    }
+
+                    <button class="btn btn-primary btn-lg w-100 mt-2" @onclick="HandleSave" disabled="@isSaving">
+                        @if (isSaving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Saving&hellip;</span>
+                        }
+                        else
+                        {
+                            <span>Continue</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private readonly UpdateProfileModel model = new();
+    private string? apiError;
+    private string? firstNameError;
+    private string? lastNameError;
+    private string? roleError;
+    private string? mobileError;
+    private string? pictureError;
+    private string pictureFileName = string.Empty;
+    private bool isSaving;
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+    {
+        pictureError            = null;
+        pictureFileName         = string.Empty;
+        model.DriverPictureBase64 = null;
+
+        if (e.File.Size > 5 * 1024 * 1024)
+        {
+            pictureError = "Image must be smaller than 5 MB.";
+            return;
+        }
+
+        try
+        {
+            using var stream = e.File.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            using var ms     = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            model.DriverPictureBase64 = Convert.ToBase64String(ms.ToArray());
+            pictureFileName           = e.File.Name;
+        }
+        catch
+        {
+            pictureError = "Failed to read the image. Please try a different file.";
+        }
+    }
+
+    private async Task HandleSave()
+    {
+        firstNameError = null;
+        lastNameError  = null;
+        roleError      = null;
+        mobileError    = null;
+        pictureError   = null;
+        apiError       = null;
+
+        if (string.IsNullOrWhiteSpace(model.FirstName))
+        {
+            firstNameError = "First name is required.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(model.LastName))
+        {
+            lastNameError = "Last name is required.";
+            return;
+        }
+        if (model.IsDriver != true && model.IsPassenger != true)
+        {
+            roleError = "Please select at least one account type.";
+            return;
+        }
+        if (model.IsDriver == true && string.IsNullOrWhiteSpace(model.MobilePhone))
+        {
+            mobileError = "Mobile phone is required for drivers.";
+            return;
+        }
+        if (model.IsDriver == true && string.IsNullOrEmpty(model.DriverPictureBase64))
+        {
+            pictureError = "A profile picture is required for drivers.";
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            var result = await IdentityApi.UpdateProfileAsync(UserSession.UserId!.Value, model);
+            if (result.Success && result.User is not null)
+            {
+                var fullName = $"{result.User.FirstName} {result.User.LastName}".Trim();
+                await AuthCookies.SetProfileCompletedAsync(fullName, result.User.IsDriver, result.User.IsPassenger);
+                Nav.NavigateTo("/", forceLoad: true);
+            }
+            else
+            {
+                apiError = result.Error ?? "Could not save profile. Please try again.";
+            }
+        }
+        catch (Exception)
+        {
+            apiError = "Could not reach the server. Please try again.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private static string ImageDataUrl(string base64)
+    {
+        var mime = base64.StartsWith("/9j/")   ? "image/jpeg"
+                 : base64.StartsWith("iVBOR")  ? "image/png"
+                 : base64.StartsWith("R0lGOD") ? "image/gif"
+                 : "image/jpeg";
+        return $"data:{mime};base64,{base64}";
+    }
+}

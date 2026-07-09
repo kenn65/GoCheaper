@@ -4,14 +4,6 @@ namespace GoCheaper.Web.Models;
 
 public class RegisterModel
 {
-    [Required(ErrorMessage = "First name is required.")]
-    [MaxLength(100)]
-    public string FirstName { get; set; } = "";
-
-    [Required(ErrorMessage = "Last name is required.")]
-    [MaxLength(100)]
-    public string LastName { get; set; } = "";
-
     [Required(ErrorMessage = "Email address is required.")]
     [EmailAddress(ErrorMessage = "Enter a valid email address.")]
     public string Email { get; set; } = "";
@@ -21,12 +13,9 @@ public class RegisterModel
         ErrorMessage = "Password must be at least 8 characters, contain 1 capital letter, and 2 digits.")]
     public string Password { get; set; } = "";
 
-    public string MobilePhone { get; set; } = "";
-
-    public bool IsDriver { get; set; }
-    public bool IsPassenger { get; set; }
-
-    public string DriverPictureBase64 { get; set; } = "";
+    [Required(ErrorMessage = "Please confirm your password.")]
+    [Compare("Password", ErrorMessage = "Passwords do not match.")]
+    public string ConfirmPassword { get; set; } = "";
 
     public bool AgreeToPrivacyPolicy { get; set; }
 }
