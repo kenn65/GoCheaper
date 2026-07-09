@@ -137,7 +137,7 @@
 <NotificationModal Show="_showCancelModal"
                    Title="Booking Cancelled"
                    Message="@($"Your booking has been cancelled. Redirecting to Browse Trips in {_cancelCountdown}…")"
-                   OnClose="() => Nav.NavigateTo("/browse-trips")" />
+                   OnClose="GoToBrowseTrips" />
 
 <ConfirmModal Show="_confirmCancel"
               Title="Cancel Booking"
@@ -164,7 +164,8 @@
     private int     _cancelCountdown  = 3;
     private bool    _confirmCancel;
 
-    private void GoToMyBookings() => Nav.NavigateTo("/my-booked-trips");
+    private void GoToMyBookings()  => Nav.NavigateTo("/my-booked-trips");
+    private void GoToBrowseTrips() => Nav.NavigateTo("/browse-trips");
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
