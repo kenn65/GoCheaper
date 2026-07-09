@@ -18,48 +18,26 @@ public class RegisterHandler(
 {
     public async Task<IResult> HandleAsync(RegisterRequest req, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(req.FirstName) ||
-            string.IsNullOrWhiteSpace(req.LastName) ||
-            string.IsNullOrWhiteSpace(req.Email) ||
-            string.IsNullOrWhiteSpace(req.Password) ||
-            string.IsNullOrWhiteSpace(req.MobilePhone) ||
-            req.IsDriver is null ||
-            req.IsPassenger is null ||
-            string.IsNullOrWhiteSpace(req.DriverPictureBase64))
-        {
-            return Results.BadRequest("All fields are required.");
-        }
+        if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
+            return Results.BadRequest("Email and password are required.");
 
         if (!IsValidEmail(req.Email))
             return Results.BadRequest("Invalid email format.");
 
-        if (!req.IsDriver.Value && !req.IsPassenger.Value)
-            return Results.BadRequest("At least one of IsDriver or IsPassenger must be true.");
-
         var normalizedEmail = req.Email.Trim().ToLowerInvariant();
-        var firstName = req.FirstName.Trim();
-        var lastName  = req.LastName.Trim();
 
         if (await db.Users.AnyAsync(u => u.Email == normalizedEmail, ct))
             return Results.Conflict("A user with this email address already exists.");
 
-        if (await db.Users.AnyAsync(u => u.FirstName == firstName && u.LastName == lastName, ct))
-            return Results.Conflict("A user with this name already exists.");
-
-        var normalizedPhone = req.MobilePhone.Trim();
-        if (await db.Users.AnyAsync(u => u.MobilePhone == normalizedPhone, ct))
-            return Results.Conflict("A user with this mobile phone number already exists.");
-
         var user = new User
         {
             Id                     = Guid.NewGuid(),
-            FirstName              = firstName,
-            LastName               = lastName,
+            FirstName              = string.Empty,
+            LastName               = string.Empty,
             Email                  = normalizedEmail,
-            MobilePhone            = normalizedPhone,
-            IsDriver               = req.IsDriver.Value,
-            IsPassenger            = req.IsPassenger.Value,
-            DriverPictureBase64    = req.DriverPictureBase64,
+            IsDriver               = false,
+            IsPassenger            = false,
+            IsProfileComplete      = false,
             EmailVerificationToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
         };
 

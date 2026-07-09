@@ -13,7 +13,8 @@ public record UserResponse(
     bool IsEmailVerified,
     string? EmailVerificationToken,
     string? DriverPictureBase64,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    bool IsProfileComplete);
 
 public static class UserMapper
 {
@@ -28,5 +29,6 @@ public static class UserMapper
         user.IsEmailVerified,
         user.EmailVerificationToken,
         user.DriverPictureBase64,
-        user.CreatedAt);
+        user.CreatedAt,
+        user.IsProfileComplete);
 }

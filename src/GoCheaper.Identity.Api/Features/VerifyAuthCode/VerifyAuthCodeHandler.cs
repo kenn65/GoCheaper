@@ -40,14 +40,15 @@ public class VerifyAuthCodeHandler(IdentityDbContext db, IConfiguration configur
         var accessToken = JwtHelper.GenerateToken(user.Id, user.Email, $"{user.FirstName} {user.LastName}", configuration);
 
         return Results.Ok(new AuthTokenResponse(
-            AccessToken:  accessToken,
-            RefreshToken: refreshToken,
-            ExpiresIn:    600,
-            UserId:       user.Id,
-            Email:        user.Email,
-            FirstName:    user.FirstName,
-            LastName:     user.LastName,
-            IsDriver:     user.IsDriver,
-            IsPassenger:  user.IsPassenger));
+            AccessToken:       accessToken,
+            RefreshToken:      refreshToken,
+            ExpiresIn:         600,
+            UserId:            user.Id,
+            Email:             user.Email,
+            FirstName:         user.FirstName,
+            LastName:          user.LastName,
+            IsDriver:          user.IsDriver,
+            IsPassenger:       user.IsPassenger,
+            IsProfileComplete: user.IsProfileComplete));
     }
 }

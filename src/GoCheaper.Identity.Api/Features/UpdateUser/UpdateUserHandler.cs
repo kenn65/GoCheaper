@@ -25,6 +25,12 @@ public class UpdateUserHandler(
         if (!newIsDriver && !newIsPassenger)
             return Results.BadRequest("At least one of IsDriver or IsPassenger must remain true.");
 
+        if (req.FirstName is not null)
+            user.FirstName = req.FirstName.Trim();
+
+        if (req.LastName is not null)
+            user.LastName = req.LastName.Trim();
+
         if (req.MobilePhone is not null)
         {
             var normalizedPhone = req.MobilePhone.Trim();
@@ -45,6 +51,14 @@ public class UpdateUserHandler(
 
         if (req.DriverPictureBase64 is not null)
             user.DriverPictureBase64 = req.DriverPictureBase64;
+
+        // Mark profile complete once the user has a name and at least one role
+        if (!string.IsNullOrWhiteSpace(user.FirstName) &&
+            !string.IsNullOrWhiteSpace(user.LastName) &&
+            (user.IsDriver || user.IsPassenger))
+        {
+            user.IsProfileComplete = true;
+        }
 
         await db.SaveChangesAsync(ct);
 

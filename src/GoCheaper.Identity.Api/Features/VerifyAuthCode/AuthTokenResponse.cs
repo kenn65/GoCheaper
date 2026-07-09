@@ -9,4 +9,5 @@ public record AuthTokenResponse(
     string FirstName,
     string LastName,
     bool   IsDriver,
-    bool   IsPassenger);
+    bool   IsPassenger,
+    bool   IsProfileComplete);
