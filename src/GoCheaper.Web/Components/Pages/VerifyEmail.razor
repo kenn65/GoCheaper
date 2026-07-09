@@ -2,6 +2,7 @@
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 @using GoCheaper.Web.Services
 @inject IdentityApiClient IdentityApi
+@inject NavigationManager Nav
 
 <PageTitle>Verify Email - GoCheaper</PageTitle>
 
@@ -31,7 +32,7 @@
                             }
                             email address has been confirmed and your account is now active.
                         </p>
-                        <a href="/login" class="btn btn-primary mt-2">Go to Login</a>
+                        <p class="text-muted small">Redirecting to login in @countdown&hellip;</p>
                     }
                     else if (result is not null && !result.Success)
                     {
@@ -66,6 +67,7 @@
     private VerifyEmailResult? result;
     private bool isLoading = true;
     private bool linkInvalid;
+    private int countdown = 3;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -74,14 +76,24 @@
         if (!Guid.TryParse(UserId, out var userId) || string.IsNullOrWhiteSpace(Token))
         {
             linkInvalid = true;
-            isLoading = false;
+            isLoading   = false;
             StateHasChanged();
             return;
         }
 
-        result = await IdentityApi.VerifyEmailAsync(userId, Token);
-
+        result    = await IdentityApi.VerifyEmailAsync(userId, Token);
         isLoading = false;
         StateHasChanged();
+
+        if (result.Success)
+        {
+            while (countdown > 0)
+            {
+                await Task.Delay(1000);
+                countdown--;
+                StateHasChanged();
+            }
+            Nav.NavigateTo("/login");
+        }
     }
 }
