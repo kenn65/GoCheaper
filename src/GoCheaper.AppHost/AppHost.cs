@@ -34,8 +34,13 @@ if (builder.Environment.EnvironmentName == "Development")
     kafka.WithKafkaUI();
 
 // ── Services ──────────────────────────────────────────────────────────────────
+// All services use TZ=Europe/Copenhagen so DateTime.Now returns Danish local time on
+// Linux (Azure Container Apps). DepartureTime is stored as entered by the user (Danish
+// local time, no UTC conversion), so comparisons in TripStatus and TripRatingEmailService
+// must use the same timezone. On Windows (local dev) TZ is ignored — no impact.
 var identityApi = builder.AddProject<Projects.GoCheaper_Identity_Api>("identity-api")
     .WithUrlForEndpoint("https", url => url.Url = "/scalar/v1")
+    .WithEnvironment("TZ",             "Europe/Copenhagen")
     .WithEnvironment("Jwt__Key",        jwtKey)
     .WithEnvironment("ApiKey__Value",   identityApiKey)
     .WithReference(identityDb)
@@ -44,6 +49,7 @@ var identityApi = builder.AddProject<Projects.GoCheaper_Identity_Api>("identity-
     .WaitFor(kafka);
 
 var notificationApi = builder.AddProject<Projects.GoCheaper_Notification_Api>("notification-api")
+    .WithEnvironment("TZ",              "Europe/Copenhagen")
     .WithEnvironment("ApiKey__Value",    notificationApiKey)
     .WithEnvironment("Smtp__Username",   smtpUsername)
     .WithEnvironment("Smtp__Password",   smtpPassword)
@@ -53,6 +59,7 @@ var notificationApi = builder.AddProject<Projects.GoCheaper_Notification_Api>("n
 
 var tripsApi = builder.AddProject<Projects.GoCheaper_Trips_Api>("trips-api")
     .WithUrlForEndpoint("https", url => url.Url = "/scalar/v1")
+    .WithEnvironment("TZ",             "Europe/Copenhagen")
     .WithEnvironment("Jwt__Key",        jwtKey)
     .WithEnvironment("ApiKey__Value",   tripsApiKey)
     .WithReference(tripsDb)
@@ -62,6 +69,7 @@ var tripsApi = builder.AddProject<Projects.GoCheaper_Trips_Api>("trips-api")
 
 var bookingApi = builder.AddProject<Projects.GoCheaper_Booking_Api>("booking-api")
     .WithUrlForEndpoint("https", url => url.Url = "/scalar/v1")
+    .WithEnvironment("TZ",             "Europe/Copenhagen")
     .WithEnvironment("Jwt__Key",        jwtKey)
     .WithEnvironment("ApiKey__Value",   bookingApiKey)
     .WithReference(bookingDb)
@@ -71,6 +79,7 @@ var bookingApi = builder.AddProject<Projects.GoCheaper_Booking_Api>("booking-api
 
 var web = builder.AddProject<Projects.GoCheaper_Web>("web")
     .WithExternalHttpEndpoints()
+    .WithEnvironment("TZ",                       "Europe/Copenhagen")
     .WithEnvironment("ApiKey__IdentityApi",     identityApiKey)
     .WithEnvironment("ApiKey__TripsApi",        tripsApiKey)
     .WithEnvironment("ApiKey__BookingApi",      bookingApiKey)
