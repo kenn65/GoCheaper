@@ -15,7 +15,7 @@
 
     <div class="collapse navbar-collapse" id="navContent">
         <ul class="navbar-nav me-auto">
-            @if (UserSession.IsLoggedIn)
+            @if (UserSession.IsLoggedIn && UserSession.IsProfileComplete)
             {
                 <li class="nav-item">
                     <NavLink class="nav-link" href="/my-profile" Match="NavLinkMatch.Prefix">

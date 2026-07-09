@@ -54,7 +54,7 @@
                                     <div class="rounded-circle border bg-secondary d-flex align-items-center
                                                 justify-content-center text-white fw-bold fs-2"
                                          style="width:80px;height:80px;">
-                                        @user.FirstName[0]
+                                        @(string.IsNullOrEmpty(user.FirstName) ? "?" : user.FirstName[0].ToString())
                                     </div>
                                 }
                             </div>
