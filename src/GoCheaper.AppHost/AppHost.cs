@@ -1,14 +1,14 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
 // ── Application secrets ───────────────────────────────────────────────────────
-var jwtKey             = builder.AddParameter("jwt_key",              secret: true);
-var identityApiKey     = builder.AddParameter("identity_api_key",     secret: true);
-var tripsApiKey        = builder.AddParameter("trips_api_key",        secret: true);
-var bookingApiKey      = builder.AddParameter("booking_api_key",      secret: true);
-var notificationApiKey = builder.AddParameter("notification_api_key", secret: true);
-var smtpUsername       = builder.AddParameter("smtp_username",        secret: true);
-var smtpPassword       = builder.AddParameter("smtp_password",        secret: true);
-var smtpFromEmail      = builder.AddParameter("smtp_from_email",      secret: true);
+var jwtKey             = builder.AddParameter("jwt-key",              secret: true);
+var identityApiKey     = builder.AddParameter("identity-api-key",     secret: true);
+var tripsApiKey        = builder.AddParameter("trips-api-key",        secret: true);
+var bookingApiKey      = builder.AddParameter("booking-api-key",      secret: true);
+var notificationApiKey = builder.AddParameter("notification-api-key", secret: true);
+var smtpUsername       = builder.AddParameter("smtp-username",        secret: true);
+var smtpPassword       = builder.AddParameter("smtp-password",        secret: true);
+var smtpFromEmail      = builder.AddParameter("smtp-from-email",      secret: true);
 
 // ── SQL Server (local dev) / Azure SQL (publish) ──────────────────────────────
 // RunAsContainer → SQL Server container locally, Azure SQL Database in Azure.
