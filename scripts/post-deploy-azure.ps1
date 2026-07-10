@@ -15,7 +15,7 @@
 #   Optional: override resource group with -ResourceGroup "rg-MyEnv"
 
 param(
-    [string]$ResourceGroup = "rg-AzureTest"
+    [string]$ResourceGroup = "rg-GoCheaper"
 )
 
 $ErrorActionPreference = "Stop"
