@@ -1,15 +1,34 @@
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
+using Azure.Core;
+using Azure.Identity;
 using GoCheaper.Web.Components;
+using GoCheaper.Web.Data;
 using GoCheaper.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+
+// Required for Managed Identity on Azure SQL (same pattern as all API services).
+SqlAuthenticationProvider.SetProvider(
+    SqlAuthenticationMethod.ActiveDirectoryDefault,
+    new ManagedIdentitySqlAuthProvider());
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+// Persist Data Protection keys to SQL so the gc_auth cookie survives web container
+// restarts (deploys, ACA revisions). Without this, every restart generates new keys
+// and existing cookies can't be decrypted → users are logged out.
+builder.AddSqlServerDbContext<WebDbContext>("webdb");
+builder.Services.AddDataProtection()
+    .SetApplicationName("GoCheaper")
+    .PersistKeysToDbContext<WebDbContext>();
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
@@ -214,6 +233,13 @@ app.MapGet("/api/export", async (HttpContext ctx, IHttpClientFactory factory, IC
     return Results.File(bytes, "application/json", filename);
 }).RequireAuthorization();
 
+// Ensure DataProtection keys table exists (creates webdb schema on first boot)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<WebDbContext>();
+    await db.Database.MigrateAsync();
+}
+
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
@@ -221,6 +247,21 @@ app.MapRazorComponents<App>()
 app.MapDefaultEndpoints();
 
 app.Run();
+
+sealed class ManagedIdentitySqlAuthProvider : SqlAuthenticationProvider
+{
+    private readonly DefaultAzureCredential _credential = new();
+
+    public override async Task<SqlAuthenticationToken> AcquireTokenAsync(SqlAuthenticationParameters parameters)
+    {
+        var token = await _credential.GetTokenAsync(
+            new TokenRequestContext(["https://database.windows.net/.default"]));
+        return new SqlAuthenticationToken(token.Token, token.ExpiresOn);
+    }
+
+    public override bool IsSupported(SqlAuthenticationMethod authenticationMethod)
+        => authenticationMethod == SqlAuthenticationMethod.ActiveDirectoryDefault;
+}
 
 record SignInRequest(
     string UserId,

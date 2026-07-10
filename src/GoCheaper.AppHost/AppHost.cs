@@ -25,6 +25,7 @@ var sql = builder.AddAzureSqlServer("sql")
 var identityDb = sql.AddDatabase("identitydb");
 var tripsDb    = sql.AddDatabase("tripsdb");
 var bookingDb  = sql.AddDatabase("bookingdb");
+var webDb      = sql.AddDatabase("webdb");
 
 // ── Kafka ─────────────────────────────────────────────────────────────────────
 var kafka = builder.AddKafka("kafka")
@@ -83,9 +84,11 @@ var web = builder.AddProject<Projects.GoCheaper_Web>("web")
     .WithEnvironment("ApiKey__IdentityApi",     identityApiKey)
     .WithEnvironment("ApiKey__TripsApi",        tripsApiKey)
     .WithEnvironment("ApiKey__BookingApi",      bookingApiKey)
+    .WithReference(webDb)
     .WithReference(identityApi)
     .WithReference(tripsApi)
     .WithReference(bookingApi)
+    .WaitFor(sql)
     .WaitFor(identityApi)
     .WaitFor(tripsApi)
     .WaitFor(bookingApi);

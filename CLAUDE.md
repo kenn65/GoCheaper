@@ -389,6 +389,17 @@ All handlers skip sending (with a warning log) if the target email address is em
 
 Interactive Server rendering. `App.razor` sets `<Routes @rendermode="InteractiveServer" />`.
 
+#### Data Protection key persistence
+
+ASP.NET Core encrypts the `gc_auth` cookie using Data Protection keys. By default these keys are stored in memory — any `web` container restart (deploy, crash, ACA revision) generates new keys and all existing cookies become unreadable, logging every user out. To prevent this, keys are persisted to `webdb` (a dedicated SQL database on the same SQL Server as all other services) via `WebDbContext` (`Data/WebDbContext.cs`) which implements `IDataProtectionKeyContext`. The `DataProtectionKeys` table is auto-migrated on startup. `Program.cs` registers:
+```csharp
+builder.AddSqlServerDbContext<WebDbContext>("webdb");
+builder.Services.AddDataProtection()
+    .SetApplicationName("GoCheaper")
+    .PersistKeysToDbContext<WebDbContext>();
+```
+With persistent keys, users remain logged in across restarts and deploys for the full 90-day cookie lifetime.
+
 #### BFF cookie authentication
 
 The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the browser — they are stored server-side and in the `gc_auth` HttpOnly cookie.
