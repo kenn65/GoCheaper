@@ -241,6 +241,44 @@ public class IdentityApiClient(
         return new DeleteAccountResult(string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
     }
 
+    // ── Forgot password ──────────────────────────────────────────────────────
+
+    public async Task<(bool Success, string? Error)> ForgotPasswordAsync(string email)
+    {
+        using var request = BuildRequest(HttpMethod.Post, "/api/auth/forgot-password");
+        request.Content = JsonContent.Create(new { email });
+
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return (false, $"Could not reach the identity service: {ex.Message}"); }
+        catch (OperationCanceledException)
+            { return (false, "The identity service did not respond in time. Please try again."); }
+
+        return response.StatusCode == HttpStatusCode.NoContent
+            ? (true, null)
+            : (false, $"Error {(int)response.StatusCode}");
+    }
+
+    // ── Reset password ───────────────────────────────────────────────────────
+
+    public async Task<(bool Success, string? Error)> ResetPasswordAsync(Guid userId, string token, string newPassword)
+    {
+        using var request = BuildRequest(HttpMethod.Post, $"/api/auth/users/{userId}/reset-password");
+        request.Content = JsonContent.Create(new { token, newPassword });
+
+        HttpResponseMessage response;
+        try { response = await CreateClient().SendAsync(request); }
+        catch (HttpRequestException ex)
+            { return (false, $"Could not reach the identity service: {ex.Message}"); }
+        catch (OperationCanceledException)
+            { return (false, "The identity service did not respond in time. Please try again."); }
+
+        if (response.StatusCode == HttpStatusCode.NoContent) return (true, null);
+        var error = await response.Content.ReadAsStringAsync();
+        return (false, string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error);
+    }
+
     // ── Refresh JWT ──────────────────────────────────────────────────────────
 
     public async Task<RefreshResult> RefreshTokenAsync(Guid userId, string refreshToken)
