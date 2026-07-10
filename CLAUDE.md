@@ -470,6 +470,8 @@ Add `@attribute [Authorize]` to any page that requires a logged-in user. Use `@a
 | `Register.razor` | `/register` | Public | Collects email + password + GDPR consent only. Name, role, phone, and picture are collected on the `/complete-profile` page after first login. On success shows inline success card with a 3-second countdown then auto-navigates to `/`. |
 | `CompleteProfile.razor` | `/complete-profile` | `[Authorize]` | `prerender: false`; forced onboarding step — `Routes.razor` redirects any logged-in user with `IsProfileComplete=false` here before they can access any other page. Collects FirstName, LastName, account type (Driver/Passenger), and (if driver) MobilePhone + picture. On save: calls `UpdateProfileAsync`, then `AuthCookies.SetProfileCompletedAsync(fullName, isDriver, isPassenger)` to rewrite the cookie with `is_profile_complete=true`, then `Nav.NavigateTo("/", forceLoad: true)`. |
 | `VerifyEmail.razor` | `/verify-email` | Public | `prerender: false`; reads `?userId=&token=` query params; calls `VerifyEmailAsync`; on success shows a 3-second countdown then auto-navigates to `/login` (no button — fully automatic) |
+| `ForgotPassword.razor` | `/forgot-password` | Public | Email entry form; always shows success state after submit (never reveals whether email exists — matches backend 204-always behaviour); success message says "we have sent a password reset link to your inbox" |
+| `ResetPassword.razor` | `/reset-password` | Public | `prerender: false`; reads `?userId=&token=` query params; new-password form; on success signs out any active session via `AuthCookies.SignOutAsync()` then shows 3-second countdown → `/login`; shows "Invalid or expired link" state if token is missing/invalid |
 | `PrivacyPolicy.razor` | `/privacy-policy` | Public | GDPR privacy policy page linked from registration and footer |
 | `MyProfile.razor` | `/my-profile` | `[Authorize]` | `prerender: false`; `OnAfterRenderAsync(firstRender)`; shows all fields, editable phone/roles/picture; mobile phone and picture are **required only when `model.IsDriver == true`** (shown as optional for passenger-only users); avatar initial falls back to `"?"` when `FirstName` is empty (guards `IndexOutOfRangeException` for newly-registered users); `ImageDataUrl()` detects JPEG/PNG/GIF from base64 signature; `NotificationModal` on save success; `ConfirmModal` with "Type DELETE" input for account delete; GDPR data export button downloads a ZIP containing PDF summary + JSON raw data |
 | `MyTrips.razor` | `/my-trips` | `DriverOnly` | Driver's trips; mobile card layout / desktop table; calls `BookingApiClient.GetBookedSeatsAsync` to merge real booked seat counts |
@@ -534,7 +536,9 @@ All list pages (MyTrips, MyBookedTrips, BrowseTrips) render a **Bootstrap card l
 
 ### Deployment (Azure Container Apps)
 
-**Build configuration:** `AzureTest` is defined in `GoCheaper.slnx`. Use it when publishing via the Visual Studio Aspire publish wizard.
+**Build configuration:** `AzureTest` is defined in `GoCheaper.slnx`. The azd environment is named `AzureTest` (stored in `src/GoCheaper.AppHost/.azure/AzureTest/`). Resource group: `rg-GoCheaper`.
+
+**Recommended region: `swedencentral` (Stockholm).** West Europe has recurring Container Apps capacity issues (`ManagedEnvironmentCapacityHeavyUsageError`). North Europe restricts Azure SQL free-tier provisioning. Sweden Central is the closest reliable region to Copenhagen.
 
 **`appsettings.AzureTest.json`** exists for all five service projects (not AppHost). These files are committed to git and contain only non-sensitive values (JWT issuer/audience, SMTP host/port/from-name, logging levels). Secrets never go in these files.
 
@@ -543,9 +547,23 @@ All list pages (MyTrips, MyBookedTrips, BrowseTrips) render a **Bootstrap card l
 appsettings.json  →  appsettings.AzureTest.json  →  env vars injected by Aspire parameters
 ```
 
-**Publish wizard parameters** — when publishing, the wizard prompts for all Aspire parameters. All values can be copied directly from `AppHost/appsettings.Development.json`. There is no `sql-password` or `aspnet-environment` parameter — SQL uses Managed Identity in Azure and `ASPNETCORE_ENVIRONMENT` is injected programmatically.
+**Deploy workflow:**
+1. `azd provision` — creates all Azure infrastructure interactively (prompts for all parameter values). Copy values from `AppHost/appsettings.Development.json`. There is no `sql-password` or `aspnet-environment` parameter.
+2. `azd deploy` — builds Docker images, pushes to ACR, deploys all container apps. If individual services were skipped, deploy them explicitly: `azd deploy --service web` etc.
+3. Run `.\scripts\post-deploy-azure.ps1` (see below).
+4. Set `WebApp__BaseUrl` on `notification-api` (see below).
 
-**After first deploy:** Update `WebApp:BaseUrl` in `src/GoCheaper.Notification.Api/appsettings.AzureTest.json` with the actual web Container App URL (e.g. `https://web.xxx.region.azurecontainerapps.io`). Until this is done, rating/verification email links point to localhost. Set `WebApp__BaseUrl` as an environment variable on `notification-api` in the Azure Portal immediately after first deploy without waiting for a code push.
+The Visual Studio Aspire publish wizard shows "missing required inputs" and is unreliable for this project — use `azd provision` + `azd deploy` instead.
+
+**AcrPull role — manual assignment may be needed:** If `azd deploy` fails with "unable to pull image using Managed identity", the AcrPull role assignment from `azd provision` hasn't propagated yet. Fix:
+```powershell
+$acrId = az acr show --name <acr-name> --resource-group rg-GoCheaper --query id -o tsv
+$miId  = az identity show --name <mi-name> --resource-group rg-GoCheaper --query principalId -o tsv
+az role assignment create --role AcrPull --assignee $miId --scope $acrId
+```
+Wait 1–2 minutes, then retry `azd deploy`.
+
+**After first deploy:** The `web` Container App URL is only known after deployment. Set `WebApp__BaseUrl` immediately on `notification-api` so email links (verification, password reset, rating) point to the correct URL: Azure Portal → `notification-api` → **Application → Containers** → **Edit and deploy** → click the container → **Environment variables** → add `WebApp__BaseUrl = https://web.xxx.swedencentral.azurecontainerapps.io`. Also update `WebApp:BaseUrl` in `src/GoCheaper.Notification.Api/appsettings.AzureTest.json` for future deploys.
 
 **Accessing Azure SQL for debugging:** To run queries against the live databases (e.g. delete test users), first make your Azure account a SQL admin: Azure Portal → SQL Server → **Microsoft Entra ID** → **Set admin** → select your account → Save. Then open Azure Portal → SQL Database → **Query editor (preview)** → click **Continue as [your account]** (Entra authentication, no password). If prompted about your IP, click the "Allowlist IP" link in the error box. Alternatively use SSMS: server `sql-xxx.database.windows.net`, Authentication: **Azure Active Directory - Interactive**.
 
@@ -559,13 +577,13 @@ appsettings.json  →  appsettings.AzureTest.json  →  env vars injected by Asp
 
 **Blazor Server sticky sessions:** Blazor Server keeps circuit state server-side and requires the same server instance for the lifetime of a SignalR connection. Aspire 13.x does not configure `stickySessionsAffinity: sticky` for the web container app, so ACA may route WebSocket frames to different replicas — button clicks appear to do nothing, state updates never reach the browser.
 
-After **every** deploy via the Aspire publish wizard, run `scripts/post-deploy-azure.ps1` to apply three fixes:
+After **every** deploy, run `scripts/post-deploy-azure.ps1` to apply three fixes:
 1. Sets `stickySessionsAffinity: sticky` on the `web` container app (Blazor Server requirement)
 2. Sets `maxReplicas: 1` on the `kafka` container app (KRaft single-replica requirement)
 3. Sets `minReplicas: 1` on all five application services to prevent cold-start delays
 
 ```powershell
-.\scripts\post-deploy-azure.ps1         # defaults to rg-AzureTest
+.\scripts\post-deploy-azure.ps1         # defaults to rg-GoCheaper
 # or for a different resource group:
 .\scripts\post-deploy-azure.ps1 -ResourceGroup "rg-MyEnv"
 ```

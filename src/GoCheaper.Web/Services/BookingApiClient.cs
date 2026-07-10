@@ -319,6 +319,9 @@ public class BookingApiClient(
             return new GetTripPassengersResult(passengers, null, true);
         }
 
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return new GetTripPassengersResult([], null, true);
+
         return new GetTripPassengersResult(null, $"Error {(int)response.StatusCode}", false);
     }
 }
