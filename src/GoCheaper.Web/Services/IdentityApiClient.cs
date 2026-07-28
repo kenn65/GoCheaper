@@ -135,6 +135,9 @@ public class IdentityApiClient(
         if (response.StatusCode == HttpStatusCode.NoContent)
             return new LoginResult(null, true);
 
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+            return new LoginResult("The email address or password is incorrect.", false);
+
         var error = await response.Content.ReadAsStringAsync();
         return new LoginResult(string.IsNullOrWhiteSpace(error) ? $"Error {(int)response.StatusCode}" : error, false);
     }
