@@ -170,10 +170,18 @@
                             }
                             @if (isOwner)
                             {
-                                <div class="d-flex flex-wrap gap-2">
-                                    <button class="btn btn-sm btn-outline-light" @onclick="StartEdit">Edit Trip</button>
-                                    <button class="btn btn-sm btn-outline-light" @onclick="() => _confirmDelete = true">Delete Trip</button>
-                                </div>
+                                var isPastWithBookings = TripStatus.Compute(_trip.DepartureTime) != "Pending" && _bookedSeats > 0;
+                                @if (isPastWithBookings)
+                                {
+                                    <small class="text-white opacity-75">Cannot edit or delete — passengers are booked</small>
+                                }
+                                else
+                                {
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <button class="btn btn-sm btn-outline-light" @onclick="StartEdit">Edit Trip</button>
+                                        <button class="btn btn-sm btn-outline-light" @onclick="() => _confirmDelete = true">Delete Trip</button>
+                                    </div>
+                                }
                             }
                         </div>
                     </div>
