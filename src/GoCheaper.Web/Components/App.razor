@@ -24,6 +24,20 @@
     <ReconnectModal />
     <script src="@Assets["lib/bootstrap/dist/js/bootstrap.bundle.min.js"]"></script>
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script>
+        window.GoCheaper = window.GoCheaper || {};
+        window.GoCheaper.getCultureLanguage = function () {
+            var c = document.cookie.split(';')
+                .map(function (s) { return s.trim(); })
+                .find(function (s) { return s.startsWith('.AspNetCore.Culture='); });
+            if (c) {
+                var v = decodeURIComponent(c.substring('.AspNetCore.Culture='.length));
+                var m = v.match(/uic=([^|]+)/);
+                if (m) return m[1];
+            }
+            return navigator.language || 'en';
+        };
+    </script>
 </body>
 
 </html>

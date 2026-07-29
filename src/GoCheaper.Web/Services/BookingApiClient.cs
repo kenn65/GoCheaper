@@ -86,12 +86,7 @@ public class BookingApiClient(
         if (cultureContext.Culture != "en") return cultureContext.Culture;
         try
         {
-            var lang = await js.InvokeAsync<string>("eval",
-                "(function(){" +
-                "var c=document.cookie.split(';').map(function(s){return s.trim();}).find(function(s){return s.startsWith('.AspNetCore.Culture=');});" +
-                "if(c){var v=decodeURIComponent(c.substring('.AspNetCore.Culture='.length));var m=v.match(/uic=([^|]+)/);if(m)return m[1];}" +
-                "return navigator.language||'en';" +
-                "})()");
+            var lang = await js.InvokeAsync<string>("GoCheaper.getCultureLanguage");
             var culture = lang.StartsWith("da") ? "da"
                 : (lang.StartsWith("nb") || lang.StartsWith("no")) ? "nb"
                 : lang.StartsWith("sv") ? "sv"

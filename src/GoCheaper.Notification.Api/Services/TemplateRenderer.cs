@@ -2,7 +2,7 @@ using System.Reflection;
 
 namespace GoCheaper.Notification.Api.Services;
 
-public class TemplateRenderer
+public class TemplateRenderer(ILogger<TemplateRenderer> logger)
 {
     private static readonly Assembly Assembly = typeof(TemplateRenderer).Assembly;
 
@@ -13,13 +13,15 @@ public class TemplateRenderer
             current.Replace($"{{{{{token.Key}}}}}", token.Value));
     }
 
-    private static string LoadTemplate(string templateName, string language)
+    private string LoadTemplate(string templateName, string language)
     {
         if (!string.IsNullOrEmpty(language) && language != "en")
         {
             // Try exact match (e.g. "da")
             var stream = TryGetStream(templateName, language);
             if (stream is not null) { using var r = new StreamReader(stream); return r.ReadToEnd(); }
+
+            logger.LogWarning("Email template {Name}.{Lang}.html not found in assembly — falling back to base language or English", templateName, language);
 
             // Try base language (e.g. "da" from "da-DK")
             var baseLang = language.Split('-')[0];
