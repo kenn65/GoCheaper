@@ -15,8 +15,9 @@ public class LoginHandler(
     IProducer<string, string> producer,
     ILogger<LoginHandler> logger)
 {
-    public async Task<IResult> HandleAsync(LoginRequest req, CancellationToken ct = default)
+    public async Task<IResult> HandleAsync(LoginRequest req, HttpContext? ctx = null, CancellationToken ct = default)
     {
+        var requestLanguage = ctx?.Request.Headers["X-Language"].FirstOrDefault();
         if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
             return Results.BadRequest("Email and password are required.");
 
@@ -44,9 +45,9 @@ public class LoginHandler(
         user.AuthCodeExpiry = DateTime.UtcNow.AddMinutes(5);
         await db.SaveChangesAsync(ct);
 
+        var language = requestLanguage ?? user.PreferredLanguage ?? "en";
         await PublishAsync(KafkaTopics.AuthCodeRequested, user.Id.ToString(),
-            new AuthCodeRequestedEvent(user.Id, user.FirstName, user.LastName, user.Email, code,
-                user.PreferredLanguage ?? "en"));
+            new AuthCodeRequestedEvent(user.Id, user.FirstName, user.LastName, user.Email, code, language));
 
         return Results.NoContent();
     }

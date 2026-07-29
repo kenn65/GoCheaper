@@ -66,7 +66,7 @@ public static class AuthEndpoints
             .Produces(StatusCodes.Status404NotFound);
 
         group.MapPost("/login",
-            (LoginRequest req, LoginHandler h, CancellationToken ct) => h.HandleAsync(req, ct))
+            (LoginRequest req, HttpContext ctx, LoginHandler h, CancellationToken ct) => h.HandleAsync(req, ctx, ct))
             .RequireAuthorization("ApiKeyOnly")
             .WithName("Login")
             .WithSummary("Validate credentials and send a 6-digit auth code via email")
@@ -93,7 +93,7 @@ public static class AuthEndpoints
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/forgot-password",
-            (ForgotPasswordRequest req, ForgotPasswordHandler h, CancellationToken ct) => h.HandleAsync(req, ct))
+            (ForgotPasswordRequest req, HttpContext ctx, ForgotPasswordHandler h, CancellationToken ct) => h.HandleAsync(req, ctx, ct))
             .RequireAuthorization("ApiKeyOnly")
             .WithName("ForgotPassword")
             .WithSummary("Initiate password reset — publishes event to send reset email")

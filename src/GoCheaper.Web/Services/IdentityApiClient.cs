@@ -123,6 +123,7 @@ public class IdentityApiClient(
     public async Task<LoginResult> LoginAsync(string email, string password)
     {
         using var request = BuildRequest(HttpMethod.Post, "/api/auth/login");
+        request.Headers.TryAddWithoutValidation("X-Language", System.Globalization.CultureInfo.CurrentUICulture.Name);
         request.Content = JsonContent.Create(new { email, password });
 
         HttpResponseMessage response;
@@ -249,6 +250,7 @@ public class IdentityApiClient(
     public async Task<(bool Success, string? Error)> ForgotPasswordAsync(string email)
     {
         using var request = BuildRequest(HttpMethod.Post, "/api/auth/forgot-password");
+        request.Headers.TryAddWithoutValidation("X-Language", System.Globalization.CultureInfo.CurrentUICulture.Name);
         request.Content = JsonContent.Create(new { email });
 
         HttpResponseMessage response;

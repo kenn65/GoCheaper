@@ -13,8 +13,10 @@ public class ForgotPasswordHandler(
     IProducer<string, string> producer,
     ILogger<ForgotPasswordHandler> logger)
 {
-    public async Task<IResult> HandleAsync(ForgotPasswordRequest req, CancellationToken ct = default)
+    public async Task<IResult> HandleAsync(ForgotPasswordRequest req, HttpContext? ctx = null, CancellationToken ct = default)
     {
+        var requestLanguage = ctx?.Request.Headers["X-Language"].FirstOrDefault();
+
         if (string.IsNullOrWhiteSpace(req.Email))
             return Results.BadRequest("Email is required.");
 
@@ -27,9 +29,10 @@ public class ForgotPasswordHandler(
             user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
             await db.SaveChangesAsync(ct);
 
+            var language = requestLanguage ?? user.PreferredLanguage ?? "en";
             await PublishAsync(KafkaTopics.ForgotPasswordRequested, user.Id.ToString(),
                 new ForgotPasswordRequestedEvent(user.Id, user.FirstName, user.LastName, user.Email,
-                    user.PasswordResetToken, user.PreferredLanguage ?? "en"));
+                    user.PasswordResetToken, language));
         }
 
         // Always 204 — never reveal whether the email exists
