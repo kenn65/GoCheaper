@@ -5,4 +5,5 @@ public record AuthCodeRequestedEvent(
     string FirstName,
     string LastName,
     string Email,
-    string Code);
+    string Code,
+    string Language = "en");

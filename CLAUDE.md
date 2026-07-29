@@ -370,6 +370,14 @@ All handlers skip sending (with a warning log) if the target email address is em
 
 **Email templates** are HTML files in `Templates/` built as `<EmbeddedResource>`. `TemplateRenderer` replaces `{{Token}}` placeholders. Add a template by adding an `.html` file — the csproj glob `<EmbeddedResource Include="Templates\*.html" />` picks it up automatically.
 
+**Multilingual email templates:** `TemplateRenderer.Render(templateName, tokens, language)` first tries to load `{TemplateName}.{lang}.html`; if not found it falls back to the base `{TemplateName}.html` (English). Translated templates follow the naming convention `AuthCodeEmail.da.html`, `BookingReceiptEmail.sv.html`, etc. Supported languages: `en` (base), `da` (Danish), `nb` (Norwegian Bokmål), `sv` (Swedish). Language is threaded through Kafka events:
+- `User.PreferredLanguage` in Identity.Api DB — set on register (from `X-Language` header / culture cookie) and updated whenever the user switches language via the `/culture` endpoint.
+- `DriverSnapshot.Language` in Trips.Api and Booking.Api — synced from `UserProfileUpdatedEvent.Language`.
+- `PassengerBooking.Language` — captured from `X-Language` HTTP header sent by `BookingApiClient.BookTripAsync` at booking time.
+- All Kafka events carry language fields: `UserRegisteredEvent.Language`, `AuthCodeRequestedEvent.Language`, `ForgotPasswordRequestedEvent.Language`, `TripBookedEvent.PassengerLanguage`/`DriverLanguage`, `BookingCancelledEvent.DriverLanguage`, `TripCancelledForPassengerEvent.PassengerLanguage`, `TripRatingRequestedEvent.PassengerLanguage`, `UserProfileUpdatedEvent.Language`.
+- All language fields default to `"en"` so old Kafka messages without the field deserialize safely.
+- **Do not translate `GoCheaper`** (brand name) or `{{Token}}` placeholder names in template files — only translate visible user-facing text.
+
 **Email logo:** All templates embed the logo as a base64-encoded PNG `<img>` data URI (`data:image/png;base64,...`). Do **not** use inline SVG — Outlook.com strips SVG from emails.
 
 **Email gradient gotcha — Outlook strips CSS gradients:** Never use `background:linear-gradient(...)` on any element in email templates — not on `<a>` tags and not on `<td>` header cells. Outlook ignores it entirely, leaving white backgrounds with invisible white text. All header `<td>` elements must use a solid `background-color`. Always wrap CTA `<a>` buttons in a `<td bgcolor="#xxxxxx">` (HTML attribute, not CSS) with a matching solid `background-color` on the link itself:

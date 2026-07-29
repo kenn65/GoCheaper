@@ -2,6 +2,7 @@
 @inject UserSession UserSession
 @inject AuthCookieService AuthCookies
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResources> L
 @implements IDisposable
 
 <nav class="navbar navbar-expand-sm navbar-dark bg-primary px-3 shadow-sm">
@@ -19,14 +20,14 @@
             {
                 <li class="nav-item">
                     <NavLink class="nav-link" href="/my-profile" Match="NavLinkMatch.Prefix">
-                        My Profile
+                        @L["Nav_MyProfile"]
                     </NavLink>
                 </li>
                 @if (UserSession.IsDriver)
                 {
                     <li class="nav-item">
                         <NavLink class="nav-link" href="/my-trips" Match="NavLinkMatch.Prefix">
-                            My Trips
+                            @L["Nav_MyTrips"]
                         </NavLink>
                     </li>
                 }
@@ -34,12 +35,12 @@
                 {
                     <li class="nav-item">
                         <NavLink class="nav-link" href="/browse-trips" Match="NavLinkMatch.Prefix">
-                            Browse Trips
+                            @L["Nav_BrowseTrips"]
                         </NavLink>
                     </li>
                     <li class="nav-item">
                         <NavLink class="nav-link" href="/my-booked-trips" Match="NavLinkMatch.Prefix">
-                            My Booked Trips
+                            @L["Nav_MyBookedTrips"]
                         </NavLink>
                     </li>
                 }
@@ -56,7 +57,7 @@
                 </li>
                 <li class="nav-item">
                     <button class="btn btn-outline-light btn-sm" @onclick="HandleSignOut">
-                        Sign Out
+                        @L["Nav_SignOut"]
                     </button>
                 </li>
             }
@@ -64,10 +65,24 @@
             {
                 <li class="nav-item">
                     <NavLink class="btn btn-outline-light btn-sm" href="/login" Match="NavLinkMatch.Prefix">
-                        Sign In
+                        @L["Nav_SignIn"]
                     </NavLink>
                 </li>
             }
+
+            <!-- Language switcher -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle text-white p-0" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false" style="font-size:0.85rem;">
+                    🌐
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="@CultureUrl("en")">English</a></li>
+                    <li><a class="dropdown-item" href="@CultureUrl("da")">Dansk</a></li>
+                    <li><a class="dropdown-item" href="@CultureUrl("nb")">Norsk</a></li>
+                    <li><a class="dropdown-item" href="@CultureUrl("sv")">Svenska</a></li>
+                </ul>
+            </li>
         </ul>
     </div>
 </nav>
@@ -83,6 +98,12 @@
     {
         await AuthCookies.SignOutAsync();
         Nav.NavigateTo("/", forceLoad: true);
+    }
+
+    private string CultureUrl(string culture)
+    {
+        var currentPath = new Uri(Nav.Uri).AbsolutePath;
+        return $"/culture?culture={culture}&redirectUri={Uri.EscapeDataString(currentPath)}";
     }
 
     public void Dispose()

@@ -52,6 +52,9 @@ public class UpdateUserHandler(
         if (req.DriverPictureBase64 is not null)
             user.DriverPictureBase64 = req.DriverPictureBase64;
 
+        if (req.PreferredLanguage is not null)
+            user.PreferredLanguage = req.PreferredLanguage;
+
         // Mark profile complete once the user has a name and at least one role
         if (!string.IsNullOrWhiteSpace(user.FirstName) &&
             !string.IsNullOrWhiteSpace(user.LastName) &&
@@ -63,7 +66,7 @@ public class UpdateUserHandler(
         await db.SaveChangesAsync(ct);
 
         await PublishAsync(KafkaTopics.UserProfileUpdated, user.Id.ToString(),
-            new UserProfileUpdatedEvent(user.Id, $"{user.FirstName} {user.LastName}", user.Email));
+            new UserProfileUpdatedEvent(user.Id, $"{user.FirstName} {user.LastName}", user.Email, user.PreferredLanguage));
 
         return Results.Ok(user.ToResponse());
     }

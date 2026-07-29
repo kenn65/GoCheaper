@@ -47,7 +47,7 @@ public class TripBookedHandler(
             ["NumberPlate"]       = numberPlate,
             ["BookedAt"]          = bookedAt,
             ["PickupPointsSection"] = pickupSection
-        });
+        }, @event.PassengerLanguage);
 
         await emailSender.SendAsync(
             toEmail:     @event.PassengerEmail,
@@ -89,7 +89,7 @@ public class TripBookedHandler(
             ["PaymentMethod"]     = paymentMethod,
             ["NumberPlateSection"]  = numberPlateSection,
             ["PickupPointsSection"] = BuildPickupPointsHtml(@event.PickupPoints)
-        });
+        }, @event.DriverLanguage);
 
         await emailSender.SendAsync(
             toEmail:     @event.DriverEmail,

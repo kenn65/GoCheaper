@@ -8,4 +8,5 @@ public class UpdateUserRequest
     public string? DriverPictureBase64 { get; set; }
     public bool?   IsDriver            { get; set; }
     public bool?   IsPassenger         { get; set; }
+    public string? PreferredLanguage   { get; set; }
 }

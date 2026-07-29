@@ -5,4 +5,5 @@ public record UserRegisteredEvent(
     string FirstName,
     string LastName,
     string Email,
-    string VerificationToken);
+    string VerificationToken,
+    string Language = "en");

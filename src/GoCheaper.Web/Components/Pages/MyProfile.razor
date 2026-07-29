@@ -7,6 +7,7 @@
 @inject AuthCookieService AuthCookies
 @inject UserSession UserSession
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>My Profile - GoCheaper</PageTitle>
 
@@ -36,11 +37,11 @@
 
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-primary text-white py-3">
-                        <h4 class="mb-0">My Profile</h4>
+                        <h4 class="mb-0">@L["MyProfile_Title"]</h4>
                     </div>
                     <div class="card-body p-4">
 
-                                                <div class="d-flex gap-3 align-items-center mb-4">
+                        <div class="d-flex gap-3 align-items-center mb-4">
                             <div class="flex-shrink-0">
                                 @if (!string.IsNullOrEmpty(user.DriverPictureBase64))
                                 {
@@ -64,47 +65,47 @@
                                     <span class="text-muted small d-block" style="word-break:break-all;overflow-wrap:break-word">@user.Email</span>
                                     @if (user.IsEmailVerified)
                                     {
-                                        <span class="badge bg-success mt-1">Verified</span>
+                                        <span class="badge bg-success mt-1">@L["MyProfile_Verified"]</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-warning text-dark mt-1">Unverified</span>
+                                        <span class="badge bg-warning text-dark mt-1">@L["MyProfile_Unverified"]</span>
                                     }
                                 </div>
-                                <div class="text-muted small text-truncate">Member since @user.CreatedAt.ToString("d MMMM yyyy")</div>
+                                <div class="text-muted small text-truncate">@string.Format(L["MyProfile_MemberSince"], user.CreatedAt.ToString("d MMMM yyyy"))</div>
                             </div>
                         </div>
 
-                                                <h6 class="text-muted text-uppercase small fw-semibold mb-2">Account Information</h6>
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-2">@L["MyProfile_AccountInfo"]</h6>
                         <div class="mb-4">
                             <div class="mb-2">
-                                <div class="small text-muted">Mobile Phone</div>
+                                <div class="small text-muted">@L["MyProfile_MobilePhone"]</div>
                                 <div>@(string.IsNullOrEmpty(user.MobilePhone) ? "—" : user.MobilePhone)</div>
                             </div>
                             <div class="mb-2">
-                                <div class="small text-muted">Account Type</div>
+                                <div class="small text-muted">@L["MyProfile_AccountType"]</div>
                                 <div>
-                                    @if (user.IsDriver && user.IsPassenger)   { <span>Driver &amp; Passenger</span> }
-                                    else if (user.IsDriver)                    { <span>Driver</span> }
-                                    else if (user.IsPassenger)                 { <span>Passenger</span> }
+                                    @if (user.IsDriver && user.IsPassenger)   { <span>@L["MyProfile_DriverAndPassenger"]</span> }
+                                    else if (user.IsDriver)                    { <span>@L["MyProfile_Driver"]</span> }
+                                    else if (user.IsPassenger)                 { <span>@L["MyProfile_Passenger"]</span> }
                                 </div>
                             </div>
                         </div>
 
                         <hr />
 
-                                                <h6 class="text-muted text-uppercase small fw-semibold mb-3">Edit Profile</h6>
+                        <h6 class="text-muted text-uppercase small fw-semibold mb-3">@L["MyProfile_EditProfile"]</h6>
 
                         <div class="mb-3">
                             <label class="form-label">
-                                Mobile Phone
+                                @L["MyProfile_MobilePhone"]
                                 @if (model.IsDriver == true)
                                 {
                                     <span class="text-danger"> *</span>
                                 }
                                 else
                                 {
-                                    <span class="text-muted small fw-normal"> (optional for passengers)</span>
+                                    <span class="text-muted small fw-normal"> @L["MyProfile_MobilePhone_Optional"]</span>
                                 }
                             </label>
                             <input @bind="model.MobilePhone" class="form-control"
@@ -116,14 +117,14 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label d-block">Account Type</label>
+                            <label class="form-label d-block">@L["MyProfile_AccountType"]</label>
                             <div class="d-flex flex-column flex-sm-row gap-2 gap-sm-4">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="chkDriver"
                                            checked="@(model.IsDriver == true)"
                                            @onchange="e => model.IsDriver = (bool)e.Value!" />
                                     <label class="form-check-label" for="chkDriver">
-                                        <strong>Driver</strong> — I want to offer rides
+                                        <strong>@L["MyProfile_Driver"]</strong> — @L["MyProfile_DriverOffer"]
                                     </label>
                                 </div>
                                 <div class="form-check">
@@ -131,7 +132,7 @@
                                            checked="@(model.IsPassenger == true)"
                                            @onchange="e => model.IsPassenger = (bool)e.Value!" />
                                     <label class="form-check-label" for="chkPassenger">
-                                        <strong>Passenger</strong> — I want to book rides
+                                        <strong>@L["MyProfile_Passenger"]</strong> — @L["MyProfile_PassengerBook"]
                                     </label>
                                 </div>
                             </div>
@@ -143,10 +144,10 @@
 
                         <div class="mb-4">
                             <label class="form-label">
-                                Profile Picture
+                                @L["MyProfile_ProfilePicture"]
                                 @if (model.IsDriver != true)
                                 {
-                                    <span class="text-muted small fw-normal"> (optional for passengers)</span>
+                                    <span class="text-muted small fw-normal"> @L["MyProfile_ProfilePicture_Optional"]</span>
                                 }
                             </label>
 
@@ -166,57 +167,47 @@
                             <InputFile OnChange="HandleImageUpload" accept="image/*" class="form-control" />
                             @if (!string.IsNullOrEmpty(pictureFileName))
                             {
-                                <div class="text-success small mt-1">&#10003; @pictureFileName selected</div>
+                                <div class="text-success small mt-1">&#10003; @string.Format(L["MyProfile_PictureSelected"], pictureFileName)</div>
                             }
                             @if (pictureError is not null)
                             {
                                 <div class="text-danger small mt-1">@pictureError</div>
                             }
-                            <div class="form-text">JPEG or PNG, max 5 MB. Leave blank to keep current picture.</div>
+                            <div class="form-text">@L["MyProfile_ImageHint"]</div>
                         </div>
 
                         <button class="btn btn-primary" @onclick="HandleSave" disabled="@isSaving">
                             @if (isSaving)
                             {
                                 <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>Saving&hellip;</span>
+                                <span>@L["MyProfile_Saving"]</span>
                             }
                             else
                             {
-                                <span>Save Changes</span>
+                                <span>@L["MyProfile_SaveChanges"]</span>
                             }
                         </button>
                     </div>
                 </div>
 
-                <!-- Your Data -->
                 <div class="card shadow-sm mb-4">
                     <div class="card-header py-3">
-                        <h4 class="mb-0">Your Data</h4>
+                        <h4 class="mb-0">@L["MyProfile_YourData"]</h4>
                     </div>
                     <div class="card-body">
-                        <p class="text-muted mb-3">
-                            View or download all personal data GoCheaper holds about you — your profile, trips, and bookings.
-                            You can save it as a PDF or download a raw JSON file.
-                        </p>
-                        <a href="/my-data" class="btn btn-outline-primary btn-sm">View &amp; Export My Data</a>
+                        <p class="text-muted mb-3">@L["MyProfile_YourData_Desc"]</p>
+                        <a href="/my-data" class="btn btn-outline-primary btn-sm">@L["MyProfile_ExportData"]</a>
                     </div>
                 </div>
 
-                <!-- Danger Zone -->
                 <div class="card border-danger shadow-sm">
                     <div class="card-header bg-danger text-white py-3">
-                        <h4 class="mb-0">Danger Zone</h4>
+                        <h4 class="mb-0">@L["MyProfile_DangerZone"]</h4>
                     </div>
                     <div class="card-body p-4">
-                        <p class="text-muted mb-3">
-                            Permanently deletes your account and all associated data:
-                            your posted trips (passengers will be notified) and all your bookings (drivers will be notified).
-                            <strong>This cannot be undone.</strong>
-                        </p>
-
+                        <p class="text-muted mb-3">@L["MyProfile_Delete_Desc"]</p>
                         <button class="btn btn-outline-danger" @onclick="() => confirmDelete = true">
-                            Delete My Account
+                            @L["MyProfile_DeleteBtn"]
                         </button>
                     </div>
                 </div>
@@ -226,22 +217,19 @@
 </div>
 
 <NotificationModal Show="saveSuccess"
-                   Title="Profile Updated"
-                   Message="Your profile changes have been saved."
+                   Title="@L["MyProfile_SaveSuccess_Title"]"
+                   Message="@L["MyProfile_SaveSuccess_Msg"]"
                    OnClose="() => saveSuccess = false" />
 
 <ConfirmModal Show="confirmDelete"
-              Title="Delete Account"
-              ConfirmLabel="@(isDeleting ? "Deleting..." : "OK")"
-              CancelLabel="Cancel"
+              Title="@L["MyProfile_Delete_Title"]"
+              ConfirmLabel="@(isDeleting ? L["MyProfile_Deleting"].Value : "OK")"
+              CancelLabel="@L["TripDetails_Cancel"]"
               ConfirmDisabled="@(isDeleting || deleteConfirmText != "DELETE")"
               OnConfirm="HandleDeleteAccount"
               OnCancel="CancelDelete">
-    <p class="text-muted mb-3">
-        This will permanently delete your account and all associated data.
-        <strong>This cannot be undone.</strong>
-    </p>
-    <label class="form-label small fw-semibold">Type DELETE to confirm</label>
+    <p class="text-muted mb-3">@L["MyProfile_Delete_Confirm"]</p>
+    <label class="form-label small fw-semibold">@L["MyProfile_TypeDelete"]</label>
     <input class="form-control" @bind="deleteConfirmText" placeholder="DELETE" maxlength="10" />
     @if (deleteError is not null)
     {
@@ -262,7 +250,6 @@
     private string? pictureError;
     private string pictureFileName = string.Empty;
 
-    // delete account
     private bool    confirmDelete;
     private bool    isDeleting;
     private string  deleteConfirmText = string.Empty;
@@ -300,7 +287,7 @@
 
         if (e.File.Size > 5 * 1024 * 1024)
         {
-            pictureError = "Image must be smaller than 5 MB.";
+            pictureError = L["MyProfile_ImageTooLarge"];
             return;
         }
 
@@ -314,7 +301,7 @@
         }
         catch
         {
-            pictureError = "Failed to read the image. Please try a different file.";
+            pictureError = L["MyProfile_ImageReadError"];
         }
     }
 
@@ -328,19 +315,19 @@
 
         if (model.IsDriver == false && model.IsPassenger == false)
         {
-            roleError = "At least one of Driver or Passenger must remain selected.";
+            roleError = L["MyProfile_RoleError"];
             return;
         }
 
         if (model.IsDriver == true && string.IsNullOrWhiteSpace(model.MobilePhone))
         {
-            mobileError = "Mobile phone is required for drivers.";
+            mobileError = L["MyProfile_MobileRequired"];
             return;
         }
 
         if (model.IsDriver == true && string.IsNullOrEmpty(model.DriverPictureBase64) && string.IsNullOrEmpty(user?.DriverPictureBase64))
         {
-            pictureError = "A profile picture is required for drivers.";
+            pictureError = L["MyProfile_PictureRequired"];
             return;
         }
 
@@ -353,7 +340,6 @@
                 user            = result.User;
                 saveSuccess     = true;
                 pictureFileName = string.Empty;
-                // Sync updated roles into the auth cookie and live NavMenu
                 await AuthCookies.UpdateRolesAsync(result.User.IsDriver, result.User.IsPassenger);
             }
             else
@@ -393,7 +379,6 @@
         isDeleting = false;
     }
 
-    // Detects JPEG, PNG or GIF from the base64 binary signature so the data URI renders correctly
     private static string ImageDataUrl(string base64)
     {
         var mime = base64.StartsWith("/9j/")   ? "image/jpeg"

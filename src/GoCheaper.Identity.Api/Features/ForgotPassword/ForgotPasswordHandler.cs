@@ -28,7 +28,8 @@ public class ForgotPasswordHandler(
             await db.SaveChangesAsync(ct);
 
             await PublishAsync(KafkaTopics.ForgotPasswordRequested, user.Id.ToString(),
-                new ForgotPasswordRequestedEvent(user.Id, user.FirstName, user.LastName, user.Email, user.PasswordResetToken));
+                new ForgotPasswordRequestedEvent(user.Id, user.FirstName, user.LastName, user.Email,
+                    user.PasswordResetToken, user.PreferredLanguage ?? "en"));
         }
 
         // Always 204 — never reveal whether the email exists

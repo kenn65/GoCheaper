@@ -5,4 +5,5 @@ public record ForgotPasswordRequestedEvent(
     string FirstName,
     string LastName,
     string Email,
-    string ResetToken);
+    string ResetToken,
+    string Language = "en");

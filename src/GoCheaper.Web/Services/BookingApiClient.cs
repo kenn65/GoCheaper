@@ -169,6 +169,7 @@ public class BookingApiClient(
     {
         await EnsureFreshTokenAsync();
         using var request = BuildRequest(HttpMethod.Post, $"/api/bookings/trips/{tripId}/book");
+        request.Headers.TryAddWithoutValidation("X-Language", System.Globalization.CultureInfo.CurrentUICulture.Name);
         request.Content = JsonContent.Create(new { SeatsCount = seatsCount });
 
         HttpResponseMessage response;

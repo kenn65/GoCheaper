@@ -47,6 +47,7 @@ public class UserProfileUpdatedConsumer(
                         DriverId  = @event.UserId,
                         FullName  = @event.FullName,
                         Email     = @event.Email ?? string.Empty,
+                        Language  = @event.Language,
                         UpdatedAt = DateTime.UtcNow
                     });
                 }
@@ -55,6 +56,8 @@ public class UserProfileUpdatedConsumer(
                     snapshot.FullName  = @event.FullName;
                     if (!string.IsNullOrEmpty(@event.Email))
                         snapshot.Email = @event.Email;
+                    if (@event.Language is not null)
+                        snapshot.Language = @event.Language;
                     snapshot.UpdatedAt = DateTime.UtcNow;
                 }
 

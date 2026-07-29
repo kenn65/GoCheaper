@@ -18,7 +18,7 @@ public class UserRegisteredHandler(
         {
             ["FullName"]         = $"{@event.FirstName} {@event.LastName}",
             ["VerificationLink"] = verificationLink
-        });
+        }, @event.Language);
 
         await emailSender.SendAsync(
             toEmail:     @event.Email,

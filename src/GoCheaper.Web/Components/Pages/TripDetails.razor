@@ -7,11 +7,12 @@
 @inject BookingApiClient BookingClient
 @inject UserSession UserSession
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>Trip Details - GoCheaper</PageTitle>
 
 <div class="container py-4" style="max-width:800px">
-    <a href="/my-trips" class="btn btn-outline-secondary btn-sm mb-3">← My Trips</a>
+    <a href="/my-trips" class="btn btn-outline-secondary btn-sm mb-3">@L["TripDetails_Back"]</a>
 
     @if (_loading)
     {
@@ -29,17 +30,16 @@
 
         @if (isOwner && _editing)
         {
-            <!-- ── Driver: edit form ── -->
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Edit Trip</h4>
-                    <button class="btn btn-sm btn-outline-light" @onclick="CancelEdit">Cancel</button>
+                    <h4 class="mb-0">@L["TripDetails_EditTitle"]</h4>
+                    <button class="btn btn-sm btn-outline-light" @onclick="CancelEdit">@L["TripDetails_Cancel"]</button>
                 </div>
                 <div class="card-body">
                     @if (_bookedSeats > 0)
                     {
                         <div class="alert alert-info mb-3">
-                            <strong>This trip has @_bookedSeats booking(s).</strong> Only the note, pickup points, payment method and number plate can be edited.
+                            <strong>@string.Format(L["TripDetails_HasBookings"], _bookedSeats)</strong>
                         </div>
                     }
                     <EditForm Model="_edit" OnValidSubmit="SaveEditAsync">
@@ -47,26 +47,26 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">From</label>
+                                <label class="form-label fw-semibold">@L["TripDetails_From"]</label>
                                 <InputText class="form-control" @bind-Value="_edit.From" disabled="@(_bookedSeats > 0)" />
                                 <ValidationMessage For="() => _edit.From" />
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">To</label>
+                                <label class="form-label fw-semibold">@L["TripDetails_To"]</label>
                                 <InputText class="form-control" @bind-Value="_edit.To" disabled="@(_bookedSeats > 0)" />
                                 <ValidationMessage For="() => _edit.To" />
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Total Seats</label>
+                            <label class="form-label fw-semibold">@L["TripDetails_TotalSeats"]</label>
                             <InputNumber class="form-control" @bind-Value="_edit.TotalSeats" disabled="@(_bookedSeats > 0)" />
                             <ValidationMessage For="() => _edit.TotalSeats" />
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Currency</label>
+                                <label class="form-label fw-semibold">@L["TripDetails_Currency"]</label>
                                 <InputSelect class="form-select" @bind-Value="_edit.Currency" disabled="@(_bookedSeats > 0)">
                                     <option value="DKK">DKK – Danish Krone</option>
                                     <option value="NOK">NOK – Norwegian Krone</option>
@@ -74,37 +74,37 @@
                                 </InputSelect>
                             </div>
                             <div class="col-md-8">
-                                <label class="form-label fw-semibold">Price per Seat (@_edit.Currency)</label>
+                                <label class="form-label fw-semibold">@string.Format(L["TripDetails_PricePerSeat"], _edit.Currency)</label>
                                 <InputNumber class="form-control" @bind-Value="_edit.PricePerSeat" disabled="@(_bookedSeats > 0)" />
                                 <ValidationMessage For="() => _edit.PricePerSeat" />
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Departure Date &amp; Time</label>
+                            <label class="form-label fw-semibold">@L["TripDetails_Departure"]</label>
                             <InputDate Type="InputDateType.DateTimeLocal" class="form-control" @bind-Value="_edit.DepartureTime" disabled="@(_bookedSeats > 0)" />
                             <ValidationMessage For="() => _edit.DepartureTime" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Number Plate</label>
+                            <label class="form-label fw-semibold">@L["TripDetails_NumberPlate"]</label>
                             <InputText class="form-control" @bind-Value="_edit.NumberPlate" />
                             <ValidationMessage For="() => _edit.NumberPlate" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Note</label>
+                            <label class="form-label fw-semibold">@L["TripDetails_Note"]</label>
                             <InputTextArea class="form-control" @bind-Value="_edit.Note" rows="3" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Payment Method</label>
+                            <label class="form-label fw-semibold">@L["TripDetails_PaymentMethod"]</label>
                             <InputText class="form-control" @bind-Value="_edit.PaymentMethod"
                                        placeholder="e.g. Cash, MobilePay (DK), Vipps (NO), Swish (SE)" />
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Pickup Points</label>
+                            <label class="form-label fw-semibold">@L["TripDetails_PickupPoints"]</label>
                             @for (var i = 0; i < _editPickupPoints.Count; i++)
                             {
                                 var index = i;
@@ -112,7 +112,7 @@
                                     <div class="d-flex align-items-center gap-2 mb-1">
                                         <span class="badge bg-secondary">@(index + 1)</span>
                                         <button type="button" class="btn btn-outline-danger btn-sm ms-auto"
-                                                @onclick="() => _editPickupPoints.RemoveAt(index)">✕ Remove</button>
+                                                @onclick="() => _editPickupPoints.RemoveAt(index)">@L["TripDetails_Remove"]</button>
                                     </div>
                                     <input class="form-control" value="@_editPickupPoints[index]"
                                            @oninput="e => _editPickupPoints[index] = e.Value?.ToString() ?? string.Empty"
@@ -120,7 +120,7 @@
                                 </div>
                             }
                             <button type="button" class="btn btn-outline-secondary btn-sm"
-                                    @onclick="() => _editPickupPoints.Add(string.Empty)">+ Add Pickup Point</button>
+                                    @onclick="() => _editPickupPoints.Add(string.Empty)">@L["TripDetails_AddPickup"]</button>
                             @if (_editPickupPointsError is not null)
                             {
                                 <div class="text-danger small mt-1">@_editPickupPointsError</div>
@@ -134,9 +134,9 @@
 
                         <div class="d-flex gap-2 mt-4">
                             <button type="submit" class="btn btn-primary" disabled="@_saving">
-                                @(_saving ? "Saving..." : "Save Changes")
+                                @(_saving ? L["TripDetails_Saving"].Value : L["TripDetails_SaveChanges"].Value)
                             </button>
-                            <button type="button" class="btn btn-outline-secondary" @onclick="CancelEdit">Cancel</button>
+                            <button type="button" class="btn btn-outline-secondary" @onclick="CancelEdit">@L["TripDetails_Cancel"]</button>
                         </div>
                     </EditForm>
                 </div>
@@ -144,16 +144,15 @@
         }
         else
         {
-            <!-- ── Read-only view (driver + passenger) ── -->
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white py-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
                         <div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <h4 class="mb-0">@_trip.From &rarr; @_trip.To</h4>
-                                <span class="badge @TripStatus.BadgeClass(_trip.DepartureTime)">@TripStatus.Compute(_trip.DepartureTime)</span>
+                                <span class="badge @TripStatus.BadgeClass(_trip.DepartureTime)">@L["Status_" + TripStatus.Compute(_trip.DepartureTime)]</span>
                             </div>
-                            <span class="text-white opacity-75 small">Driver: <strong>@(_trip.DriverFullName == "Unknown Driver" && isOwner ? (UserSession.FullName ?? _trip.DriverFullName) : _trip.DriverFullName)</strong></span>
+                            <span class="text-white opacity-75 small">@L["TripDetails_Driver"] <strong>@(_trip.DriverFullName == "Unknown Driver" && isOwner ? (UserSession.FullName ?? _trip.DriverFullName) : _trip.DriverFullName)</strong></span>
                         </div>
                         <div class="d-flex flex-wrap align-items-center gap-2">
                             @if (!string.IsNullOrEmpty(_trip.CarPictureBase64))
@@ -173,13 +172,13 @@
                                 var isPastWithBookings = TripStatus.Compute(_trip.DepartureTime) != "Pending" && _bookedSeats > 0;
                                 @if (isPastWithBookings)
                                 {
-                                    <small class="text-white opacity-75">Cannot edit or delete — passengers are booked</small>
+                                    <small class="text-white opacity-75">@L["TripDetails_CannotEdit"]</small>
                                 }
                                 else
                                 {
                                     <div class="d-flex flex-wrap gap-2">
-                                        <button class="btn btn-sm btn-outline-light" @onclick="StartEdit">Edit Trip</button>
-                                        <button class="btn btn-sm btn-outline-light" @onclick="() => _confirmDelete = true">Delete Trip</button>
+                                        <button class="btn btn-sm btn-outline-light" @onclick="StartEdit">@L["TripDetails_EditBtn"]</button>
+                                        <button class="btn btn-sm btn-outline-light" @onclick="() => _confirmDelete = true">@L["TripDetails_DeleteBtn"]</button>
                                     </div>
                                 }
                             }
@@ -188,36 +187,39 @@
                 </div>
                 <div class="card-body">
                     <dl class="row mb-0">
-                        <dt class="col-sm-4">Departure</dt>
+                        <dt class="col-sm-4">@L["TripDetails_Departure_Label"]</dt>
                         <dd class="col-sm-8">@(_trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
 
-                        <dt class="col-sm-4">Seats</dt>
-                        <dd class="col-sm-8">@_bookedSeats booked / @_trip.TotalSeats total &nbsp;<span class="text-muted small">(@(_trip.TotalSeats - _bookedSeats) available)</span></dd>
+                        <dt class="col-sm-4">@L["TripDetails_Seats"]</dt>
+                        <dd class="col-sm-8">
+                            @string.Format(L["TripDetails_SeatsInfo"], _bookedSeats, _trip.TotalSeats)
+                            &nbsp;<span class="text-muted small">@string.Format(L["TripDetails_SeatsAvail"], _trip.TotalSeats - _bookedSeats)</span>
+                        </dd>
 
-                        <dt class="col-sm-4">Price per Seat (@_trip.Currency)</dt>
+                        <dt class="col-sm-4">@string.Format(L["TripDetails_PriceLabel"], _trip.Currency)</dt>
                         <dd class="col-sm-8">@_trip.PricePerSeat.ToString("N2") @_trip.Currency</dd>
 
                         @if (_trip.NumberPlate is not null && string.IsNullOrEmpty(_trip.CarPictureBase64))
                         {
-                            <dt class="col-sm-4">Number Plate</dt>
+                            <dt class="col-sm-4">@L["TripDetails_NumberPlate_Label"]</dt>
                             <dd class="col-sm-8">@_trip.NumberPlate</dd>
                         }
 
                         @if (!string.IsNullOrWhiteSpace(_trip.Note))
                         {
-                            <dt class="col-sm-4">Note</dt>
+                            <dt class="col-sm-4">@L["TripDetails_Note_Label"]</dt>
                             <dd class="col-sm-8">@_trip.Note</dd>
                         }
 
                         @if (!string.IsNullOrWhiteSpace(_trip.PaymentMethod))
                         {
-                            <dt class="col-sm-4">Payment Method</dt>
+                            <dt class="col-sm-4">@L["TripDetails_PaymentMethod_Label"]</dt>
                             <dd class="col-sm-8">@_trip.PaymentMethod</dd>
                         }
 
                         @if (_trip.PickupPoints is { Count: > 0 })
                         {
-                            <dt class="col-sm-4">Pickup Points</dt>
+                            <dt class="col-sm-4">@L["TripDetails_PickupPoints_Label"]</dt>
                             <dd class="col-sm-8">
                                 <ol class="mb-0 ps-3">
                                     @foreach (var point in _trip.PickupPoints)
@@ -233,12 +235,11 @@
         }
     }
 
-    @* ── Passengers card (driver view — only shown when this user owns the trip) ── *@
     @if (_trip is not null && UserSession.UserId.HasValue && UserSession.UserId.Value == _trip.DriverId && !_editing)
     {
         <div class="card shadow-sm mt-4">
             <div class="card-header bg-primary text-white py-3">
-                <h4 class="mb-0">Passengers</h4>
+                <h4 class="mb-0">@L["TripDetails_Passengers"]</h4>
             </div>
             <div class="card-body">
                 @if (_passengersError is not null)
@@ -247,11 +248,10 @@
                 }
                 else if (_passengers is { Count: 0 })
                 {
-                    <p class="text-muted mb-0">No bookings yet for this trip.</p>
+                    <p class="text-muted mb-0">@L["TripDetails_NoBookings"]</p>
                 }
                 else if (_passengers is not null)
                 {
-                    <!-- Mobile cards -->
                     <div class="d-md-none">
                         @foreach (var p in _passengers)
                         {
@@ -262,17 +262,16 @@
                                 </div>
                             </div>
                         }
-                        <div class="text-muted small mt-2">Total: @_passengers.Sum(p => p.SeatsCount) seat(s) booked</div>
+                        <div class="text-muted small mt-2">@L["TripDetails_Total"]: @_passengers.Sum(p => p.SeatsCount) seat(s) booked</div>
                     </div>
 
-                    <!-- Desktop table -->
                     <div class="d-none d-md-block">
                         <table class="table table-hover align-middle mb-1">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Passenger</th>
-                                    <th>Seats Booked</th>
-                                    <th>Booked At</th>
+                                    <th>@L["TripDetails_PassengerName"]</th>
+                                    <th>@L["TripDetails_SeatsBooked"]</th>
+                                    <th>@L["TripDetails_BookedAt"]</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -287,7 +286,7 @@
                             </tbody>
                             <tfoot>
                                 <tr class="table-light fw-semibold">
-                                    <td>Total</td>
+                                    <td>@L["TripDetails_Total"]</td>
                                     <td>@_passengers.Sum(p => p.SeatsCount)</td>
                                     <td></td>
                                 </tr>
@@ -301,16 +300,16 @@
 </div>
 
 <ConfirmModal Show="_confirmDelete"
-              Title="Delete Trip"
-              ConfirmLabel="@(_deleting ? "Deleting..." : "OK")"
-              CancelLabel="Cancel"
+              Title="@L["TripDetails_DeleteTitle"]"
+              ConfirmLabel="@(_deleting ? L["TripDetails_Deleting"].Value : "OK")"
+              CancelLabel="@L["TripDetails_Cancel"]"
               ConfirmDisabled="_deleting"
               OnConfirm="ConfirmDeleteAsync"
               OnCancel="CancelDelete">
-    <p class="text-muted mb-3">Permanently deletes this trip. Passengers with bookings will be notified by email.</p>
-    <label class="form-label small fw-semibold">Reason for deletion (optional)</label>
+    <p class="text-muted mb-3">@L["TripDetails_DeleteDesc"]</p>
+    <label class="form-label small fw-semibold">@L["TripDetails_DeleteReason"]</label>
     <textarea class="form-control" rows="2"
-              placeholder="Sent to passengers if provided"
+              placeholder="@L["TripDetails_DeleteReasonHint"]"
               @bind="_deleteReason"></textarea>
     @if (_deleteError is not null)
     {
@@ -328,14 +327,11 @@
     private bool    _loading = true;
     private string? _error;
 
-    // delete
     private bool    _confirmDelete;
     private bool    _deleting;
     private string? _deleteError;
     private string  _deleteReason = string.Empty;
 
-
-    // owner editing
     private bool _editing;
     private bool _saving;
     private string? _saveError;
@@ -418,7 +414,7 @@
         var validPickupPoints = _editPickupPoints.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
         if (validPickupPoints.Count == 0)
         {
-            _editPickupPointsError = "At least one pickup point is required.";
+            _editPickupPointsError = L["TripDetails_PickupRequired"];
             _saving = false;
             return;
         }
@@ -469,7 +465,7 @@
         [Required] public string From { get; set; } = string.Empty;
         [Required] public string To   { get; set; } = string.Empty;
         [Range(1, 50)] public int TotalSeats { get; set; } = 1;
-        [Range(1, 99999, ErrorMessage = "Price per seat must be at least 1 DKK.")] public decimal PricePerSeat { get; set; }
+        [Range(1, 99999, ErrorMessage = "Price per seat must be at least 1.")] public decimal PricePerSeat { get; set; }
         [Required(ErrorMessage = "Departure date and time is required.")] public DateTime? DepartureTime { get; set; }
         [Required(ErrorMessage = "Number plate is required.")] public string? NumberPlate { get; set; }
         public string? Note          { get; set; }

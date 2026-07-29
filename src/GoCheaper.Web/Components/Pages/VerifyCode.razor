@@ -5,6 +5,7 @@
 @inject IdentityApiClient IdentityApi
 @inject IMemoryCache Cache
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>Verify Code - GoCheaper</PageTitle>
 
@@ -13,9 +14,9 @@
         <div class="col-md-6 col-lg-5">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white py-3">
-                    <h4 class="mb-0">Check your email</h4>
+                    <h4 class="mb-0">@L["VerifyCode_Title"]</h4>
                     <small class="opacity-75">
-                        We sent a 6-digit code to <strong>@Email</strong>
+                        @string.Format(L["VerifyCode_Subtitle"], Email)
                     </small>
                 </div>
                 <div class="card-body p-4">
@@ -25,10 +26,10 @@
                         <div class="alert alert-danger">@apiError</div>
                     }
 
-                    <p class="text-muted small">Enter the code below. It expires in 5 minutes.</p>
+                    <p class="text-muted small">@L["VerifyCode_Expires"]</p>
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">6-digit code</label>
+                        <label class="form-label fw-semibold">@L["VerifyCode_Label"]</label>
                         <input @bind="code" @bind:event="oninput"
                                class="form-control form-control-lg text-center fw-bold fs-4 letter-spacing-wide"
                                type="text" inputmode="numeric" pattern="[0-9]*"
@@ -42,18 +43,18 @@
                         @if (isLoading)
                         {
                             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            <span>Verifying&hellip;</span>
+                            <span>@L["VerifyCode_Verifying"]</span>
                         }
                         else
                         {
-                            <span>Verify &amp; Sign In</span>
+                            <span>@L["VerifyCode_VerifyBtn"]</span>
                         }
                     </button>
 
                     <hr class="my-4" />
                     <p class="text-center text-muted small mb-0">
-                        Didn't receive it?
-                        <a href="/login">Request a new code</a>
+                        @L["VerifyCode_DidntReceive"]
+                        <a href="/login">@L["VerifyCode_RequestNew"]</a>
                     </p>
                 </div>
             </div>
@@ -80,8 +81,6 @@
             var result = await IdentityApi.VerifyAuthCodeAsync(Email, code);
             if (result.Success && result.Tokens is not null)
             {
-                // Store tokens server-side for 30 s; /auth/complete reads them and sets the
-                // HttpOnly cookie — avoids JS interop across a forceLoad navigation.
                 var key = Guid.NewGuid().ToString("N");
                 Cache.Set(key, result.Tokens, TimeSpan.FromSeconds(30));
 

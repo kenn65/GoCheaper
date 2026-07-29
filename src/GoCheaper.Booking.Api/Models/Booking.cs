@@ -9,6 +9,7 @@ public class PassengerBooking
     public string   PassengerEmail    { get; set; } = string.Empty;
     public int      SeatsCount        { get; set; } = 1;
     public DateTime BookedAt          { get; set; }
+    public string?  Language          { get; set; }
 
     public Guid?     RatingToken         { get; set; }
     public DateTime? RatingEmailSentAt   { get; set; }

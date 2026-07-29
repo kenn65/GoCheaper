@@ -11,4 +11,5 @@ public record TripCancelledForPassengerEvent(
     string    PassengerFullName,
     int       SeatsCount,
     string?   Reason,
-    DateTime  CancelledAt);
+    DateTime  CancelledAt,
+    string    PassengerLanguage = "en");

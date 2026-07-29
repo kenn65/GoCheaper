@@ -4,6 +4,7 @@
 @using GoCheaper.Web.Services
 @inject IdentityApiClient IdentityApi
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>Login - GoCheaper</PageTitle>
 
@@ -12,7 +13,7 @@
         <div class="col-md-6 col-lg-5">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white py-3">
-                    <h4 class="mb-0">Sign in to GoCheaper</h4>
+                    <h4 class="mb-0">@L["Login_Title"]</h4>
                 </div>
                 <div class="card-body p-4">
 
@@ -25,16 +26,16 @@
                         <DataAnnotationsValidator />
 
                         <div class="mb-3">
-                            <label class="form-label">Email Address</label>
+                            <label class="form-label">@L["Login_Email"]</label>
                             <InputText @bind-Value="model.Email" type="email" class="form-control"
-                                       placeholder="Email address" autocomplete="email" />
+                                       placeholder="@L["Login_Email"]" autocomplete="email" />
                             <ValidationMessage For="() => model.Email" class="text-danger small" />
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label">Password</label>
+                            <label class="form-label">@L["Login_Password"]</label>
                             <InputText @bind-Value="model.Password" type="password"
-                                       class="form-control" placeholder="Password"
+                                       class="form-control" placeholder="@L["Login_Password"]"
                                        autocomplete="current-password" />
                             <ValidationMessage For="() => model.Password" class="text-danger small" />
                         </div>
@@ -43,21 +44,21 @@
                             @if (isLoading)
                             {
                                 <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>Sending code&hellip;</span>
+                                <span>@L["Login_Sending"]</span>
                             }
                             else
                             {
-                                <span>Continue</span>
+                                <span>@L["Login_Continue"]</span>
                             }
                         </button>
                     </EditForm>
 
                     <hr class="my-4" />
                     <p class="text-center text-muted small mb-0">
-                        Don't have an account? <a href="/register">Sign up</a>
+                        @L["Login_NoAccount"] <a href="/register">@L["Login_SignUp"]</a>
                     </p>
                     <p class="text-center text-muted small mb-0 mt-1">
-                        <a href="/forgot-password">Forgot your password?</a>
+                        <a href="/forgot-password">@L["Login_ForgotPassword"]</a>
                     </p>
                 </div>
             </div>
@@ -66,8 +67,8 @@
 </div>
 
 <NotificationModal Show="_showEmailModal"
-                   Title="Login Code Sent"
-                   Message="We've emailed you a 6-digit login code. Click OK to enter it."
+                   Title="@L["Login_CodeSentTitle"]"
+                   Message="@L["Login_CodeSentMsg"]"
                    OnClose="NavigateAfterModal" />
 
 @code {

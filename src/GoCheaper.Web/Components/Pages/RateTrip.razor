@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using GoCheaper.Web.Services
 @inject BookingApiClient BookingClient
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>Rate Your Driver - GoCheaper</PageTitle>
 
@@ -17,9 +18,9 @@
     {
         <div class="card shadow-sm text-center p-4">
             <div style="font-size:3rem;color:#dc3545;">&#9888;</div>
-            <h4 class="mt-3">Link Unavailable</h4>
+            <h4 class="mt-3">@L["RateTrip_LinkUnavailable"]</h4>
             <p class="text-muted">@_error</p>
-            <a href="/" class="btn btn-outline-primary mt-2">Go to GoCheaper</a>
+            <a href="/" class="btn btn-outline-primary mt-2">@L["RateTrip_GoToCheaper"]</a>
         </div>
     }
     else if (_submitted)
@@ -31,9 +32,9 @@
                     <span>&#9733;</span>
                 }
             </div>
-            <h4 class="mt-3 fw-bold">Thank you!</h4>
-            <p class="text-muted">Your rating for <strong>@_info!.DriverFullName</strong> has been submitted. It helps other passengers make informed choices.</p>
-            <a href="/browse-trips" class="btn btn-primary mt-2">Browse Trips</a>
+            <h4 class="mt-3 fw-bold">@L["RateTrip_Thanks_Title"]</h4>
+            <p class="text-muted">@string.Format(L["RateTrip_Thanks_Msg"], _info!.DriverFullName)</p>
+            <a href="/browse-trips" class="btn btn-primary mt-2">@L["RateTrip_BrowseTrips"]</a>
         </div>
     }
     else if (_info is not null)
@@ -42,9 +43,9 @@
         {
             <div class="card shadow-sm text-center p-4">
                 <div style="font-size:3rem;color:#ffc107;">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                <h4 class="mt-3">Already Rated</h4>
-                <p class="text-muted">You have already submitted a rating for this trip. Thank you!</p>
-                <a href="/browse-trips" class="btn btn-outline-primary mt-2">Browse Trips</a>
+                <h4 class="mt-3">@L["RateTrip_AlreadyRated_Title"]</h4>
+                <p class="text-muted">@L["RateTrip_AlreadyRated_Msg"]</p>
+                <a href="/browse-trips" class="btn btn-outline-primary mt-2">@L["RateTrip_BrowseTrips"]</a>
             </div>
         }
         else
@@ -53,25 +54,23 @@
                 <div class="card-header text-center py-3"
                      style="background:linear-gradient(135deg,#1a237e 0%,#3949ab 100%);">
                     <p class="mb-0 small" style="color:rgba(255,255,255,0.75);letter-spacing:1px;text-transform:uppercase;">GoCheaper</p>
-                    <h4 class="text-white fw-bold mb-0 mt-1">Rate Your Driver</h4>
+                    <h4 class="text-white fw-bold mb-0 mt-1">@L["RateTrip_Heading"]</h4>
                 </div>
 
                 <div class="card-body p-4">
 
-                    <!-- Trip summary -->
                     <div class="rounded mb-4 p-3" style="background:#eef2ff;border:1px solid #c5cae9;">
                         <div class="fw-semibold fs-5">@_info.From &rarr; @_info.To</div>
                         <div class="text-muted small mt-1">
                             &#128197; @(_info.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")
                         </div>
                         <div class="text-muted small mt-1">
-                            &#128100; Driver: <strong class="text-body">@_info.DriverFullName</strong>
+                            &#128100; @L["RateTrip_Title"]: <strong class="text-body">@_info.DriverFullName</strong>
                         </div>
                     </div>
 
-                    <!-- Star selector -->
                     <div class="text-center mb-3">
-                        <p class="fw-semibold mb-2">How many stars for @_info.DriverFullName?</p>
+                        <p class="fw-semibold mb-2">@string.Format(L["RateTrip_HowManyStars"], _info.DriverFullName)</p>
                         <div>
                             @for (var i = 1; i <= 5; i++)
                             {
@@ -89,11 +88,10 @@
                         }
                     </div>
 
-                    <!-- Comment -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Comment <span class="text-muted fw-normal">(optional)</span></label>
+                        <label class="form-label fw-semibold">@L["RateTrip_Comment"] <span class="text-muted fw-normal">@L["RateTrip_CommentOptional"]</span></label>
                         <textarea class="form-control" rows="3" maxlength="500"
-                                  placeholder="Share a few words about your experience..."
+                                  placeholder="@L["RateTrip_CommentHint"]"
                                   @bind="_comment"></textarea>
                         <div class="text-muted small text-end mt-1">@(_comment?.Length ?? 0) / 500</div>
                     </div>
@@ -110,11 +108,11 @@
                         @if (_busy)
                         {
                             <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                            <span>Submitting&hellip;</span>
+                            <span>@L["RateTrip_Submitting"]</span>
                         }
                         else
                         {
-                            <span>Submit Rating</span>
+                            <span>@L["RateTrip_Submit"]</span>
                         }
                     </button>
 
@@ -179,13 +177,13 @@
         _busy = false;
     }
 
-    private static string RatingLabel(int stars) => stars switch
+    private string RatingLabel(int stars) => stars switch
     {
-        1 => "Poor",
-        2 => "Fair",
-        3 => "Good",
-        4 => "Very Good",
-        5 => "Excellent!",
+        1 => L["RateTrip_Rating1"],
+        2 => L["RateTrip_Rating2"],
+        3 => L["RateTrip_Rating3"],
+        4 => L["RateTrip_Rating4"],
+        5 => L["RateTrip_Rating5"],
         _ => ""
     };
 }

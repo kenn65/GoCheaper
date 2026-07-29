@@ -5,11 +5,12 @@
 @inject BookingApiClient BookingClient
 @inject UserSession UserSession
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>Trip Details - GoCheaper</PageTitle>
 
 <div class="container py-4" style="max-width: 680px;">
-    <a href="/browse-trips" class="btn btn-sm btn-outline-secondary mb-3">&#8592; Browse Trips</a>
+    <a href="/browse-trips" class="btn btn-sm btn-outline-secondary mb-3">@L["PassTrip_Back"]</a>
 
     @if (_loading)
     {
@@ -28,45 +29,45 @@
                 <div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <h5 class="mb-0">@_trip.From &rarr; @_trip.To</h5>
-                        <span class="badge @TripStatus.BadgeClass(_trip.DepartureTime)">@TripStatus.Compute(_trip.DepartureTime)</span>
+                        <span class="badge @TripStatus.BadgeClass(_trip.DepartureTime)">@L["Status_" + TripStatus.Compute(_trip.DepartureTime)]</span>
                     </div>
                     <small class="text-white opacity-75">
-                        Driver: <a href="/driver/@_trip.DriverId" class="text-white">@_trip.DriverFullName</a>
+                        @L["PassTrip_Driver"] <a href="/driver/@_trip.DriverId" class="text-white">@_trip.DriverFullName</a>
                     </small>
                 </div>
             </div>
             <div class="card-body">
                 <dl class="row mb-0">
-                    <dt class="col-sm-4">Departure</dt>
+                    <dt class="col-sm-4">@L["PassTrip_Departure"]</dt>
                     <dd class="col-sm-8">@(_trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</dd>
 
-                    <dt class="col-sm-4">Available Seats</dt>
+                    <dt class="col-sm-4">@L["PassTrip_AvailableSeats"]</dt>
                     <dd class="col-sm-8">@_trip.AvailableSeats of @_trip.TotalSeats</dd>
 
-                    <dt class="col-sm-4">Price per Seat (@_trip.Currency)</dt>
+                    <dt class="col-sm-4">@string.Format(L["PassTrip_PricePerSeat"], _trip.Currency)</dt>
                     <dd class="col-sm-8">@_trip.PricePerSeat.ToString("N2") @_trip.Currency</dd>
 
                     @if (!string.IsNullOrWhiteSpace(_trip.NumberPlate))
                     {
-                        <dt class="col-sm-4">Number Plate</dt>
+                        <dt class="col-sm-4">@L["PassTrip_NumberPlate"]</dt>
                         <dd class="col-sm-8">@_trip.NumberPlate</dd>
                     }
 
                     @if (!string.IsNullOrWhiteSpace(_trip.PaymentMethod))
                     {
-                        <dt class="col-sm-4">Payment Method</dt>
+                        <dt class="col-sm-4">@L["PassTrip_PaymentMethod"]</dt>
                         <dd class="col-sm-8">@_trip.PaymentMethod</dd>
                     }
 
                     @if (!string.IsNullOrWhiteSpace(_trip.Note))
                     {
-                        <dt class="col-sm-4">Note</dt>
+                        <dt class="col-sm-4">@L["PassTrip_Note"]</dt>
                         <dd class="col-sm-8">@_trip.Note</dd>
                     }
 
                     @if (_trip.PickupPoints.Count > 0)
                     {
-                        <dt class="col-sm-4"><strong>Pickup Points</strong></dt>
+                        <dt class="col-sm-4"><strong>@L["PassTrip_PickupPoints"]</strong></dt>
                         <dd class="col-sm-8">
                             <ol class="mb-0 ps-3">
                                 @foreach (var pt in _trip.PickupPoints)
@@ -83,14 +84,14 @@
                 @if (_bookingStatus is not null)
                 {
                     <div class="alert alert-success mb-2">
-                        You have booked <strong>@_bookingStatus.SeatsCount seat(s)</strong> on this trip.
+                        @string.Format(L["PassTrip_Booked"], _bookingStatus.SeatsCount)
                     </div>
                     @if (_cancelError is not null)
                     {
                         <div class="alert alert-danger">@_cancelError</div>
                     }
                     <button class="btn btn-outline-danger btn-sm" @onclick="() => _confirmCancel = true">
-                        Cancel Booking
+                        @L["PassTrip_CancelBooking"]
                     </button>
                 }
                 else if (_trip.AvailableSeats > 0)
@@ -101,7 +102,7 @@
                     }
                     <div class="d-flex flex-column gap-3 py-2">
                         <div class="d-flex align-items-center gap-3">
-                            <label class="form-label mb-0 fw-semibold">Number of seats</label>
+                            <label class="form-label mb-0 fw-semibold">@L["PassTrip_NumberOfSeats"]</label>
                             <input type="number" class="form-control" style="width:100px"
                                    min="1" max="@_trip.AvailableSeats" @bind="_seatsToBook" />
                         </div>
@@ -111,18 +112,18 @@
                             @if (_actionBusy)
                             {
                                 <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                <span>Booking&hellip;</span>
+                                <span>@L["PassTrip_Booking"]</span>
                             }
                             else
                             {
-                                <span>Book This Trip</span>
+                                <span>@L["PassTrip_BookThisTrip"]</span>
                             }
                         </button>
                     </div>
                 }
                 else
                 {
-                    <span class="text-muted small">This trip is fully booked.</span>
+                    <span class="text-muted small">@L["PassTrip_FullyBooked"]</span>
                 }
             </div>
         </div>
@@ -130,20 +131,20 @@
 </div>
 
 <NotificationModal Show="_showBookingModal"
-                   Title="Booking Confirmed"
-                   Message="Your seat is reserved. A booking confirmation has been emailed to you."
+                   Title="@L["PassTrip_BookingConfirmed"]"
+                   Message="@L["PassTrip_BookingConfirmed_Msg"]"
                    OnClose="GoToMyBookings" />
 
 <NotificationModal Show="_showCancelModal"
-                   Title="Booking Cancelled"
-                   Message="@($"Your booking has been cancelled. Redirecting to Browse Trips in {_cancelCountdown}…")"
+                   Title="@L["PassTrip_BookingCancelled"]"
+                   Message="@string.Format(L["PassTrip_BookingCancelled_Msg"], _cancelCountdown)"
                    OnClose="GoToBrowseTrips" />
 
 <ConfirmModal Show="_confirmCancel"
-              Title="Cancel Booking"
-              Message="Are you sure you want to cancel your booking? The seats will be freed for other passengers."
-              ConfirmLabel="@(_actionBusy ? "Cancelling..." : "OK")"
-              CancelLabel="Cancel"
+              Title="@L["PassTrip_CancelTitle"]"
+              Message="@L["PassTrip_CancelMsg"]"
+              ConfirmLabel="@(_actionBusy ? L["PassTrip_Cancelling"].Value : "OK")"
+              CancelLabel="@L["TripDetails_Cancel"]"
               ConfirmDisabled="_actionBusy"
               OnConfirm="CancelBookingAsync"
               OnCancel="() => _confirmCancel = false" />

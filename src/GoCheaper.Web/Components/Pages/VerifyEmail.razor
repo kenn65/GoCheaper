@@ -3,6 +3,7 @@
 @using GoCheaper.Web.Services
 @inject IdentityApiClient IdentityApi
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>Verify Email - GoCheaper</PageTitle>
 
@@ -15,43 +16,37 @@
                     @if (isLoading)
                     {
                         <div class="spinner-border text-primary mb-3" role="status"></div>
-                        <p class="text-muted">Verifying your email address&hellip;</p>
+                        <p class="text-muted">@L["VerifyEmail_Verifying"]</p>
                     }
                     else if (result is not null && result.Success)
                     {
                         <div class="mb-3 text-success" style="font-size: 3rem;">&#10003;</div>
-                        <h4 class="text-success">Email Verified!</h4>
+                        <h4 class="text-success">@L["VerifyEmail_Success_Title"]</h4>
                         <p class="text-muted">
                             @if (result.FirstName is not null)
                             {
-                                <span>Hi <strong>@result.FirstName</strong> &mdash; your </span>
+                                <span>@string.Format(L["VerifyEmail_Hi"], result.FirstName) </span>
                             }
                             else
                             {
-                                <span>Your </span>
+                                <span>@L["VerifyEmail_Your"] </span>
                             }
-                            email address has been confirmed and your account is now active.
+                            @L["VerifyEmail_Success_Confirmed"]
                         </p>
-                        <p class="text-muted small">Redirecting to login in @countdown&hellip;</p>
+                        <p class="text-muted small">@string.Format(L["VerifyEmail_Redirecting"], countdown)</p>
                     }
                     else if (result is not null && !result.Success)
                     {
                         <div class="mb-3 text-danger" style="font-size: 3rem;">&#x26A0;</div>
-                        <h4 class="text-danger">Verification Failed</h4>
+                        <h4 class="text-danger">@L["VerifyEmail_Failed_Title"]</h4>
                         <p class="text-muted">@result.Error</p>
-                        <p class="small text-muted">
-                            The link may have already been used or has expired.
-                            Please contact support if you need a new verification email.
-                        </p>
+                        <p class="small text-muted">@L["VerifyEmail_Failed_Msg"]</p>
                     }
                     else if (linkInvalid)
                     {
                         <div class="mb-3 text-warning" style="font-size: 3rem;">&#x26A0;</div>
-                        <h4>Invalid Link</h4>
-                        <p class="text-muted">
-                            This verification link is missing required information.
-                            Please use the link from your verification email.
-                        </p>
+                        <h4>@L["VerifyEmail_Invalid_Title"]</h4>
+                        <p class="text-muted">@L["VerifyEmail_Invalid_Msg"]</p>
                     }
 
                 </div>

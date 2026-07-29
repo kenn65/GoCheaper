@@ -38,6 +38,9 @@ namespace GoCheaper.Booking.Api.Data.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<string>("Language")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -61,6 +64,9 @@ namespace GoCheaper.Booking.Api.Data.Migrations
                     b.Property<string>("DriverRatingComment")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Language")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PassengerEmail")
                         .IsRequired()

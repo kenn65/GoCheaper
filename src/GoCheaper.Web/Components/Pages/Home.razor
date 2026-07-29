@@ -4,18 +4,15 @@
 @inject UserSession UserSession
 @inject TripsApiClient TripsClient
 @inject BookingApiClient BookingClient
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>GoCheaper — Affordable Ride Sharing</PageTitle>
 
 <AuthorizeView>
 
-    <!-- ════════════════════════════════════════════════════
-         Logged-in: personalised welcome + stats + quick access
-    ════════════════════════════════════════════════════ -->
     <Authorized>
         <div class="container py-5">
 
-            <!-- Welcome header -->
             <div class="text-center mb-5">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="80" height="80"
                      class="mb-3" style="filter:drop-shadow(0 4px 16px rgba(29,78,216,0.35))">
@@ -36,12 +33,11 @@
                     <span class="text-primary">Go</span><span style="color:#15803d">Cheaper</span>
                 </div>
                 <h1 class="fw-bold mb-1">
-                    Hello, <span class="text-primary">@UserSession.FullName</span>!
+                    @string.Format(L["Home_Hello"], UserSession.FullName)
                 </h1>
-                <p class="text-muted mb-0">Here's a snapshot of your activity.</p>
+                <p class="text-muted mb-0">@L["Home_Snapshot"]</p>
             </div>
 
-            <!-- ── Stats ─────────────────────────────────── -->
             @if (_statsLoading)
             {
                 <div class="text-center mb-5">
@@ -54,25 +50,25 @@
                 {
                     <div class="mb-4">
                         <p class="text-muted text-uppercase small fw-semibold text-center mb-3 ls-wide">
-                            As a driver
+                            @L["Home_AsDriver"]
                         </p>
                         <div class="row g-3 justify-content-center" style="max-width:560px;margin:auto">
                             <div class="col-4">
                                 <div class="card shadow-sm text-center py-3 px-2 h-100">
                                     <div class="fs-2 fw-bold text-primary lh-1 mb-1">@_tripsPosted</div>
-                                    <div class="text-muted" style="font-size:0.78rem">Trips posted</div>
+                                    <div class="text-muted" style="font-size:0.78rem">@L["Home_TripsPosted"]</div>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="card shadow-sm text-center py-3 px-2 h-100">
                                     <div class="fs-2 fw-bold text-success lh-1 mb-1">@_totalPassengers</div>
-                                    <div class="text-muted" style="font-size:0.78rem">Passengers</div>
+                                    <div class="text-muted" style="font-size:0.78rem">@L["Home_Passengers"]</div>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <div class="card shadow-sm text-center py-3 px-2 h-100">
                                     <div class="fs-2 fw-bold lh-1 mb-1" style="color:#0891b2">@_availableSeats</div>
-                                    <div class="text-muted" style="font-size:0.78rem">Seats open</div>
+                                    <div class="text-muted" style="font-size:0.78rem">@L["Home_SeatsOpen"]</div>
                                 </div>
                             </div>
                         </div>
@@ -88,19 +84,19 @@
                 {
                     <div class="mb-5">
                         <p class="text-muted text-uppercase small fw-semibold text-center mb-3">
-                            As a passenger
+                            @L["Home_AsPassenger"]
                         </p>
                         <div class="row g-3 justify-content-center" style="max-width:380px;margin:auto">
                             <div class="col-6">
                                 <div class="card shadow-sm text-center py-3 px-2 h-100">
                                     <div class="fs-2 fw-bold lh-1 mb-1" style="color:#7c3aed">@_tripsBooked</div>
-                                    <div class="text-muted" style="font-size:0.78rem">Trips booked</div>
+                                    <div class="text-muted" style="font-size:0.78rem">@L["Home_TripsBooked"]</div>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="card shadow-sm text-center py-3 px-2 h-100">
                                     <div class="fs-2 fw-bold lh-1 mb-1" style="color:#d97706">@_seatsReserved</div>
-                                    <div class="text-muted" style="font-size:0.78rem">Seats reserved</div>
+                                    <div class="text-muted" style="font-size:0.78rem">@L["Home_SeatsReserved"]</div>
                                 </div>
                             </div>
                         </div>
@@ -108,25 +104,24 @@
                 }
             }
 
-            <!-- ── Quick access cards ─────────────────────── -->
-            <p class="text-muted text-uppercase small fw-semibold text-center mb-3">Quick access</p>
+            <p class="text-muted text-uppercase small fw-semibold text-center mb-3">@L["Home_QuickAccess"]</p>
             <div class="row g-4 justify-content-center" style="max-width:740px;margin:auto">
                 @if (UserSession.IsDriver)
                 {
                     <div class="col-12 col-sm-6">
                         <div class="card h-100 shadow-sm text-center p-4">
                             <div class="mb-2" style="font-size:2.5rem">🚗</div>
-                            <h5 class="fw-semibold">My Trips</h5>
-                            <p class="text-muted small flex-grow-1">Manage your posted trips and see passenger bookings.</p>
-                            <a href="/my-trips" class="btn btn-outline-primary btn-sm">View My Trips</a>
+                            <h5 class="fw-semibold">@L["Home_MyTrips"]</h5>
+                            <p class="text-muted small flex-grow-1">@L["Home_MyTrips_Desc"]</p>
+                            <a href="/my-trips" class="btn btn-outline-primary btn-sm">@L["Home_ViewMyTrips"]</a>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6">
                         <div class="card h-100 shadow-sm text-center p-4">
                             <div class="mb-2" style="font-size:2.5rem">➕</div>
-                            <h5 class="fw-semibold">Post a Trip</h5>
-                            <p class="text-muted small flex-grow-1">Offer seats and share your travel costs with others.</p>
-                            <a href="/trips/create" class="btn btn-primary btn-sm">Create Trip</a>
+                            <h5 class="fw-semibold">@L["Home_PostTrip"]</h5>
+                            <p class="text-muted small flex-grow-1">@L["Home_PostTrip_Desc"]</p>
+                            <a href="/trips/create" class="btn btn-primary btn-sm">@L["Home_CreateTrip"]</a>
                         </div>
                     </div>
                 }
@@ -135,17 +130,17 @@
                     <div class="col-12 col-sm-6">
                         <div class="card h-100 shadow-sm text-center p-4">
                             <div class="mb-2" style="font-size:2.5rem">🔍</div>
-                            <h5 class="fw-semibold">Browse Trips</h5>
-                            <p class="text-muted small flex-grow-1">Find affordable rides to your destination.</p>
-                            <a href="/browse-trips" class="btn btn-outline-primary btn-sm">Browse Trips</a>
+                            <h5 class="fw-semibold">@L["Home_BrowseTrips"]</h5>
+                            <p class="text-muted small flex-grow-1">@L["Home_BrowseTrips_Desc"]</p>
+                            <a href="/browse-trips" class="btn btn-outline-primary btn-sm">@L["Home_BrowseTrips"]</a>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6">
                         <div class="card h-100 shadow-sm text-center p-4">
                             <div class="mb-2" style="font-size:2.5rem">🎫</div>
-                            <h5 class="fw-semibold">My Bookings</h5>
-                            <p class="text-muted small flex-grow-1">View your upcoming booked trips at a glance.</p>
-                            <a href="/my-booked-trips" class="btn btn-outline-primary btn-sm">My Bookings</a>
+                            <h5 class="fw-semibold">@L["Home_MyBookings"]</h5>
+                            <p class="text-muted small flex-grow-1">@L["Home_MyBookings_Desc"]</p>
+                            <a href="/my-booked-trips" class="btn btn-outline-primary btn-sm">@L["Home_MyBookings_CTA"]</a>
                         </div>
                     </div>
                 }
@@ -154,13 +149,9 @@
         </div>
     </Authorized>
 
-    <!-- ════════════════════════════════════════════════════
-         Not logged in: full marketing landing page
-    ════════════════════════════════════════════════════ -->
     <NotAuthorized>
         <div style="overflow-x:hidden">
 
-            <!-- ── Hero ────────────────────────────────── -->
             <div class="text-white py-5"
                  style="margin:-1.5rem -0.75rem 0;background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%)">
                 <div class="container text-center py-4">
@@ -183,108 +174,77 @@
                     <h1 class="display-3 fw-bold mb-2 lh-1">
                         Go<span style="color:#86efac">Cheaper</span>
                     </h1>
-                    <p class="fs-5 mb-1">Share the journey. Split the cost.</p>
-                    <p class="mb-4" style="color:rgba(255,255,255,0.65)">
-                        A free, non-profit ride-sharing platform for drivers and passengers.
-                    </p>
+                    <p class="fs-5 mb-1">@L["Home_Hero_Sub1"]</p>
+                    <p class="mb-4" style="color:rgba(255,255,255,0.65)">@L["Home_Hero_Sub2"]</p>
                     <div class="d-flex flex-wrap justify-content-center gap-3">
-                        <a href="/register" class="btn btn-light btn-lg px-5 fw-semibold">Get Started Free</a>
-                        <a href="/login" class="btn btn-outline-light btn-lg px-4">Sign In</a>
+                        <a href="/register" class="btn btn-light btn-lg px-5 fw-semibold">@L["Home_GetStarted"]</a>
+                        <a href="/login" class="btn btn-outline-light btn-lg px-4">@L["Nav_SignIn"]</a>
                     </div>
                 </div>
             </div>
 
-            <!-- ── Key values ──────────────────────────── -->
             <div class="container py-5">
                 <div class="row g-4 text-center">
                     <div class="col-12 col-md-4">
                         <div class="py-2">
                             <div class="mb-2" style="font-size:2.5rem">🆓</div>
-                            <h5 class="fw-semibold">Always Free</h5>
-                            <p class="text-muted small mb-0">
-                                No booking fees, no commissions, no hidden costs.
-                                The platform is completely free for both drivers and passengers.
-                            </p>
+                            <h5 class="fw-semibold">@L["Home_AlwaysFree"]</h5>
+                            <p class="text-muted small mb-0">@L["Home_AlwaysFree_Desc"]</p>
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
                         <div class="py-2">
                             <div class="mb-2" style="font-size:2.5rem">🤝</div>
-                            <h5 class="fw-semibold">Non-Profit</h5>
-                            <p class="text-muted small mb-0">
-                                GoCheaper is run for the community, not for profit.
-                                No investors, no ads — just people helping people travel affordably.
-                            </p>
+                            <h5 class="fw-semibold">@L["Home_NonProfit"]</h5>
+                            <p class="text-muted small mb-0">@L["Home_NonProfit_Desc"]</p>
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
                         <div class="py-2">
                             <div class="mb-2" style="font-size:2.5rem">💸</div>
-                            <h5 class="fw-semibold">Pay After the Ride</h5>
-                            <p class="text-muted small mb-0">
-                                No platform fees, no middleman. The driver sets the price upfront —
-                                you pay them directly when you arrive: cash, MobilePay (DK), Vipps (NO), or Swish (SE).
-                            </p>
+                            <h5 class="fw-semibold">@L["Home_PayAfter"]</h5>
+                            <p class="text-muted small mb-0">@L["Home_PayAfter_Desc"]</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ── How it works (light bg) ─────────────── -->
             <div style="margin:0 -0.75rem;background:#f1f5f9">
                 <div class="container py-5">
-                    <h2 class="text-center fw-bold mb-5">How it works</h2>
+                    <h2 class="text-center fw-bold mb-5">@L["Home_HowItWorks"]</h2>
                     <div class="row g-4 justify-content-center">
                         <div class="col-12 col-md-4 text-center">
                             <div class="rounded-circle bg-primary text-white d-inline-flex
                                         align-items-center justify-content-center fw-bold fs-5 mb-3"
                                  style="width:48px;height:48px">1</div>
-                            <h5 class="fw-semibold">Driver posts a trip</h5>
-                            <p class="text-muted small mb-0">
-                                Set your route, departure time, available seats, and price per seat.
-                                Passengers can discover your trip instantly.
-                            </p>
+                            <h5 class="fw-semibold">@L["Home_Step1_Title"]</h5>
+                            <p class="text-muted small mb-0">@L["Home_Step1_Desc"]</p>
                         </div>
                         <div class="col-12 col-md-4 text-center">
                             <div class="rounded-circle bg-primary text-white d-inline-flex
                                         align-items-center justify-content-center fw-bold fs-5 mb-3"
                                  style="width:48px;height:48px">2</div>
-                            <h5 class="fw-semibold">Passenger books a seat</h5>
-                            <p class="text-muted small mb-0">
-                                Browse available trips, pick one that fits, and book in seconds.
-                                Both driver and passenger receive an email confirmation.
-                            </p>
+                            <h5 class="fw-semibold">@L["Home_Step2_Title"]</h5>
+                            <p class="text-muted small mb-0">@L["Home_Step2_Desc"]</p>
                         </div>
                         <div class="col-12 col-md-4 text-center">
                             <div class="rounded-circle bg-primary text-white d-inline-flex
                                         align-items-center justify-content-center fw-bold fs-5 mb-3"
                                  style="width:48px;height:48px">3</div>
-                            <h5 class="fw-semibold">Travel &amp; pay on arrival</h5>
-                            <p class="text-muted small mb-0">
-                                Meet at the pickup point, enjoy the ride, and settle up with the driver
-                                when you reach your destination — cash, MobilePay, Vipps, or Swish.
-                            </p>
+                            <h5 class="fw-semibold">@L["Home_Step3_Title"]</h5>
+                            <p class="text-muted small mb-0">@L["Home_Step3_Desc"]</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ── Open-source / Contribute ────────────── -->
             <div class="container py-5">
                 <div class="row justify-content-center">
                     <div class="col-12 col-md-8 col-lg-7 text-center">
                         <div class="mb-3" style="font-size:2.5rem">🌍</div>
-                        <h2 class="fw-bold mb-3">Open Source &amp; Community-Driven</h2>
-                        <p class="text-muted mb-3">
-                            GoCheaper is a non-profit project built with .NET 10 and a passion for
-                            sustainable, affordable travel. There are no shareholders — only contributors
-                            who believe that getting around shouldn't cost a fortune.
-                        </p>
-                        <p class="text-muted mb-4">
-                            Whether you're a developer, a designer, or simply someone with great ideas,
-                            your contribution matters. The codebase is open source and welcomes
-                            pull requests, bug reports, and feature suggestions.
-                        </p>
+                        <h2 class="fw-bold mb-3">@L["Home_OpenSource"]</h2>
+                        <p class="text-muted mb-3">@L["Home_OpenSource_Desc1"]</p>
+                        <p class="text-muted mb-4">@L["Home_OpenSource_Desc2"]</p>
                         <a href="https://github.com/kenn65/GoCheaper"
                            target="_blank" rel="noopener noreferrer"
                            class="btn btn-dark btn-lg px-4 mb-5">
@@ -305,24 +265,19 @@
                                          0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57
                                          C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
                             </svg>
-                            View on GitHub
+                            @L["Home_ViewOnGitHub"]
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- ── Support hosting ─────────────────────── -->
             <div style="margin:0 -0.75rem;background:#f1f5f9">
                 <div class="container py-5">
                     <div class="row justify-content-center">
                         <div class="col-12 col-md-8 col-lg-6 text-center">
                             <div class="mb-3" style="font-size:2.5rem">💝</div>
-                            <h2 class="fw-bold mb-3">Support the Hosting</h2>
-                            <p class="text-muted mb-4">
-                                GoCheaper is free and non-profit, but hosting isn't. If you find the
-                                platform useful, a small voluntary contribution helps keep the servers
-                                running — completely optional and deeply appreciated.
-                            </p>
+                            <h2 class="fw-bold mb-3">@L["Home_SupportHosting"]</h2>
+                            <p class="text-muted mb-4">@L["Home_SupportHosting_Desc"]</p>
                             <div class="d-flex flex-wrap justify-content-center gap-3 mb-3">
                                 <div class="d-flex align-items-center gap-2 border rounded-3 px-3 py-2 bg-white shadow-sm">
                                     <span class="fw-bold text-white rounded px-2 py-1 small"
@@ -341,23 +296,20 @@
                                     </div>
                                 </div>
                             </div>
-                            <p class="text-muted small mb-0">Thank you for keeping GoCheaper alive! 🙏</p>
+                            <p class="text-muted small mb-0">@L["Home_ThankyouHosting"]</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- ── Final CTA (dark blue) ────────────────── -->
             <div class="text-white"
                  style="margin:0 -0.75rem -1.5rem;background:#1e3a8a">
                 <div class="container text-center py-5">
-                    <h2 class="fw-bold mb-3">Ready to go cheaper?</h2>
-                    <p class="mb-4" style="color:rgba(255,255,255,0.65)">
-                        Join the community of drivers and passengers making travel more affordable.
-                    </p>
+                    <h2 class="fw-bold mb-3">@L["Home_ReadyToCheaper"]</h2>
+                    <p class="mb-4" style="color:rgba(255,255,255,0.65)">@L["Home_ReadyToCheaper_Sub"]</p>
                     <div class="d-flex flex-wrap justify-content-center gap-3">
-                        <a href="/register" class="btn btn-light btn-lg px-5 fw-semibold">Create a Free Account</a>
-                        <a href="/login" class="btn btn-outline-light btn-lg px-4">Sign In</a>
+                        <a href="/register" class="btn btn-light btn-lg px-5 fw-semibold">@L["Home_CreateFreeAccount"]</a>
+                        <a href="/login" class="btn btn-outline-light btn-lg px-4">@L["Nav_SignIn"]</a>
                     </div>
                 </div>
             </div>
@@ -371,25 +323,20 @@
     private bool _statsLoading = true;
     private bool _statsLoaded;
 
-    // Driver stats
     private int _tripsPosted;
     private int _totalPassengers;
     private int _availableSeats;
 
-    // Passenger stats
     private int _tripsBooked;
     private int _seatsReserved;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_statsLoaded) return;
-        // AuthorizeView may resolve before Routes.OnInitializedAsync calls
-        // LoadFromClaims — return without marking loaded so the next render retries.
         if (!UserSession.IsLoggedIn) return;
 
         _statsLoaded = true;
 
-        // Kick off driver and passenger fetches in parallel
         var driverTask    = UserSession.IsDriver    ? TripsClient.GetMyTripsAsync()      : null;
         var passengerTask = UserSession.IsPassenger ? BookingClient.GetMyBookingsAsync() : null;
 
@@ -398,7 +345,6 @@
         if (passengerTask is not null) pending.Add(passengerTask);
         if (pending.Count > 0) await Task.WhenAll(pending);
 
-        // Driver stats
         if (driverTask?.Result is { Success: true, Trips: { } trips } && trips.Count > 0)
         {
             _tripsPosted = trips.Count;
@@ -411,7 +357,6 @@
             _tripsPosted = 0;
         }
 
-        // Passenger stats
         if (passengerTask?.Result is { Success: true, Bookings: { } bookings })
         {
             _tripsBooked   = bookings.Count;

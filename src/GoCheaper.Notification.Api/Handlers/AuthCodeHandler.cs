@@ -14,7 +14,7 @@ public class AuthCodeHandler(
         {
             ["FullName"] = $"{@event.FirstName} {@event.LastName}",
             ["Code"]     = @event.Code
-        });
+        }, @event.Language);
 
         await emailSender.SendAsync(
             toEmail:     @event.Email,

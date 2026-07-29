@@ -9,6 +9,7 @@ using GoCheaper.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -87,6 +88,8 @@ builder.Services.AddScoped<UserSession>();
 builder.Services.AddScoped<AuthCookieService>();
 builder.Services.AddMemoryCache();
 
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -96,6 +99,12 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+
+var supportedCultures = new[] { "en", "da", "nb", "sv" };
+app.UseRequestLocalization(new RequestLocalizationOptions()
+    .SetDefaultCulture("en")
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures));
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -184,6 +193,40 @@ app.MapGet("/auth/verify-redirect", async (HttpContext ctx) =>
 {
     await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return Results.Redirect("/");
+}).AllowAnonymous();
+
+// Sets the language preference cookie and redirects back; persists to user profile if logged in
+app.MapGet("/culture", async (string culture, string redirectUri, HttpContext ctx, IHttpClientFactory factory, IConfiguration config) =>
+{
+    var cookieOptions = new CookieOptions
+    {
+        Expires  = DateTimeOffset.UtcNow.AddYears(1),
+        SameSite = SameSiteMode.Lax,
+        IsEssential = true
+    };
+    ctx.Response.Cookies.Append(
+        CookieRequestCultureProvider.DefaultCookieName,
+        CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
+        cookieOptions);
+
+    var userId      = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var accessToken = ctx.User.FindFirst("access_token")?.Value;
+    if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(accessToken))
+    {
+        try
+        {
+            var http = factory.CreateClient("identity-api");
+            http.DefaultRequestHeaders.Add("X-API-Key", config["ApiKey:IdentityApi"]);
+            http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            await http.PatchAsJsonAsync($"/api/auth/users/{userId}",
+                new { PreferredLanguage = culture });
+        }
+        catch { /* non-critical: cookie already set */ }
+    }
+
+    var safe = !string.IsNullOrWhiteSpace(redirectUri) && redirectUri.StartsWith('/') ? redirectUri : "/";
+    return Results.Redirect(safe);
 }).AllowAnonymous();
 
 // GDPR data export — returns all personal data as a JSON file download

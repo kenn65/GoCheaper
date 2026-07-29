@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Navigation -->
+  <data name="Nav_MyProfile" xml:space="preserve"><value>My Profile</value></data>
+  <data name="Nav_MyTrips" xml:space="preserve"><value>My Trips</value></data>
+  <data name="Nav_BrowseTrips" xml:space="preserve"><value>Browse Trips</value></data>
+  <data name="Nav_MyBookedTrips" xml:space="preserve"><value>My Booked Trips</value></data>
+  <data name="Nav_SignIn" xml:space="preserve"><value>Sign In</value></data>
+  <data name="Nav_SignOut" xml:space="preserve"><value>Sign Out</value></data>
+
+  <!-- Footer / Layout -->
+  <data name="Footer_PrivacyPolicy" xml:space="preserve"><value>Privacy Policy</value></data>
+  <data name="Footer_OpenSource" xml:space="preserve"><value>Open Source</value></data>
+  <data name="Footer_NonProfit" xml:space="preserve"><value>non-profit, free to use</value></data>
+  <data name="Error_Unhandled" xml:space="preserve"><value>An unhandled error has occurred.</value></data>
+  <data name="Error_Reload" xml:space="preserve"><value>Reload</value></data>
+
+  <!-- Home (logged in) -->
+  <data name="Home_Hello" xml:space="preserve"><value>Hello, {0}!</value></data>
+  <data name="Home_Snapshot" xml:space="preserve"><value>Here's a snapshot of your activity.</value></data>
+  <data name="Home_AsDriver" xml:space="preserve"><value>As a driver</value></data>
+  <data name="Home_TripsPosted" xml:space="preserve"><value>Trips posted</value></data>
+  <data name="Home_Passengers" xml:space="preserve"><value>Passengers</value></data>
+  <data name="Home_SeatsOpen" xml:space="preserve"><value>Seats open</value></data>
+  <data name="Home_AsPassenger" xml:space="preserve"><value>As a passenger</value></data>
+  <data name="Home_TripsBooked" xml:space="preserve"><value>Trips booked</value></data>
+  <data name="Home_SeatsReserved" xml:space="preserve"><value>Seats reserved</value></data>
+  <data name="Home_QuickAccess" xml:space="preserve"><value>Quick access</value></data>
+  <data name="Home_MyTrips" xml:space="preserve"><value>My Trips</value></data>
+  <data name="Home_MyTrips_Desc" xml:space="preserve"><value>Manage your posted trips and see passenger bookings.</value></data>
+  <data name="Home_ViewMyTrips" xml:space="preserve"><value>View My Trips</value></data>
+  <data name="Home_PostTrip" xml:space="preserve"><value>Post a Trip</value></data>
+  <data name="Home_PostTrip_Desc" xml:space="preserve"><value>Offer seats and share your travel costs with others.</value></data>
+  <data name="Home_CreateTrip" xml:space="preserve"><value>Create Trip</value></data>
+  <data name="Home_BrowseTrips" xml:space="preserve"><value>Browse Trips</value></data>
+  <data name="Home_BrowseTrips_Desc" xml:space="preserve"><value>Find affordable rides to your destination.</value></data>
+  <data name="Home_MyBookings" xml:space="preserve"><value>My Bookings</value></data>
+  <data name="Home_MyBookings_Desc" xml:space="preserve"><value>View your upcoming booked trips at a glance.</value></data>
+  <data name="Home_MyBookings_CTA" xml:space="preserve"><value>My Bookings</value></data>
+
+  <!-- Home (not logged in) -->
+  <data name="Home_Hero_Sub1" xml:space="preserve"><value>Share the journey. Split the cost.</value></data>
+  <data name="Home_Hero_Sub2" xml:space="preserve"><value>A free, non-profit ride-sharing platform for drivers and passengers.</value></data>
+  <data name="Home_GetStarted" xml:space="preserve"><value>Get Started Free</value></data>
+  <data name="Home_AlwaysFree" xml:space="preserve"><value>Always Free</value></data>
+  <data name="Home_AlwaysFree_Desc" xml:space="preserve"><value>No booking fees, no commissions, no hidden costs. The platform is completely free for both drivers and passengers.</value></data>
+  <data name="Home_NonProfit" xml:space="preserve"><value>Non-Profit</value></data>
+  <data name="Home_NonProfit_Desc" xml:space="preserve"><value>GoCheaper is run for the community, not for profit. No investors, no ads — just people helping people travel affordably.</value></data>
+  <data name="Home_PayAfter" xml:space="preserve"><value>Pay After the Ride</value></data>
+  <data name="Home_PayAfter_Desc" xml:space="preserve"><value>No platform fees, no middleman. The driver sets the price upfront — you pay them directly when you arrive: cash, MobilePay (DK), Vipps (NO), or Swish (SE).</value></data>
+  <data name="Home_HowItWorks" xml:space="preserve"><value>How it works</value></data>
+  <data name="Home_Step1_Title" xml:space="preserve"><value>Driver posts a trip</value></data>
+  <data name="Home_Step1_Desc" xml:space="preserve"><value>Set your route, departure time, available seats, and price per seat. Passengers can discover your trip instantly.</value></data>
+  <data name="Home_Step2_Title" xml:space="preserve"><value>Passenger books a seat</value></data>
+  <data name="Home_Step2_Desc" xml:space="preserve"><value>Browse available trips, pick one that fits, and book in seconds. Both driver and passenger receive an email confirmation.</value></data>
+  <data name="Home_Step3_Title" xml:space="preserve"><value>Travel &amp; pay on arrival</value></data>
+  <data name="Home_Step3_Desc" xml:space="preserve"><value>Meet at the pickup point, enjoy the ride, and settle up with the driver when you reach your destination — cash, MobilePay, Vipps, or Swish.</value></data>
+  <data name="Home_OpenSource" xml:space="preserve"><value>Open Source &amp; Community-Driven</value></data>
+  <data name="Home_OpenSource_Desc1" xml:space="preserve"><value>GoCheaper is a non-profit project built with .NET 10 and a passion for sustainable, affordable travel. There are no shareholders — only contributors who believe that getting around shouldn't cost a fortune.</value></data>
+  <data name="Home_OpenSource_Desc2" xml:space="preserve"><value>Whether you're a developer, a designer, or simply someone with great ideas, your contribution matters. The codebase is open source and welcomes pull requests, bug reports, and feature suggestions.</value></data>
+  <data name="Home_ViewOnGitHub" xml:space="preserve"><value>View on GitHub</value></data>
+  <data name="Home_SupportHosting" xml:space="preserve"><value>Support the Hosting</value></data>
+  <data name="Home_SupportHosting_Desc" xml:space="preserve"><value>GoCheaper is free and non-profit, but hosting isn't. If you find the platform useful, a small voluntary contribution helps keep the servers running — completely optional and deeply appreciated.</value></data>
+  <data name="Home_ThankyouHosting" xml:space="preserve"><value>Thank you for keeping GoCheaper alive! 🙏</value></data>
+  <data name="Home_ReadyToCheaper" xml:space="preserve"><value>Ready to go cheaper?</value></data>
+  <data name="Home_ReadyToCheaper_Sub" xml:space="preserve"><value>Join the community of drivers and passengers making travel more affordable.</value></data>
+  <data name="Home_CreateFreeAccount" xml:space="preserve"><value>Create a Free Account</value></data>
+
+  <!-- Login -->
+  <data name="Login_Title" xml:space="preserve"><value>Sign in to GoCheaper</value></data>
+  <data name="Login_Email" xml:space="preserve"><value>Email Address</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>Password</value></data>
+  <data name="Login_Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="Login_Sending" xml:space="preserve"><value>Sending code…</value></data>
+  <data name="Login_NoAccount" xml:space="preserve"><value>Don't have an account?</value></data>
+  <data name="Login_SignUp" xml:space="preserve"><value>Sign up</value></data>
+  <data name="Login_ForgotPassword" xml:space="preserve"><value>Forgot your password?</value></data>
+  <data name="Login_CodeSentTitle" xml:space="preserve"><value>Login Code Sent</value></data>
+  <data name="Login_CodeSentMsg" xml:space="preserve"><value>We've emailed you a 6-digit login code. Click OK to enter it.</value></data>
+
+  <!-- Register -->
+  <data name="Register_Title" xml:space="preserve"><value>Create your GoCheaper account</value></data>
+  <data name="Register_Subtitle" xml:space="preserve"><value>You'll complete your profile after signing in</value></data>
+  <data name="Register_Email" xml:space="preserve"><value>Email Address</value></data>
+  <data name="Register_Password" xml:space="preserve"><value>Password</value></data>
+  <data name="Register_PasswordHint" xml:space="preserve"><value>Min. 8 chars · 1 capital · 2 digits</value></data>
+  <data name="Register_ConfirmPassword" xml:space="preserve"><value>Confirm Password</value></data>
+  <data name="Register_ConfirmHint" xml:space="preserve"><value>Repeat password</value></data>
+  <data name="Register_PrivacyAgree" xml:space="preserve"><value>I have read and agree to the</value></data>
+  <data name="Register_PrivacyPolicy" xml:space="preserve"><value>Privacy Policy</value></data>
+  <data name="Register_Create" xml:space="preserve"><value>Create Account</value></data>
+  <data name="Register_Creating" xml:space="preserve"><value>Creating account…</value></data>
+  <data name="Register_Success_Title" xml:space="preserve"><value>Account Created!</value></data>
+  <data name="Register_Success_Welcome" xml:space="preserve"><value>Welcome to GoCheaper!</value></data>
+  <data name="Register_Success_Check" xml:space="preserve"><value>A verification link will be sent to {0}. Please check your inbox to activate your account.</value></data>
+  <data name="Register_Redirecting" xml:space="preserve"><value>Redirecting to home in {0}…</value></data>
+  <data name="Register_MustAgreePrivacy" xml:space="preserve"><value>You must agree to the Privacy Policy to create an account.</value></data>
+
+  <!-- VerifyCode -->
+  <data name="VerifyCode_Title" xml:space="preserve"><value>Check your email</value></data>
+  <data name="VerifyCode_Subtitle" xml:space="preserve"><value>We sent a 6-digit code to {0}</value></data>
+  <data name="VerifyCode_Expires" xml:space="preserve"><value>Enter the code below. It expires in 5 minutes.</value></data>
+  <data name="VerifyCode_Label" xml:space="preserve"><value>6-digit code</value></data>
+  <data name="VerifyCode_Verifying" xml:space="preserve"><value>Verifying…</value></data>
+  <data name="VerifyCode_VerifyBtn" xml:space="preserve"><value>Verify &amp; Sign In</value></data>
+  <data name="VerifyCode_DidntReceive" xml:space="preserve"><value>Didn't receive it?</value></data>
+  <data name="VerifyCode_RequestNew" xml:space="preserve"><value>Request a new code</value></data>
+
+  <!-- VerifyEmail -->
+  <data name="VerifyEmail_Verifying" xml:space="preserve"><value>Verifying your email address…</value></data>
+  <data name="VerifyEmail_Success_Title" xml:space="preserve"><value>Email Verified!</value></data>
+  <data name="VerifyEmail_Success_Confirmed" xml:space="preserve"><value>email address has been confirmed and your account is now active.</value></data>
+  <data name="VerifyEmail_Hi" xml:space="preserve"><value>Hi {0} — your</value></data>
+  <data name="VerifyEmail_Your" xml:space="preserve"><value>Your</value></data>
+  <data name="VerifyEmail_Redirecting" xml:space="preserve"><value>Redirecting to login in {0}…</value></data>
+  <data name="VerifyEmail_Failed_Title" xml:space="preserve"><value>Verification Failed</value></data>
+  <data name="VerifyEmail_Failed_Msg" xml:space="preserve"><value>The link may have already been used or has expired. Please contact support if you need a new verification email.</value></data>
+  <data name="VerifyEmail_Invalid_Title" xml:space="preserve"><value>Invalid Link</value></data>
+  <data name="VerifyEmail_Invalid_Msg" xml:space="preserve"><value>This verification link is missing required information. Please use the link from your verification email.</value></data>
+
+  <!-- ForgotPassword -->
+  <data name="ForgotPassword_Title" xml:space="preserve"><value>Reset your password</value></data>
+  <data name="ForgotPassword_Desc" xml:space="preserve"><value>Enter your email address and we will send you a link to reset your password.</value></data>
+  <data name="ForgotPassword_Email" xml:space="preserve"><value>Email Address</value></data>
+  <data name="ForgotPassword_Send" xml:space="preserve"><value>Send Reset Link</value></data>
+  <data name="ForgotPassword_Sending" xml:space="preserve"><value>Sending…</value></data>
+  <data name="ForgotPassword_BackToSignIn" xml:space="preserve"><value>Back to Sign In</value></data>
+  <data name="ForgotPassword_Success" xml:space="preserve"><value>If that email address is registered, we have sent a password reset link to your inbox. Please check your email.</value></data>
+
+  <!-- ResetPassword -->
+  <data name="ResetPassword_Title" xml:space="preserve"><value>Choose a new password</value></data>
+  <data name="ResetPassword_NewPassword" xml:space="preserve"><value>New Password</value></data>
+  <data name="ResetPassword_ConfirmPassword" xml:space="preserve"><value>Confirm New Password</value></data>
+  <data name="ResetPassword_Save" xml:space="preserve"><value>Reset Password</value></data>
+  <data name="ResetPassword_Saving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="ResetPassword_BackToSignIn" xml:space="preserve"><value>Back to Sign In</value></data>
+  <data name="ResetPassword_Invalid_Title" xml:space="preserve"><value>Invalid Reset Link</value></data>
+  <data name="ResetPassword_Invalid_Desc" xml:space="preserve"><value>This password reset link is invalid or missing required information. Please use the link from your reset email.</value></data>
+  <data name="ResetPassword_RequestNew" xml:space="preserve"><value>Request New Link</value></data>
+  <data name="ResetPassword_Success_Title" xml:space="preserve"><value>Password Reset!</value></data>
+  <data name="ResetPassword_Success_Desc" xml:space="preserve"><value>Your password has been changed. You can now sign in with your new password.</value></data>
+  <data name="ResetPassword_Redirecting" xml:space="preserve"><value>Redirecting to login in {0}…</value></data>
+
+  <!-- CompleteProfile -->
+  <data name="CompleteProfile_Title" xml:space="preserve"><value>Complete Your Profile</value></data>
+  <data name="CompleteProfile_Subtitle" xml:space="preserve"><value>Just a few details before you start</value></data>
+  <data name="CompleteProfile_FirstName" xml:space="preserve"><value>First Name</value></data>
+  <data name="CompleteProfile_LastName" xml:space="preserve"><value>Last Name</value></data>
+  <data name="CompleteProfile_AccountType" xml:space="preserve"><value>Account Type</value></data>
+  <data name="CompleteProfile_Driver" xml:space="preserve"><value>Driver</value></data>
+  <data name="CompleteProfile_DriverOffer" xml:space="preserve"><value>I want to offer rides</value></data>
+  <data name="CompleteProfile_Passenger" xml:space="preserve"><value>Passenger</value></data>
+  <data name="CompleteProfile_PassengerBook" xml:space="preserve"><value>I want to book rides</value></data>
+  <data name="CompleteProfile_CanSelectBoth" xml:space="preserve"><value>You can select both.</value></data>
+  <data name="CompleteProfile_MobilePhone" xml:space="preserve"><value>Mobile Phone</value></data>
+  <data name="CompleteProfile_ProfilePicture" xml:space="preserve"><value>Profile Picture</value></data>
+  <data name="CompleteProfile_ImageHint" xml:space="preserve"><value>JPEG or PNG, max 5 MB.</value></data>
+  <data name="CompleteProfile_Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="CompleteProfile_Saving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="CompleteProfile_FirstNameRequired" xml:space="preserve"><value>First name is required.</value></data>
+  <data name="CompleteProfile_LastNameRequired" xml:space="preserve"><value>Last name is required.</value></data>
+  <data name="CompleteProfile_RoleRequired" xml:space="preserve"><value>Please select at least one account type.</value></data>
+  <data name="CompleteProfile_MobileRequired" xml:space="preserve"><value>Mobile phone is required for drivers.</value></data>
+  <data name="CompleteProfile_PictureRequired" xml:space="preserve"><value>A profile picture is required for drivers.</value></data>
+  <data name="CompleteProfile_ImageTooLarge" xml:space="preserve"><value>Image must be smaller than 5 MB.</value></data>
+  <data name="CompleteProfile_ImageReadError" xml:space="preserve"><value>Failed to read the image. Please try a different file.</value></data>
+
+  <!-- MyProfile -->
+  <data name="MyProfile_Title" xml:space="preserve"><value>My Profile</value></data>
+  <data name="MyProfile_Verified" xml:space="preserve"><value>Verified</value></data>
+  <data name="MyProfile_Unverified" xml:space="preserve"><value>Unverified</value></data>
+  <data name="MyProfile_MemberSince" xml:space="preserve"><value>Member since {0}</value></data>
+  <data name="MyProfile_AccountInfo" xml:space="preserve"><value>Account Information</value></data>
+  <data name="MyProfile_MobilePhone" xml:space="preserve"><value>Mobile Phone</value></data>
+  <data name="MyProfile_AccountType" xml:space="preserve"><value>Account Type</value></data>
+  <data name="MyProfile_DriverAndPassenger" xml:space="preserve"><value>Driver &amp; Passenger</value></data>
+  <data name="MyProfile_Driver" xml:space="preserve"><value>Driver</value></data>
+  <data name="MyProfile_Passenger" xml:space="preserve"><value>Passenger</value></data>
+  <data name="MyProfile_EditProfile" xml:space="preserve"><value>Edit Profile</value></data>
+  <data name="MyProfile_MobilePhone_Optional" xml:space="preserve"><value>(optional for passengers)</value></data>
+  <data name="MyProfile_DriverOffer" xml:space="preserve"><value>I want to offer rides</value></data>
+  <data name="MyProfile_PassengerBook" xml:space="preserve"><value>I want to book rides</value></data>
+  <data name="MyProfile_ProfilePicture" xml:space="preserve"><value>Profile Picture</value></data>
+  <data name="MyProfile_ProfilePicture_Optional" xml:space="preserve"><value>(optional for passengers)</value></data>
+  <data name="MyProfile_PictureSelected" xml:space="preserve"><value>{0} selected</value></data>
+  <data name="MyProfile_ImageHint" xml:space="preserve"><value>JPEG or PNG, max 5 MB. Leave blank to keep current picture.</value></data>
+  <data name="MyProfile_SaveChanges" xml:space="preserve"><value>Save Changes</value></data>
+  <data name="MyProfile_Saving" xml:space="preserve"><value>Saving…</value></data>
+  <data name="MyProfile_SaveSuccess_Title" xml:space="preserve"><value>Profile Updated</value></data>
+  <data name="MyProfile_SaveSuccess_Msg" xml:space="preserve"><value>Your profile changes have been saved.</value></data>
+  <data name="MyProfile_YourData" xml:space="preserve"><value>Your Data</value></data>
+  <data name="MyProfile_YourData_Desc" xml:space="preserve"><value>View or download all personal data GoCheaper holds about you — your profile, trips, and bookings. You can save it as a PDF or download a raw JSON file.</value></data>
+  <data name="MyProfile_ExportData" xml:space="preserve"><value>View &amp; Export My Data</value></data>
+  <data name="MyProfile_DangerZone" xml:space="preserve"><value>Danger Zone</value></data>
+  <data name="MyProfile_Delete_Desc" xml:space="preserve"><value>Permanently deletes your account and all associated data: your posted trips (passengers will be notified) and all your bookings (drivers will be notified). This cannot be undone.</value></data>
+  <data name="MyProfile_DeleteBtn" xml:space="preserve"><value>Delete My Account</value></data>
+  <data name="MyProfile_Delete_Title" xml:space="preserve"><value>Delete Account</value></data>
+  <data name="MyProfile_Delete_Confirm" xml:space="preserve"><value>This will permanently delete your account and all associated data. This cannot be undone.</value></data>
+  <data name="MyProfile_TypeDelete" xml:space="preserve"><value>Type DELETE to confirm</value></data>
+  <data name="MyProfile_Deleting" xml:space="preserve"><value>Deleting...</value></data>
+  <data name="MyProfile_RoleError" xml:space="preserve"><value>At least one of Driver or Passenger must remain selected.</value></data>
+  <data name="MyProfile_MobileRequired" xml:space="preserve"><value>Mobile phone is required for drivers.</value></data>
+  <data name="MyProfile_PictureRequired" xml:space="preserve"><value>A profile picture is required for drivers.</value></data>
+  <data name="MyProfile_ImageTooLarge" xml:space="preserve"><value>Image must be smaller than 5 MB.</value></data>
+  <data name="MyProfile_ImageReadError" xml:space="preserve"><value>Failed to read the image. Please try a different file.</value></data>
+
+  <!-- MyTrips -->
+  <data name="MyTrips_Title" xml:space="preserve"><value>My Trips</value></data>
+  <data name="MyTrips_NewTrip" xml:space="preserve"><value>+ New Trip</value></data>
+  <data name="MyTrips_NoTrips" xml:space="preserve"><value>You have not posted any trips yet.</value></data>
+  <data name="MyTrips_PostFirst" xml:space="preserve"><value>Post your first trip.</value></data>
+  <data name="MyTrips_SeatsBooked" xml:space="preserve"><value>Seats booked:</value></data>
+  <data name="MyTrips_Price" xml:space="preserve"><value>Price:</value></data>
+  <data name="MyTrips_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="MyTrips_Driver" xml:space="preserve"><value>Driver</value></data>
+  <data name="MyTrips_From" xml:space="preserve"><value>From</value></data>
+  <data name="MyTrips_To" xml:space="preserve"><value>To</value></data>
+  <data name="MyTrips_Departure" xml:space="preserve"><value>Departure</value></data>
+  <data name="MyTrips_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="MyTrips_SeatsBookedTotal" xml:space="preserve"><value>Seats (booked / total)</value></data>
+  <data name="MyTrips_PricePerSeat" xml:space="preserve"><value>Price per Seat</value></data>
+
+  <!-- CreateTrip -->
+  <data name="CreateTrip_Title" xml:space="preserve"><value>Post a New Trip</value></data>
+  <data name="CreateTrip_DriverOnly" xml:space="preserve"><value>Only drivers can post trips.</value></data>
+  <data name="CreateTrip_UpdateProfile" xml:space="preserve"><value>Update your profile</value></data>
+  <data name="CreateTrip_DriverOnlyTo" xml:space="preserve"><value>to become a driver.</value></data>
+  <data name="CreateTrip_From" xml:space="preserve"><value>From</value></data>
+  <data name="CreateTrip_FromHint" xml:space="preserve"><value>Departure city or address</value></data>
+  <data name="CreateTrip_To" xml:space="preserve"><value>To</value></data>
+  <data name="CreateTrip_ToHint" xml:space="preserve"><value>Destination city or address</value></data>
+  <data name="CreateTrip_TotalSeats" xml:space="preserve"><value>Total Seats</value></data>
+  <data name="CreateTrip_Currency" xml:space="preserve"><value>Currency</value></data>
+  <data name="CreateTrip_PricePerSeat" xml:space="preserve"><value>Price per Seat ({0})</value></data>
+  <data name="CreateTrip_Departure" xml:space="preserve"><value>Departure Date &amp; Time</value></data>
+  <data name="CreateTrip_NumberPlate" xml:space="preserve"><value>Number Plate</value></data>
+  <data name="CreateTrip_Note" xml:space="preserve"><value>Note (optional)</value></data>
+  <data name="CreateTrip_NoteHint" xml:space="preserve"><value>e.g. Luggage space available, no smoking...</value></data>
+  <data name="CreateTrip_PaymentMethod" xml:space="preserve"><value>Payment Method (optional)</value></data>
+  <data name="CreateTrip_PaymentHint" xml:space="preserve"><value>e.g. Cash, MobilePay (DK), Vipps (NO), Swish (SE)</value></data>
+  <data name="CreateTrip_PickupPoints" xml:space="preserve"><value>Pickup Points</value></data>
+  <data name="CreateTrip_PickupHint" xml:space="preserve"><value>Address or landmark</value></data>
+  <data name="CreateTrip_AddPickup" xml:space="preserve"><value>+ Add Pickup Point</value></data>
+  <data name="CreateTrip_Remove" xml:space="preserve"><value>✕ Remove</value></data>
+  <data name="CreateTrip_Post" xml:space="preserve"><value>Post Trip</value></data>
+  <data name="CreateTrip_Posting" xml:space="preserve"><value>Posting...</value></data>
+  <data name="CreateTrip_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CreateTrip_FromRequired" xml:space="preserve"><value>From is required.</value></data>
+  <data name="CreateTrip_ToRequired" xml:space="preserve"><value>To is required.</value></data>
+  <data name="CreateTrip_SeatsRange" xml:space="preserve"><value>Seats must be between 1 and 50.</value></data>
+  <data name="CreateTrip_PriceMin" xml:space="preserve"><value>Price per seat must be at least 1.</value></data>
+  <data name="CreateTrip_DepartureRequired" xml:space="preserve"><value>Departure date and time is required.</value></data>
+  <data name="CreateTrip_NumberPlateRequired" xml:space="preserve"><value>Number plate is required.</value></data>
+  <data name="CreateTrip_PickupRequired" xml:space="preserve"><value>At least one pickup point is required.</value></data>
+
+  <!-- TripDetails (driver) -->
+  <data name="TripDetails_Back" xml:space="preserve"><value>← My Trips</value></data>
+  <data name="TripDetails_EditTitle" xml:space="preserve"><value>Edit Trip</value></data>
+  <data name="TripDetails_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="TripDetails_HasBookings" xml:space="preserve"><value>This trip has {0} booking(s). Only the note, pickup points, payment method and number plate can be edited.</value></data>
+  <data name="TripDetails_From" xml:space="preserve"><value>From</value></data>
+  <data name="TripDetails_To" xml:space="preserve"><value>To</value></data>
+  <data name="TripDetails_TotalSeats" xml:space="preserve"><value>Total Seats</value></data>
+  <data name="TripDetails_Currency" xml:space="preserve"><value>Currency</value></data>
+  <data name="TripDetails_PricePerSeat" xml:space="preserve"><value>Price per Seat ({0})</value></data>
+  <data name="TripDetails_Departure" xml:space="preserve"><value>Departure Date &amp; Time</value></data>
+  <data name="TripDetails_NumberPlate" xml:space="preserve"><value>Number Plate</value></data>
+  <data name="TripDetails_Note" xml:space="preserve"><value>Note</value></data>
+  <data name="TripDetails_PaymentMethod" xml:space="preserve"><value>Payment Method</value></data>
+  <data name="TripDetails_PickupPoints" xml:space="preserve"><value>Pickup Points</value></data>
+  <data name="TripDetails_AddPickup" xml:space="preserve"><value>+ Add Pickup Point</value></data>
+  <data name="TripDetails_Remove" xml:space="preserve"><value>✕ Remove</value></data>
+  <data name="TripDetails_Saving" xml:space="preserve"><value>Saving...</value></data>
+  <data name="TripDetails_SaveChanges" xml:space="preserve"><value>Save Changes</value></data>
+  <data name="TripDetails_EditBtn" xml:space="preserve"><value>Edit Trip</value></data>
+  <data name="TripDetails_DeleteBtn" xml:space="preserve"><value>Delete Trip</value></data>
+  <data name="TripDetails_CannotEdit" xml:space="preserve"><value>Cannot edit or delete — passengers are booked</value></data>
+  <data name="TripDetails_Driver" xml:space="preserve"><value>Driver:</value></data>
+  <data name="TripDetails_Departure_Label" xml:space="preserve"><value>Departure</value></data>
+  <data name="TripDetails_Seats" xml:space="preserve"><value>Seats</value></data>
+  <data name="TripDetails_SeatsInfo" xml:space="preserve"><value>{0} booked / {1} total</value></data>
+  <data name="TripDetails_SeatsAvail" xml:space="preserve"><value>({0} available)</value></data>
+  <data name="TripDetails_PriceLabel" xml:space="preserve"><value>Price per Seat ({0})</value></data>
+  <data name="TripDetails_NumberPlate_Label" xml:space="preserve"><value>Number Plate</value></data>
+  <data name="TripDetails_Note_Label" xml:space="preserve"><value>Note</value></data>
+  <data name="TripDetails_PaymentMethod_Label" xml:space="preserve"><value>Payment Method</value></data>
+  <data name="TripDetails_PickupPoints_Label" xml:space="preserve"><value>Pickup Points</value></data>
+  <data name="TripDetails_Passengers" xml:space="preserve"><value>Passengers</value></data>
+  <data name="TripDetails_NoBookings" xml:space="preserve"><value>No bookings yet for this trip.</value></data>
+  <data name="TripDetails_PassengerName" xml:space="preserve"><value>Passenger</value></data>
+  <data name="TripDetails_SeatsBooked" xml:space="preserve"><value>Seats Booked</value></data>
+  <data name="TripDetails_BookedAt" xml:space="preserve"><value>Booked At</value></data>
+  <data name="TripDetails_Total" xml:space="preserve"><value>Total</value></data>
+  <data name="TripDetails_DeleteTitle" xml:space="preserve"><value>Delete Trip</value></data>
+  <data name="TripDetails_DeleteDesc" xml:space="preserve"><value>Permanently deletes this trip. Passengers with bookings will be notified by email.</value></data>
+  <data name="TripDetails_DeleteReason" xml:space="preserve"><value>Reason for deletion (optional)</value></data>
+  <data name="TripDetails_DeleteReasonHint" xml:space="preserve"><value>Sent to passengers if provided</value></data>
+  <data name="TripDetails_Deleting" xml:space="preserve"><value>Deleting...</value></data>
+  <data name="TripDetails_PickupRequired" xml:space="preserve"><value>At least one pickup point is required.</value></data>
+
+  <!-- BrowseTrips -->
+  <data name="BrowseTrips_Title" xml:space="preserve"><value>Browse Available Trips</value></data>
+  <data name="BrowseTrips_From" xml:space="preserve"><value>From</value></data>
+  <data name="BrowseTrips_AllFrom" xml:space="preserve"><value>All departure cities</value></data>
+  <data name="BrowseTrips_To" xml:space="preserve"><value>To</value></data>
+  <data name="BrowseTrips_AllTo" xml:space="preserve"><value>All destinations</value></data>
+  <data name="BrowseTrips_Clear" xml:space="preserve"><value>Clear</value></data>
+  <data name="BrowseTrips_NoTrips" xml:space="preserve"><value>No available trips match your filter.</value></data>
+  <data name="BrowseTrips_Driver" xml:space="preserve"><value>Driver:</value></data>
+  <data name="BrowseTrips_Available" xml:space="preserve"><value>Available:</value></data>
+  <data name="BrowseTrips_Price" xml:space="preserve"><value>Price:</value></data>
+  <data name="BrowseTrips_Plate" xml:space="preserve"><value>Plate:</value></data>
+  <data name="BrowseTrips_BookTrip" xml:space="preserve"><value>Book Trip</value></data>
+  <data name="BrowseTrips_From_Header" xml:space="preserve"><value>From</value></data>
+  <data name="BrowseTrips_To_Header" xml:space="preserve"><value>To</value></data>
+  <data name="BrowseTrips_Departure" xml:space="preserve"><value>Departure</value></data>
+  <data name="BrowseTrips_SeatsAvailable" xml:space="preserve"><value>Seats Available</value></data>
+  <data name="BrowseTrips_PricePerSeat" xml:space="preserve"><value>Price per Seat</value></data>
+  <data name="BrowseTrips_NumberPlate" xml:space="preserve"><value>Number Plate</value></data>
+  <data name="BrowseTrips_Status" xml:space="preserve"><value>Status</value></data>
+
+  <!-- PassengerTripDetails -->
+  <data name="PassTrip_Back" xml:space="preserve"><value>← Browse Trips</value></data>
+  <data name="PassTrip_Driver" xml:space="preserve"><value>Driver:</value></data>
+  <data name="PassTrip_Departure" xml:space="preserve"><value>Departure</value></data>
+  <data name="PassTrip_AvailableSeats" xml:space="preserve"><value>Available Seats</value></data>
+  <data name="PassTrip_PricePerSeat" xml:space="preserve"><value>Price per Seat ({0})</value></data>
+  <data name="PassTrip_NumberPlate" xml:space="preserve"><value>Number Plate</value></data>
+  <data name="PassTrip_PaymentMethod" xml:space="preserve"><value>Payment Method</value></data>
+  <data name="PassTrip_Note" xml:space="preserve"><value>Note</value></data>
+  <data name="PassTrip_PickupPoints" xml:space="preserve"><value>Pickup Points</value></data>
+  <data name="PassTrip_Booked" xml:space="preserve"><value>You have booked {0} seat(s) on this trip.</value></data>
+  <data name="PassTrip_CancelBooking" xml:space="preserve"><value>Cancel Booking</value></data>
+  <data name="PassTrip_NumberOfSeats" xml:space="preserve"><value>Number of seats</value></data>
+  <data name="PassTrip_BookThisTrip" xml:space="preserve"><value>Book This Trip</value></data>
+  <data name="PassTrip_Booking" xml:space="preserve"><value>Booking…</value></data>
+  <data name="PassTrip_FullyBooked" xml:space="preserve"><value>This trip is fully booked.</value></data>
+  <data name="PassTrip_BookingConfirmed" xml:space="preserve"><value>Booking Confirmed</value></data>
+  <data name="PassTrip_BookingConfirmed_Msg" xml:space="preserve"><value>Your seat is reserved. A booking confirmation has been emailed to you.</value></data>
+  <data name="PassTrip_BookingCancelled" xml:space="preserve"><value>Booking Cancelled</value></data>
+  <data name="PassTrip_BookingCancelled_Msg" xml:space="preserve"><value>Your booking has been cancelled. Redirecting to Browse Trips in {0}…</value></data>
+  <data name="PassTrip_CancelTitle" xml:space="preserve"><value>Cancel Booking</value></data>
+  <data name="PassTrip_CancelMsg" xml:space="preserve"><value>Are you sure you want to cancel your booking? The seats will be freed for other passengers.</value></data>
+  <data name="PassTrip_Cancelling" xml:space="preserve"><value>Cancelling...</value></data>
+
+  <!-- MyBookedTrips -->
+  <data name="MyBookedTrips_Title" xml:space="preserve"><value>My Booked Trips</value></data>
+  <data name="MyBookedTrips_NoBookings" xml:space="preserve"><value>You have not booked any trips yet.</value></data>
+  <data name="MyBookedTrips_BrowseLink" xml:space="preserve"><value>Browse available trips</value></data>
+  <data name="MyBookedTrips_Driver" xml:space="preserve"><value>Driver:</value></data>
+  <data name="MyBookedTrips_Price" xml:space="preserve"><value>Price:</value></data>
+  <data name="MyBookedTrips_Seats" xml:space="preserve"><value>Seats:</value></data>
+  <data name="MyBookedTrips_Details" xml:space="preserve"><value>Details</value></data>
+  <data name="MyBookedTrips_Driver_Header" xml:space="preserve"><value>Driver</value></data>
+  <data name="MyBookedTrips_From" xml:space="preserve"><value>From</value></data>
+  <data name="MyBookedTrips_To" xml:space="preserve"><value>To</value></data>
+  <data name="MyBookedTrips_Departure" xml:space="preserve"><value>Departure</value></data>
+  <data name="MyBookedTrips_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="MyBookedTrips_PricePerSeat" xml:space="preserve"><value>Price per Seat</value></data>
+  <data name="MyBookedTrips_Seats_Header" xml:space="preserve"><value>Seats</value></data>
+
+  <!-- DriverProfile -->
+  <data name="DriverProfile_Driver" xml:space="preserve"><value>Driver</value></data>
+  <data name="DriverProfile_MemberSince" xml:space="preserve"><value>Member since {0}</value></data>
+  <data name="DriverProfile_Rating" xml:space="preserve"><value>Driver Rating</value></data>
+  <data name="DriverProfile_NoRatings" xml:space="preserve"><value>No ratings yet.</value></data>
+  <data name="DriverProfile_Ratings" xml:space="preserve"><value>{0} rating(s)</value></data>
+  <data name="DriverProfile_NotFound" xml:space="preserve"><value>Driver not found.</value></data>
+
+  <!-- RateTrip -->
+  <data name="RateTrip_Title" xml:space="preserve"><value>Rate Your Driver</value></data>
+  <data name="RateTrip_LinkUnavailable" xml:space="preserve"><value>Link Unavailable</value></data>
+  <data name="RateTrip_GoToCheaper" xml:space="preserve"><value>Go to GoCheaper</value></data>
+  <data name="RateTrip_AlreadyRated_Title" xml:space="preserve"><value>Already Rated</value></data>
+  <data name="RateTrip_AlreadyRated_Msg" xml:space="preserve"><value>You have already submitted a rating for this trip. Thank you!</value></data>
+  <data name="RateTrip_BrowseTrips" xml:space="preserve"><value>Browse Trips</value></data>
+  <data name="RateTrip_Heading" xml:space="preserve"><value>Rate Your Driver</value></data>
+  <data name="RateTrip_HowManyStars" xml:space="preserve"><value>How many stars for {0}?</value></data>
+  <data name="RateTrip_Comment" xml:space="preserve"><value>Comment</value></data>
+  <data name="RateTrip_CommentOptional" xml:space="preserve"><value>(optional)</value></data>
+  <data name="RateTrip_CommentHint" xml:space="preserve"><value>Share a few words about your experience...</value></data>
+  <data name="RateTrip_Submit" xml:space="preserve"><value>Submit Rating</value></data>
+  <data name="RateTrip_Submitting" xml:space="preserve"><value>Submitting…</value></data>
+  <data name="RateTrip_Thanks_Title" xml:space="preserve"><value>Thank you!</value></data>
+  <data name="RateTrip_Thanks_Msg" xml:space="preserve"><value>Your rating for {0} has been submitted. It helps other passengers make informed choices.</value></data>
+  <data name="RateTrip_Rating1" xml:space="preserve"><value>Poor</value></data>
+  <data name="RateTrip_Rating2" xml:space="preserve"><value>Fair</value></data>
+  <data name="RateTrip_Rating3" xml:space="preserve"><value>Good</value></data>
+  <data name="RateTrip_Rating4" xml:space="preserve"><value>Very Good</value></data>
+  <data name="RateTrip_Rating5" xml:space="preserve"><value>Excellent!</value></data>
+
+  <!-- Trip Status -->
+  <data name="Status_Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="Status_Active" xml:space="preserve"><value>Active</value></data>
+  <data name="Status_Completed" xml:space="preserve"><value>Completed</value></data>
+</root>

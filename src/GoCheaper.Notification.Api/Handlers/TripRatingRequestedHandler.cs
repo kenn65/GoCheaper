@@ -29,7 +29,7 @@ public class TripRatingRequestedHandler(
             ["To"]                = @event.To,
             ["DepartureTime"]     = departure,
             ["RatingLink"]        = ratingLink
-        });
+        }, @event.PassengerLanguage);
 
         await emailSender.SendAsync(
             toEmail:     @event.PassengerEmail,

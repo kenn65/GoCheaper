@@ -45,7 +45,8 @@ public class LoginHandler(
         await db.SaveChangesAsync(ct);
 
         await PublishAsync(KafkaTopics.AuthCodeRequested, user.Id.ToString(),
-            new AuthCodeRequestedEvent(user.Id, user.FirstName, user.LastName, user.Email, code));
+            new AuthCodeRequestedEvent(user.Id, user.FirstName, user.LastName, user.Email, code,
+                user.PreferredLanguage ?? "en"));
 
         return Results.NoContent();
     }

@@ -18,7 +18,7 @@ public class ForgotPasswordHandler(
         {
             ["FullName"]  = $"{@event.FirstName} {@event.LastName}",
             ["ResetLink"] = resetLink
-        });
+        }, @event.Language);
 
         await emailSender.SendAsync(
             toEmail:     @event.Email,

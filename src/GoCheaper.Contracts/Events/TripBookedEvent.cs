@@ -17,4 +17,6 @@ public record TripBookedEvent(
     string       DriverFullName,
     int          SeatsCount,
     decimal      TotalPrice,
-    DateTime     BookedAt);
+    DateTime     BookedAt,
+    string       PassengerLanguage = "en",
+    string       DriverLanguage    = "en");

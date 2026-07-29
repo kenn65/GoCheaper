@@ -23,7 +23,7 @@ public class UserProfileBootstrapPublisher(
             var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
 
             var users = await db.Users
-                .Select(u => new { u.Id, u.FirstName, u.LastName, u.Email })
+                .Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, u.PreferredLanguage })
                 .ToListAsync(stoppingToken);
 
             if (users.Count == 0)
@@ -39,7 +39,8 @@ public class UserProfileBootstrapPublisher(
                     var @event = new UserProfileUpdatedEvent(
                         user.Id,
                         $"{user.FirstName} {user.LastName}",
-                        user.Email);
+                        user.Email,
+                        user.PreferredLanguage);
 
                     await producer.ProduceAsync(KafkaTopics.UserProfileUpdated,
                         new Message<string, string>

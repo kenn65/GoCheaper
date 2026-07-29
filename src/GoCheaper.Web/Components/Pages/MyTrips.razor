@@ -5,6 +5,7 @@
 @inject TripsApiClient TripsClient
 @inject BookingApiClient BookingClient
 @inject UserSession UserSession
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>My Trips - GoCheaper</PageTitle>
 
@@ -20,10 +21,10 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white py-3">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">My Trips</h4>
+                    <h4 class="mb-0">@L["MyTrips_Title"]</h4>
                     @if (UserSession.IsDriver)
                     {
-                        <a href="/trips/create" class="btn btn-light btn-sm">+ New Trip</a>
+                        <a href="/trips/create" class="btn btn-light btn-sm">@L["MyTrips_NewTrip"]</a>
                     }
                 </div>
             </div>
@@ -35,10 +36,10 @@
                 else if (_trips is { Count: 0 })
                 {
                     <div class="alert alert-info">
-                        You have not posted any trips yet.
+                        @L["MyTrips_NoTrips"]
                         @if (UserSession.IsDriver)
                         {
-                            <a href="/trips/create" class="alert-link ms-1">Post your first trip.</a>
+                            <a href="/trips/create" class="alert-link ms-1">@L["MyTrips_PostFirst"]</a>
                         }
                     </div>
                 }
@@ -56,14 +57,14 @@
                                             <div class="fw-semibold">@trip.From &rarr; @trip.To</div>
                                             <small class="text-muted">@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</small>
                                             <div class="mt-1">
-                                                <span class="badge @TripStatus.BadgeClass(trip.DepartureTime)">@TripStatus.Compute(trip.DepartureTime)</span>
+                                                <span class="badge @TripStatus.BadgeClass(trip.DepartureTime)">@L["Status_" + TripStatus.Compute(trip.DepartureTime)]</span>
                                             </div>
                                         </div>
-                                        <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">Details</a>
+                                        <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">@L["MyTrips_Details"]</a>
                                     </div>
                                     <div class="row row-cols-2 g-1 small">
-                                        <div class="col text-muted">Seats booked: <span class="text-body fw-semibold">@booked / @trip.TotalSeats</span></div>
-                                        <div class="col text-muted">Price: <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") @trip.Currency</span></div>
+                                        <div class="col text-muted">@L["MyTrips_SeatsBooked"] <span class="text-body fw-semibold">@booked / @trip.TotalSeats</span></div>
+                                        <div class="col text-muted">@L["MyTrips_Price"] <span class="text-body fw-semibold">@trip.PricePerSeat.ToString("N2") @trip.Currency</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -76,13 +77,13 @@
                             <table class="table table-hover align-middle">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Driver</th>
-                                        <th>From</th>
-                                        <th>To</th>
-                                        <th>Departure</th>
-                                        <th>Status</th>
-                                        <th>Seats (booked / total)</th>
-                                        <th>Price per Seat</th>
+                                        <th>@L["MyTrips_Driver"]</th>
+                                        <th>@L["MyTrips_From"]</th>
+                                        <th>@L["MyTrips_To"]</th>
+                                        <th>@L["MyTrips_Departure"]</th>
+                                        <th>@L["MyTrips_Status"]</th>
+                                        <th>@L["MyTrips_SeatsBookedTotal"]</th>
+                                        <th>@L["MyTrips_PricePerSeat"]</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -95,11 +96,11 @@
                                             <td>@trip.From</td>
                                             <td>@trip.To</td>
                                             <td>@(trip.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
-                                            <td><span class="badge @TripStatus.BadgeClass(trip.DepartureTime)">@TripStatus.Compute(trip.DepartureTime)</span></td>
+                                            <td><span class="badge @TripStatus.BadgeClass(trip.DepartureTime)">@L["Status_" + TripStatus.Compute(trip.DepartureTime)]</span></td>
                                             <td>@booked / @trip.TotalSeats</td>
                                             <td>@trip.PricePerSeat.ToString("N2") @trip.Currency</td>
                                             <td>
-                                                <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                                                <a href="/trips/@trip.Id" class="btn btn-sm btn-outline-primary">@L["MyTrips_Details"]</a>
                                             </td>
                                         </tr>
                                     }

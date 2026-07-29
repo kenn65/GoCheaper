@@ -5,6 +5,7 @@
 @inject IdentityApiClient IdentityApi
 @inject IWebHostEnvironment Env
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>Register - GoCheaper</PageTitle>
 
@@ -19,13 +20,10 @@
                         <div class="mb-3">
                             <span style="font-size: 3rem;">&#10003;</span>
                         </div>
-                        <h4 class="text-success">Account Created!</h4>
-                        <p class="mb-1">
-                            Welcome to GoCheaper!
-                        </p>
+                        <h4 class="text-success">@L["Register_Success_Title"]</h4>
+                        <p class="mb-1">@L["Register_Success_Welcome"]</p>
                         <p class="text-muted small mb-3">
-                            A verification link will be sent to <strong>@registrationResult.Email</strong>.
-                            Please check your inbox to activate your account.
+                            @string.Format(L["Register_Success_Check"], registrationResult.Email)
                         </p>
                         @if (Env.IsDevelopment() && registrationResult.EmailVerificationToken is not null)
                         {
@@ -34,7 +32,7 @@
                                 <code class="user-select-all">@registrationResult.EmailVerificationToken</code>
                             </div>
                         }
-                        <p class="text-muted small">Redirecting to home in @_countdown&hellip;</p>
+                        <p class="text-muted small">@string.Format(L["Register_Redirecting"], _countdown)</p>
                     </div>
                 </div>
             }
@@ -42,8 +40,8 @@
             {
                 <div class="card shadow-sm">
                     <div class="card-header bg-primary text-white py-3">
-                        <h4 class="mb-0">Create your GoCheaper account</h4>
-                        <small class="opacity-75">You'll complete your profile after signing in</small>
+                        <h4 class="mb-0">@L["Register_Title"]</h4>
+                        <small class="opacity-75">@L["Register_Subtitle"]</small>
                     </div>
                     <div class="card-body p-4">
 
@@ -56,23 +54,23 @@
                             <DataAnnotationsValidator />
 
                             <div class="mb-3">
-                                <label class="form-label">Email Address</label>
+                                <label class="form-label">@L["Register_Email"]</label>
                                 <InputText @bind-Value="model.Email" type="email" class="form-control"
-                                           placeholder="Email address" autocomplete="email" />
+                                           placeholder="@L["Register_Email"]" autocomplete="email" />
                                 <ValidationMessage For="() => model.Email" class="text-danger small" />
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Password</label>
+                                <label class="form-label">@L["Register_Password"]</label>
                                 <InputText @bind-Value="model.Password" class="form-control" type="password"
-                                           placeholder="Min. 8 chars · 1 capital · 2 digits" autocomplete="new-password" />
+                                           placeholder="@L["Register_PasswordHint"]" autocomplete="new-password" />
                                 <ValidationMessage For="() => model.Password" class="text-danger small" />
                             </div>
 
                             <div class="mb-4">
-                                <label class="form-label">Confirm Password</label>
+                                <label class="form-label">@L["Register_ConfirmPassword"]</label>
                                 <InputText @bind-Value="model.ConfirmPassword" class="form-control" type="password"
-                                           placeholder="Repeat password" autocomplete="new-password" />
+                                           placeholder="@L["Register_ConfirmHint"]" autocomplete="new-password" />
                                 <ValidationMessage For="() => model.ConfirmPassword" class="text-danger small" />
                             </div>
 
@@ -84,8 +82,8 @@
                                            checked="@model.AgreeToPrivacyPolicy"
                                            @onchange="e => model.AgreeToPrivacyPolicy = (bool)e.Value!" />
                                     <label class="form-check-label" for="chkPrivacy">
-                                        I have read and agree to the
-                                        <a href="/privacy-policy" target="_blank">Privacy Policy</a>
+                                        @L["Register_PrivacyAgree"]
+                                        <a href="/privacy-policy" target="_blank">@L["Register_PrivacyPolicy"]</a>
                                     </label>
                                 </div>
                                 @if (privacyError is not null)
@@ -98,11 +96,11 @@
                                 @if (isLoading)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Creating account&hellip;</span>
+                                    <span>@L["Register_Creating"]</span>
                                 }
                                 else
                                 {
-                                    <span>Create Account</span>
+                                    <span>@L["Register_Create"]</span>
                                 }
                             </button>
                         </EditForm>
@@ -128,7 +126,7 @@
 
         if (!model.AgreeToPrivacyPolicy)
         {
-            privacyError = "You must agree to the Privacy Policy to create an account.";
+            privacyError = L["Register_MustAgreePrivacy"];
             return;
         }
 

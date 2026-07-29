@@ -43,7 +43,7 @@ public class TripCancelledHandler(
             ["SeatsCount"]        = @event.SeatsCount.ToString(),
             ["CancelledAt"]       = cancelledAt,
             ["ReasonSection"]     = reasonSection
-        });
+        }, @event.PassengerLanguage);
 
         await emailSender.SendAsync(
             toEmail:     @event.PassengerEmail,

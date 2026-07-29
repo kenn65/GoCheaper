@@ -3,6 +3,7 @@
 @attribute [Authorize]
 @using GoCheaper.Web.Services
 @inject BookingApiClient BookingClient
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>My Booked Trips - GoCheaper</PageTitle>
 
@@ -17,7 +18,7 @@
     {
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white py-3">
-                <h4 class="mb-0">My Booked Trips</h4>
+                <h4 class="mb-0">@L["MyBookedTrips_Title"]</h4>
             </div>
             <div class="card-body">
                 @if (_error is not null)
@@ -27,7 +28,7 @@
                 else if (_bookings is { Count: 0 })
                 {
                     <div class="alert alert-info">
-                        You have not booked any trips yet. <a href="/browse-trips">Browse available trips</a>.
+                        @L["MyBookedTrips_NoBookings"] <a href="/browse-trips">@L["MyBookedTrips_BrowseLink"]</a>.
                     </div>
                 }
                 else
@@ -42,16 +43,16 @@
                             <div>
                                 <div class="fw-semibold">@b.From &rarr; @b.To</div>
                                 <small class="text-muted">@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</small>
-                                <div class="small mt-1">Driver: <a href="/driver/@b.DriverId">@b.DriverFullName</a></div>
+                                <div class="small mt-1">@L["MyBookedTrips_Driver"] <a href="/driver/@b.DriverId">@b.DriverFullName</a></div>
                                 <div class="mt-1">
-                                    <span class="badge @TripStatus.BadgeClass(b.DepartureTime)">@TripStatus.Compute(b.DepartureTime)</span>
+                                    <span class="badge @TripStatus.BadgeClass(b.DepartureTime)">@L["Status_" + TripStatus.Compute(b.DepartureTime)]</span>
                                 </div>
                             </div>
-                            <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">Details</a>
+                            <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary ms-2 flex-shrink-0">@L["MyBookedTrips_Details"]</a>
                         </div>
                         <div class="row row-cols-2 g-1 small">
-                            <div class="col text-muted">Price: <span class="text-body fw-semibold">@b.PricePerSeat.ToString("N2") @b.Currency</span></div>
-                            <div class="col text-muted">Seats: <span class="text-body fw-semibold">@b.SeatsCount</span></div>
+                            <div class="col text-muted">@L["MyBookedTrips_Price"] <span class="text-body fw-semibold">@b.PricePerSeat.ToString("N2") @b.Currency</span></div>
+                            <div class="col text-muted">@L["MyBookedTrips_Seats"] <span class="text-body fw-semibold">@b.SeatsCount</span></div>
                         </div>
                     </div>
                 </div>
@@ -64,13 +65,13 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>Driver</th>
-                            <th>From</th>
-                            <th>To</th>
-                            <th>Departure</th>
-                            <th>Status</th>
-                            <th>Price per Seat</th>
-                            <th>Seats</th>
+                            <th>@L["MyBookedTrips_Driver_Header"]</th>
+                            <th>@L["MyBookedTrips_From"]</th>
+                            <th>@L["MyBookedTrips_To"]</th>
+                            <th>@L["MyBookedTrips_Departure"]</th>
+                            <th>@L["MyBookedTrips_Status"]</th>
+                            <th>@L["MyBookedTrips_PricePerSeat"]</th>
+                            <th>@L["MyBookedTrips_Seats_Header"]</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -82,11 +83,11 @@
                                 <td>@b.From</td>
                                 <td>@b.To</td>
                                 <td>@(b.DepartureTime?.ToString("dd MMM yyyy HH:mm") ?? "—")</td>
-                                <td><span class="badge @TripStatus.BadgeClass(b.DepartureTime)">@TripStatus.Compute(b.DepartureTime)</span></td>
+                                <td><span class="badge @TripStatus.BadgeClass(b.DepartureTime)">@L["Status_" + TripStatus.Compute(b.DepartureTime)]</span></td>
                                 <td>@b.PricePerSeat.ToString("N2") @b.Currency</td>
                                 <td>@b.SeatsCount</td>
                                 <td>
-                                    <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary">Details</a>
+                                    <a href="/passenger/trips/@b.TripId" class="btn btn-sm btn-outline-primary">@L["MyBookedTrips_Details"]</a>
                                 </td>
                             </tr>
                         }

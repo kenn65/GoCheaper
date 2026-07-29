@@ -21,4 +21,5 @@ public class User
     public DateTime? RefreshTokenExpiry { get; set; }
     public DateTime CreatedAt { get; set; }
     public bool IsProfileComplete { get; set; }
+    public string? PreferredLanguage { get; set; }
 }

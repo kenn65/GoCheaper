@@ -63,17 +63,18 @@ public class TripDeletedConsumer(
                         }
 
                         await PublishPassengerNotificationAsync(new TripCancelledForPassengerEvent(
-                            TripId:            trip.TripId,
-                            PassengerUserId:   booking.PassengerUserId,
-                            From:              trip.From,
-                            To:                trip.To,
-                            DepartureTime:     trip.DepartureTime,
-                            DriverFullName:    trip.DriverFullName,
-                            PassengerEmail:    email,
-                            PassengerFullName: booking.PassengerFullName,
-                            SeatsCount:        booking.SeatsCount,
-                            Reason:            @event.Reason,
-                            CancelledAt:       cancelledAt));
+                            TripId:             trip.TripId,
+                            PassengerUserId:    booking.PassengerUserId,
+                            From:               trip.From,
+                            To:                 trip.To,
+                            DepartureTime:      trip.DepartureTime,
+                            DriverFullName:     trip.DriverFullName,
+                            PassengerEmail:     email,
+                            PassengerFullName:  booking.PassengerFullName,
+                            SeatsCount:         booking.SeatsCount,
+                            Reason:             @event.Reason,
+                            CancelledAt:        cancelledAt,
+                            PassengerLanguage:  booking.Language ?? "en"));
                     }
 
                     await db.TripSnapshots

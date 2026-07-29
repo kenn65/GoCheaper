@@ -47,15 +47,16 @@ public class TripRatingEmailService(
                 var token = Guid.NewGuid();
 
                 var @event = new TripRatingRequestedEvent(
-                    BookingId:         booking.Id,
-                    PassengerEmail:    booking.PassengerEmail,
-                    PassengerFullName: booking.PassengerFullName,
-                    DriverFullName:    booking.Trip.DriverFullName,
-                    DriverId:          booking.Trip.DriverId,
-                    From:              booking.Trip.From,
-                    To:                booking.Trip.To,
-                    DepartureTime:     booking.Trip.DepartureTime,
-                    RatingToken:       token);
+                    BookingId:          booking.Id,
+                    PassengerEmail:     booking.PassengerEmail,
+                    PassengerFullName:  booking.PassengerFullName,
+                    DriverFullName:     booking.Trip.DriverFullName,
+                    DriverId:           booking.Trip.DriverId,
+                    From:               booking.Trip.From,
+                    To:                 booking.Trip.To,
+                    DepartureTime:      booking.Trip.DepartureTime,
+                    RatingToken:        token,
+                    PassengerLanguage:  booking.Language ?? "en");
 
                 // Produce first — if Kafka or notification-api is unavailable, RatingEmailSentAt
                 // stays null so the next 30-minute poll retries rather than silently dropping.

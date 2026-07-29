@@ -52,8 +52,8 @@ public static class BookingEndpoints
             .Produces(StatusCodes.Status401Unauthorized);
 
         group.MapPost("/trips/{id:guid}/book",
-            (Guid id, BookTripRequest req, ClaimsPrincipal user, BookTripHandler h, CancellationToken ct) =>
-                h.HandleAsync(id, req, user, ct))
+            (Guid id, BookTripRequest req, ClaimsPrincipal user, HttpContext ctx, BookTripHandler h, CancellationToken ct) =>
+                h.HandleAsync(id, req, user, ctx, ct))
             .RequireAuthorization("ApiKeyAndJwt")
             .WithName("BookTrip")
             .WithSummary("Book one or more seats on a trip")

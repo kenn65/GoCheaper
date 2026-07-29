@@ -12,4 +12,5 @@ public record BookingCancelledEvent(
     string    DriverEmail,
     string    DriverFullName,
     int       SeatsCount,
-    DateTime  CancelledAt);
+    DateTime  CancelledAt,
+    string    DriverLanguage = "en");

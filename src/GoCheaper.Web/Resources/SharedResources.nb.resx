@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Navigation -->
+  <data name="Nav_MyProfile" xml:space="preserve"><value>Min Profil</value></data>
+  <data name="Nav_MyTrips" xml:space="preserve"><value>Mine Turer</value></data>
+  <data name="Nav_BrowseTrips" xml:space="preserve"><value>Finn Turer</value></data>
+  <data name="Nav_MyBookedTrips" xml:space="preserve"><value>Mine Bestillinger</value></data>
+  <data name="Nav_SignIn" xml:space="preserve"><value>Logg inn</value></data>
+  <data name="Nav_SignOut" xml:space="preserve"><value>Logg ut</value></data>
+
+  <!-- Footer / Layout -->
+  <data name="Footer_PrivacyPolicy" xml:space="preserve"><value>Personvernerklæring</value></data>
+  <data name="Footer_OpenSource" xml:space="preserve"><value>Åpen kildekode</value></data>
+  <data name="Footer_NonProfit" xml:space="preserve"><value>ideell, gratis å bruke</value></data>
+  <data name="Error_Unhandled" xml:space="preserve"><value>Det oppstod en uventet feil.</value></data>
+  <data name="Error_Reload" xml:space="preserve"><value>Last på nytt</value></data>
+
+  <!-- Home (logged in) -->
+  <data name="Home_Hello" xml:space="preserve"><value>Hei, {0}!</value></data>
+  <data name="Home_Snapshot" xml:space="preserve"><value>Her er et øyeblikksbilde av aktiviteten din.</value></data>
+  <data name="Home_AsDriver" xml:space="preserve"><value>Som sjåfør</value></data>
+  <data name="Home_TripsPosted" xml:space="preserve"><value>Opprettede turer</value></data>
+  <data name="Home_Passengers" xml:space="preserve"><value>Passasjerer</value></data>
+  <data name="Home_SeatsOpen" xml:space="preserve"><value>Ledige seter</value></data>
+  <data name="Home_AsPassenger" xml:space="preserve"><value>Som passasjer</value></data>
+  <data name="Home_TripsBooked" xml:space="preserve"><value>Bestilte turer</value></data>
+  <data name="Home_SeatsReserved" xml:space="preserve"><value>Reserverte seter</value></data>
+  <data name="Home_QuickAccess" xml:space="preserve"><value>Hurtigtilgang</value></data>
+  <data name="Home_MyTrips" xml:space="preserve"><value>Mine Turer</value></data>
+  <data name="Home_MyTrips_Desc" xml:space="preserve"><value>Administrer dine opprettede turer og se passasjerbestillinger.</value></data>
+  <data name="Home_ViewMyTrips" xml:space="preserve"><value>Se Mine Turer</value></data>
+  <data name="Home_PostTrip" xml:space="preserve"><value>Legg ut en Tur</value></data>
+  <data name="Home_PostTrip_Desc" xml:space="preserve"><value>Tilby seter og del reisekostnadene dine med andre.</value></data>
+  <data name="Home_CreateTrip" xml:space="preserve"><value>Opprett Tur</value></data>
+  <data name="Home_BrowseTrips" xml:space="preserve"><value>Finn Turer</value></data>
+  <data name="Home_BrowseTrips_Desc" xml:space="preserve"><value>Finn rimelige turer til destinasjonen din.</value></data>
+  <data name="Home_MyBookings" xml:space="preserve"><value>Mine Bestillinger</value></data>
+  <data name="Home_MyBookings_Desc" xml:space="preserve"><value>Se dine kommende bestilte turer på ett sted.</value></data>
+  <data name="Home_MyBookings_CTA" xml:space="preserve"><value>Mine Bestillinger</value></data>
+
+  <!-- Home (not logged in) -->
+  <data name="Home_Hero_Sub1" xml:space="preserve"><value>Del turen. Del kostnadene.</value></data>
+  <data name="Home_Hero_Sub2" xml:space="preserve"><value>En gratis, ideell samkjøringsplattform for sjåfører og passasjerer.</value></data>
+  <data name="Home_GetStarted" xml:space="preserve"><value>Kom i gang gratis</value></data>
+  <data name="Home_AlwaysFree" xml:space="preserve"><value>Alltid Gratis</value></data>
+  <data name="Home_AlwaysFree_Desc" xml:space="preserve"><value>Ingen bestillingsgebyrer, ingen provisjon, ingen skjulte kostnader. Plattformen er helt gratis for både sjåfører og passasjerer.</value></data>
+  <data name="Home_NonProfit" xml:space="preserve"><value>Ideell</value></data>
+  <data name="Home_NonProfit_Desc" xml:space="preserve"><value>GoCheaper drives for fellesskapet, ikke for profitt. Ingen investorer, ingen reklame — bare folk som hjelper hverandre med å reise rimelig.</value></data>
+  <data name="Home_PayAfter" xml:space="preserve"><value>Betal Etter Turen</value></data>
+  <data name="Home_PayAfter_Desc" xml:space="preserve"><value>Ingen plattformgebyrer, ingen mellomledd. Sjåføren setter prisen på forhånd — du betaler direkte ved ankomst: kontant, MobilePay (DK), Vipps (NO) eller Swish (SE).</value></data>
+  <data name="Home_HowItWorks" xml:space="preserve"><value>Slik fungerer det</value></data>
+  <data name="Home_Step1_Title" xml:space="preserve"><value>Sjåfør legger ut en tur</value></data>
+  <data name="Home_Step1_Desc" xml:space="preserve"><value>Angi rute, avgangstid, ledige seter og pris per sete. Passasjerer kan oppdage turen din umiddelbart.</value></data>
+  <data name="Home_Step2_Title" xml:space="preserve"><value>Passasjer bestiller et sete</value></data>
+  <data name="Home_Step2_Desc" xml:space="preserve"><value>Bla gjennom tilgjengelige turer, velg en som passer, og bestill på sekunder. Både sjåfør og passasjer mottar en e-postbekreftelse.</value></data>
+  <data name="Home_Step3_Title" xml:space="preserve"><value>Reis og betal ved ankomst</value></data>
+  <data name="Home_Step3_Desc" xml:space="preserve"><value>Møt opp på henteplassen, nyt turen, og gjør opp med sjåføren når du ankommer destinasjonen — kontant, MobilePay, Vipps eller Swish.</value></data>
+  <data name="Home_OpenSource" xml:space="preserve"><value>Åpen kildekode og drevet av fellesskapet</value></data>
+  <data name="Home_OpenSource_Desc1" xml:space="preserve"><value>GoCheaper er et ideelt prosjekt bygget med .NET 10 og en lidenskap for bærekraftig, rimelig reise. Det er ingen aksjonærer — bare bidragsytere som tror at transport ikke skal koste en formue.</value></data>
+  <data name="Home_OpenSource_Desc2" xml:space="preserve"><value>Enten du er utvikler, designer eller bare en med gode idéer, betyr ditt bidrag noe. Kodebasen er åpen kildekode og tar imot pull requests, feilrapporter og funksjonsforslag.</value></data>
+  <data name="Home_ViewOnGitHub" xml:space="preserve"><value>Se på GitHub</value></data>
+  <data name="Home_SupportHosting" xml:space="preserve"><value>Støtt Driften</value></data>
+  <data name="Home_SupportHosting_Desc" xml:space="preserve"><value>GoCheaper er gratis og ideell, men hosting koster. Hvis du finner plattformen nyttig, er et lite frivillig bidrag med å holde serverne i gang — helt frivillig og dypt verdsatt.</value></data>
+  <data name="Home_ThankyouHosting" xml:space="preserve"><value>Takk for at du holder GoCheaper i live! 🙏</value></data>
+  <data name="Home_ReadyToCheaper" xml:space="preserve"><value>Klar for å reise rimeligere?</value></data>
+  <data name="Home_ReadyToCheaper_Sub" xml:space="preserve"><value>Bli med i fellesskapet av sjåfører og passasjerer som gjør reiser mer overkommelige.</value></data>
+  <data name="Home_CreateFreeAccount" xml:space="preserve"><value>Opprett en gratis konto</value></data>
+
+  <!-- Login -->
+  <data name="Login_Title" xml:space="preserve"><value>Logg inn på GoCheaper</value></data>
+  <data name="Login_Email" xml:space="preserve"><value>E-postadresse</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>Passord</value></data>
+  <data name="Login_Continue" xml:space="preserve"><value>Fortsett</value></data>
+  <data name="Login_Sending" xml:space="preserve"><value>Sender kode…</value></data>
+  <data name="Login_NoAccount" xml:space="preserve"><value>Har du ikke en konto?</value></data>
+  <data name="Login_SignUp" xml:space="preserve"><value>Registrer deg</value></data>
+  <data name="Login_ForgotPassword" xml:space="preserve"><value>Glemt passordet?</value></data>
+  <data name="Login_CodeSentTitle" xml:space="preserve"><value>Innloggingskode sendt</value></data>
+  <data name="Login_CodeSentMsg" xml:space="preserve"><value>Vi har sendt deg en 6-sifret innloggingskode på e-post. Klikk OK for å skrive den inn.</value></data>
+
+  <!-- Register -->
+  <data name="Register_Title" xml:space="preserve"><value>Opprett din GoCheaper-konto</value></data>
+  <data name="Register_Subtitle" xml:space="preserve"><value>Du fullfører profilen etter første innlogging</value></data>
+  <data name="Register_Email" xml:space="preserve"><value>E-postadresse</value></data>
+  <data name="Register_Password" xml:space="preserve"><value>Passord</value></data>
+  <data name="Register_PasswordHint" xml:space="preserve"><value>Min. 8 tegn · 1 stor bokstav · 2 sifre</value></data>
+  <data name="Register_ConfirmPassword" xml:space="preserve"><value>Bekreft passord</value></data>
+  <data name="Register_ConfirmHint" xml:space="preserve"><value>Gjenta passord</value></data>
+  <data name="Register_PrivacyAgree" xml:space="preserve"><value>Jeg har lest og godtar</value></data>
+  <data name="Register_PrivacyPolicy" xml:space="preserve"><value>Personvernerklæringen</value></data>
+  <data name="Register_Create" xml:space="preserve"><value>Opprett konto</value></data>
+  <data name="Register_Creating" xml:space="preserve"><value>Oppretter konto…</value></data>
+  <data name="Register_Success_Title" xml:space="preserve"><value>Konto opprettet!</value></data>
+  <data name="Register_Success_Welcome" xml:space="preserve"><value>Velkommen til GoCheaper!</value></data>
+  <data name="Register_Success_Check" xml:space="preserve"><value>En bekreftelseslenke vil bli sendt til {0}. Sjekk innboksen din for å aktivere kontoen.</value></data>
+  <data name="Register_Redirecting" xml:space="preserve"><value>Omdirigerer til forsiden om {0}…</value></data>
+  <data name="Register_MustAgreePrivacy" xml:space="preserve"><value>Du må godta personvernerklæringen for å opprette en konto.</value></data>
+
+  <!-- VerifyCode -->
+  <data name="VerifyCode_Title" xml:space="preserve"><value>Sjekk e-posten din</value></data>
+  <data name="VerifyCode_Subtitle" xml:space="preserve"><value>Vi sendte en 6-sifret kode til {0}</value></data>
+  <data name="VerifyCode_Expires" xml:space="preserve"><value>Skriv inn koden nedenfor. Den utløper om 5 minutter.</value></data>
+  <data name="VerifyCode_Label" xml:space="preserve"><value>6-sifret kode</value></data>
+  <data name="VerifyCode_Verifying" xml:space="preserve"><value>Verifiserer…</value></data>
+  <data name="VerifyCode_VerifyBtn" xml:space="preserve"><value>Verifiser og logg inn</value></data>
+  <data name="VerifyCode_DidntReceive" xml:space="preserve"><value>Mottok du den ikke?</value></data>
+  <data name="VerifyCode_RequestNew" xml:space="preserve"><value>Be om en ny kode</value></data>
+
+  <!-- VerifyEmail -->
+  <data name="VerifyEmail_Verifying" xml:space="preserve"><value>Verifiserer e-postadressen din…</value></data>
+  <data name="VerifyEmail_Success_Title" xml:space="preserve"><value>E-post bekreftet!</value></data>
+  <data name="VerifyEmail_Success_Confirmed" xml:space="preserve"><value>e-postadresse er bekreftet og kontoen din er nå aktiv.</value></data>
+  <data name="VerifyEmail_Hi" xml:space="preserve"><value>Hei {0} — din</value></data>
+  <data name="VerifyEmail_Your" xml:space="preserve"><value>Din</value></data>
+  <data name="VerifyEmail_Redirecting" xml:space="preserve"><value>Omdirigerer til innlogging om {0}…</value></data>
+  <data name="VerifyEmail_Failed_Title" xml:space="preserve"><value>Bekreftelse mislyktes</value></data>
+  <data name="VerifyEmail_Failed_Msg" xml:space="preserve"><value>Lenken kan allerede ha blitt brukt eller er utløpt. Kontakt støtte hvis du trenger en ny bekreftelses-e-post.</value></data>
+  <data name="VerifyEmail_Invalid_Title" xml:space="preserve"><value>Ugyldig lenke</value></data>
+  <data name="VerifyEmail_Invalid_Msg" xml:space="preserve"><value>Denne bekreftelseslenken mangler nødvendig informasjon. Bruk lenken fra bekreftelses-e-posten din.</value></data>
+
+  <!-- ForgotPassword -->
+  <data name="ForgotPassword_Title" xml:space="preserve"><value>Tilbakestill passordet ditt</value></data>
+  <data name="ForgotPassword_Desc" xml:space="preserve"><value>Skriv inn e-postadressen din, så sender vi deg en lenke for å tilbakestille passordet.</value></data>
+  <data name="ForgotPassword_Email" xml:space="preserve"><value>E-postadresse</value></data>
+  <data name="ForgotPassword_Send" xml:space="preserve"><value>Send tilbakestillingslenke</value></data>
+  <data name="ForgotPassword_Sending" xml:space="preserve"><value>Sender…</value></data>
+  <data name="ForgotPassword_BackToSignIn" xml:space="preserve"><value>Tilbake til innlogging</value></data>
+  <data name="ForgotPassword_Success" xml:space="preserve"><value>Hvis den e-postadressen er registrert, har vi sendt en tilbakestillingslenke til innboksen din. Sjekk e-posten din.</value></data>
+
+  <!-- ResetPassword -->
+  <data name="ResetPassword_Title" xml:space="preserve"><value>Velg et nytt passord</value></data>
+  <data name="ResetPassword_NewPassword" xml:space="preserve"><value>Nytt passord</value></data>
+  <data name="ResetPassword_ConfirmPassword" xml:space="preserve"><value>Bekreft nytt passord</value></data>
+  <data name="ResetPassword_Save" xml:space="preserve"><value>Tilbakestill passord</value></data>
+  <data name="ResetPassword_Saving" xml:space="preserve"><value>Lagrer…</value></data>
+  <data name="ResetPassword_BackToSignIn" xml:space="preserve"><value>Tilbake til innlogging</value></data>
+  <data name="ResetPassword_Invalid_Title" xml:space="preserve"><value>Ugyldig tilbakestillingslenke</value></data>
+  <data name="ResetPassword_Invalid_Desc" xml:space="preserve"><value>Denne tilbakestillingslenken er ugyldig eller mangler nødvendig informasjon. Bruk lenken fra tilbakestillings-e-posten din.</value></data>
+  <data name="ResetPassword_RequestNew" xml:space="preserve"><value>Be om ny lenke</value></data>
+  <data name="ResetPassword_Success_Title" xml:space="preserve"><value>Passord tilbakestilt!</value></data>
+  <data name="ResetPassword_Success_Desc" xml:space="preserve"><value>Passordet ditt er endret. Du kan nå logge inn med det nye passordet.</value></data>
+  <data name="ResetPassword_Redirecting" xml:space="preserve"><value>Omdirigerer til innlogging om {0}…</value></data>
+
+  <!-- CompleteProfile -->
+  <data name="CompleteProfile_Title" xml:space="preserve"><value>Fullfør profilen din</value></data>
+  <data name="CompleteProfile_Subtitle" xml:space="preserve"><value>Bare noen få detaljer, så er du klar</value></data>
+  <data name="CompleteProfile_FirstName" xml:space="preserve"><value>Fornavn</value></data>
+  <data name="CompleteProfile_LastName" xml:space="preserve"><value>Etternavn</value></data>
+  <data name="CompleteProfile_AccountType" xml:space="preserve"><value>Kontotype</value></data>
+  <data name="CompleteProfile_Driver" xml:space="preserve"><value>Sjåfør</value></data>
+  <data name="CompleteProfile_DriverOffer" xml:space="preserve"><value>Jeg vil tilby turer</value></data>
+  <data name="CompleteProfile_Passenger" xml:space="preserve"><value>Passasjer</value></data>
+  <data name="CompleteProfile_PassengerBook" xml:space="preserve"><value>Jeg vil bestille turer</value></data>
+  <data name="CompleteProfile_CanSelectBoth" xml:space="preserve"><value>Du kan velge begge.</value></data>
+  <data name="CompleteProfile_MobilePhone" xml:space="preserve"><value>Mobiltelefon</value></data>
+  <data name="CompleteProfile_ProfilePicture" xml:space="preserve"><value>Profilbilde</value></data>
+  <data name="CompleteProfile_ImageHint" xml:space="preserve"><value>JPEG eller PNG, maks 5 MB.</value></data>
+  <data name="CompleteProfile_Continue" xml:space="preserve"><value>Fortsett</value></data>
+  <data name="CompleteProfile_Saving" xml:space="preserve"><value>Lagrer…</value></data>
+  <data name="CompleteProfile_FirstNameRequired" xml:space="preserve"><value>Fornavn er påkrevd.</value></data>
+  <data name="CompleteProfile_LastNameRequired" xml:space="preserve"><value>Etternavn er påkrevd.</value></data>
+  <data name="CompleteProfile_RoleRequired" xml:space="preserve"><value>Velg minst én kontotype.</value></data>
+  <data name="CompleteProfile_MobileRequired" xml:space="preserve"><value>Mobiltelefon er påkrevd for sjåfører.</value></data>
+  <data name="CompleteProfile_PictureRequired" xml:space="preserve"><value>Et profilbilde er påkrevd for sjåfører.</value></data>
+  <data name="CompleteProfile_ImageTooLarge" xml:space="preserve"><value>Bildet må være mindre enn 5 MB.</value></data>
+  <data name="CompleteProfile_ImageReadError" xml:space="preserve"><value>Kunne ikke lese bildet. Prøv en annen fil.</value></data>
+
+  <!-- MyProfile -->
+  <data name="MyProfile_Title" xml:space="preserve"><value>Min Profil</value></data>
+  <data name="MyProfile_Verified" xml:space="preserve"><value>Bekreftet</value></data>
+  <data name="MyProfile_Unverified" xml:space="preserve"><value>Ikke bekreftet</value></data>
+  <data name="MyProfile_MemberSince" xml:space="preserve"><value>Medlem siden {0}</value></data>
+  <data name="MyProfile_AccountInfo" xml:space="preserve"><value>Kontoinformasjon</value></data>
+  <data name="MyProfile_MobilePhone" xml:space="preserve"><value>Mobiltelefon</value></data>
+  <data name="MyProfile_AccountType" xml:space="preserve"><value>Kontotype</value></data>
+  <data name="MyProfile_DriverAndPassenger" xml:space="preserve"><value>Sjåfør og passasjer</value></data>
+  <data name="MyProfile_Driver" xml:space="preserve"><value>Sjåfør</value></data>
+  <data name="MyProfile_Passenger" xml:space="preserve"><value>Passasjer</value></data>
+  <data name="MyProfile_EditProfile" xml:space="preserve"><value>Rediger profil</value></data>
+  <data name="MyProfile_MobilePhone_Optional" xml:space="preserve"><value>(valgfritt for passasjerer)</value></data>
+  <data name="MyProfile_DriverOffer" xml:space="preserve"><value>Jeg vil tilby turer</value></data>
+  <data name="MyProfile_PassengerBook" xml:space="preserve"><value>Jeg vil bestille turer</value></data>
+  <data name="MyProfile_ProfilePicture" xml:space="preserve"><value>Profilbilde</value></data>
+  <data name="MyProfile_ProfilePicture_Optional" xml:space="preserve"><value>(valgfritt for passasjerer)</value></data>
+  <data name="MyProfile_PictureSelected" xml:space="preserve"><value>{0} valgt</value></data>
+  <data name="MyProfile_ImageHint" xml:space="preserve"><value>JPEG eller PNG, maks 5 MB. La stå tom for å beholde nåværende bilde.</value></data>
+  <data name="MyProfile_SaveChanges" xml:space="preserve"><value>Lagre endringer</value></data>
+  <data name="MyProfile_Saving" xml:space="preserve"><value>Lagrer…</value></data>
+  <data name="MyProfile_SaveSuccess_Title" xml:space="preserve"><value>Profil oppdatert</value></data>
+  <data name="MyProfile_SaveSuccess_Msg" xml:space="preserve"><value>Profilendringene dine er lagret.</value></data>
+  <data name="MyProfile_YourData" xml:space="preserve"><value>Dine data</value></data>
+  <data name="MyProfile_YourData_Desc" xml:space="preserve"><value>Se eller last ned alle personopplysninger GoCheaper har om deg — profilen din, turer og bestillinger. Du kan lagre det som PDF eller laste ned en rå JSON-fil.</value></data>
+  <data name="MyProfile_ExportData" xml:space="preserve"><value>Se og eksporter mine data</value></data>
+  <data name="MyProfile_DangerZone" xml:space="preserve"><value>Faresone</value></data>
+  <data name="MyProfile_Delete_Desc" xml:space="preserve"><value>Sletter permanent kontoen din og alle tilknyttede data: dine opprettede turer (passasjerer vil bli varslet) og alle bestillingene dine (sjåfører vil bli varslet). Dette kan ikke angres.</value></data>
+  <data name="MyProfile_DeleteBtn" xml:space="preserve"><value>Slett kontoen min</value></data>
+  <data name="MyProfile_Delete_Title" xml:space="preserve"><value>Slett konto</value></data>
+  <data name="MyProfile_Delete_Confirm" xml:space="preserve"><value>Dette vil permanent slette kontoen din og alle tilknyttede data. Dette kan ikke angres.</value></data>
+  <data name="MyProfile_TypeDelete" xml:space="preserve"><value>Skriv DELETE for å bekrefte</value></data>
+  <data name="MyProfile_Deleting" xml:space="preserve"><value>Sletter...</value></data>
+  <data name="MyProfile_RoleError" xml:space="preserve"><value>Minst én av rollene Sjåfør eller Passasjer må forbli valgt.</value></data>
+  <data name="MyProfile_MobileRequired" xml:space="preserve"><value>Mobiltelefon er påkrevd for sjåfører.</value></data>
+  <data name="MyProfile_PictureRequired" xml:space="preserve"><value>Et profilbilde er påkrevd for sjåfører.</value></data>
+  <data name="MyProfile_ImageTooLarge" xml:space="preserve"><value>Bildet må være mindre enn 5 MB.</value></data>
+  <data name="MyProfile_ImageReadError" xml:space="preserve"><value>Kunne ikke lese bildet. Prøv en annen fil.</value></data>
+
+  <!-- MyTrips -->
+  <data name="MyTrips_Title" xml:space="preserve"><value>Mine Turer</value></data>
+  <data name="MyTrips_NewTrip" xml:space="preserve"><value>+ Ny Tur</value></data>
+  <data name="MyTrips_NoTrips" xml:space="preserve"><value>Du har ikke lagt ut noen turer ennå.</value></data>
+  <data name="MyTrips_PostFirst" xml:space="preserve"><value>Legg ut din første tur.</value></data>
+  <data name="MyTrips_SeatsBooked" xml:space="preserve"><value>Bestilte seter:</value></data>
+  <data name="MyTrips_Price" xml:space="preserve"><value>Pris:</value></data>
+  <data name="MyTrips_Details" xml:space="preserve"><value>Detaljer</value></data>
+  <data name="MyTrips_Driver" xml:space="preserve"><value>Sjåfør</value></data>
+  <data name="MyTrips_From" xml:space="preserve"><value>Fra</value></data>
+  <data name="MyTrips_To" xml:space="preserve"><value>Til</value></data>
+  <data name="MyTrips_Departure" xml:space="preserve"><value>Avgang</value></data>
+  <data name="MyTrips_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="MyTrips_SeatsBookedTotal" xml:space="preserve"><value>Seter (bestilt / totalt)</value></data>
+  <data name="MyTrips_PricePerSeat" xml:space="preserve"><value>Pris per sete</value></data>
+
+  <!-- CreateTrip -->
+  <data name="CreateTrip_Title" xml:space="preserve"><value>Legg ut en ny tur</value></data>
+  <data name="CreateTrip_DriverOnly" xml:space="preserve"><value>Kun sjåfører kan legge ut turer.</value></data>
+  <data name="CreateTrip_UpdateProfile" xml:space="preserve"><value>Oppdater profilen din</value></data>
+  <data name="CreateTrip_DriverOnlyTo" xml:space="preserve"><value>for å bli sjåfør.</value></data>
+  <data name="CreateTrip_From" xml:space="preserve"><value>Fra</value></data>
+  <data name="CreateTrip_FromHint" xml:space="preserve"><value>Avgangsby eller adresse</value></data>
+  <data name="CreateTrip_To" xml:space="preserve"><value>Til</value></data>
+  <data name="CreateTrip_ToHint" xml:space="preserve"><value>Destinasjonsby eller adresse</value></data>
+  <data name="CreateTrip_TotalSeats" xml:space="preserve"><value>Totalt antall seter</value></data>
+  <data name="CreateTrip_Currency" xml:space="preserve"><value>Valuta</value></data>
+  <data name="CreateTrip_PricePerSeat" xml:space="preserve"><value>Pris per sete ({0})</value></data>
+  <data name="CreateTrip_Departure" xml:space="preserve"><value>Avgangsdato og -tid</value></data>
+  <data name="CreateTrip_NumberPlate" xml:space="preserve"><value>Registreringsnummer</value></data>
+  <data name="CreateTrip_Note" xml:space="preserve"><value>Merknad (valgfritt)</value></data>
+  <data name="CreateTrip_NoteHint" xml:space="preserve"><value>f.eks. Bagasjeplass tilgjengelig, ikke-røyker...</value></data>
+  <data name="CreateTrip_PaymentMethod" xml:space="preserve"><value>Betalingsmetode (valgfritt)</value></data>
+  <data name="CreateTrip_PaymentHint" xml:space="preserve"><value>f.eks. Kontant, MobilePay (DK), Vipps (NO), Swish (SE)</value></data>
+  <data name="CreateTrip_PickupPoints" xml:space="preserve"><value>Hentesteder</value></data>
+  <data name="CreateTrip_PickupHint" xml:space="preserve"><value>Adresse eller landemerke</value></data>
+  <data name="CreateTrip_AddPickup" xml:space="preserve"><value>+ Legg til hentested</value></data>
+  <data name="CreateTrip_Remove" xml:space="preserve"><value>✕ Fjern</value></data>
+  <data name="CreateTrip_Post" xml:space="preserve"><value>Legg ut tur</value></data>
+  <data name="CreateTrip_Posting" xml:space="preserve"><value>Legger ut...</value></data>
+  <data name="CreateTrip_Cancel" xml:space="preserve"><value>Avbryt</value></data>
+  <data name="CreateTrip_FromRequired" xml:space="preserve"><value>Fra er påkrevd.</value></data>
+  <data name="CreateTrip_ToRequired" xml:space="preserve"><value>Til er påkrevd.</value></data>
+  <data name="CreateTrip_SeatsRange" xml:space="preserve"><value>Antall seter må være mellom 1 og 50.</value></data>
+  <data name="CreateTrip_PriceMin" xml:space="preserve"><value>Prisen per sete må være minst 1.</value></data>
+  <data name="CreateTrip_DepartureRequired" xml:space="preserve"><value>Avgangsdato og -tid er påkrevd.</value></data>
+  <data name="CreateTrip_NumberPlateRequired" xml:space="preserve"><value>Registreringsnummer er påkrevd.</value></data>
+  <data name="CreateTrip_PickupRequired" xml:space="preserve"><value>Minst ett hentested er påkrevd.</value></data>
+
+  <!-- TripDetails (driver) -->
+  <data name="TripDetails_Back" xml:space="preserve"><value>← Mine Turer</value></data>
+  <data name="TripDetails_EditTitle" xml:space="preserve"><value>Rediger tur</value></data>
+  <data name="TripDetails_Cancel" xml:space="preserve"><value>Avbryt</value></data>
+  <data name="TripDetails_HasBookings" xml:space="preserve"><value>Denne turen har {0} bestilling(er). Kun merknad, hentesteder, betalingsmetode og registreringsnummer kan redigeres.</value></data>
+  <data name="TripDetails_From" xml:space="preserve"><value>Fra</value></data>
+  <data name="TripDetails_To" xml:space="preserve"><value>Til</value></data>
+  <data name="TripDetails_TotalSeats" xml:space="preserve"><value>Totalt antall seter</value></data>
+  <data name="TripDetails_Currency" xml:space="preserve"><value>Valuta</value></data>
+  <data name="TripDetails_PricePerSeat" xml:space="preserve"><value>Pris per sete ({0})</value></data>
+  <data name="TripDetails_Departure" xml:space="preserve"><value>Avgangsdato og -tid</value></data>
+  <data name="TripDetails_NumberPlate" xml:space="preserve"><value>Registreringsnummer</value></data>
+  <data name="TripDetails_Note" xml:space="preserve"><value>Merknad</value></data>
+  <data name="TripDetails_PaymentMethod" xml:space="preserve"><value>Betalingsmetode</value></data>
+  <data name="TripDetails_PickupPoints" xml:space="preserve"><value>Hentesteder</value></data>
+  <data name="TripDetails_AddPickup" xml:space="preserve"><value>+ Legg til hentested</value></data>
+  <data name="TripDetails_Remove" xml:space="preserve"><value>✕ Fjern</value></data>
+  <data name="TripDetails_Saving" xml:space="preserve"><value>Lagrer...</value></data>
+  <data name="TripDetails_SaveChanges" xml:space="preserve"><value>Lagre endringer</value></data>
+  <data name="TripDetails_EditBtn" xml:space="preserve"><value>Rediger tur</value></data>
+  <data name="TripDetails_DeleteBtn" xml:space="preserve"><value>Slett tur</value></data>
+  <data name="TripDetails_CannotEdit" xml:space="preserve"><value>Kan ikke redigere eller slette — passasjerer er bestilt</value></data>
+  <data name="TripDetails_Driver" xml:space="preserve"><value>Sjåfør:</value></data>
+  <data name="TripDetails_Departure_Label" xml:space="preserve"><value>Avgang</value></data>
+  <data name="TripDetails_Seats" xml:space="preserve"><value>Seter</value></data>
+  <data name="TripDetails_SeatsInfo" xml:space="preserve"><value>{0} bestilt / {1} totalt</value></data>
+  <data name="TripDetails_SeatsAvail" xml:space="preserve"><value>({0} ledig)</value></data>
+  <data name="TripDetails_PriceLabel" xml:space="preserve"><value>Pris per sete ({0})</value></data>
+  <data name="TripDetails_NumberPlate_Label" xml:space="preserve"><value>Registreringsnummer</value></data>
+  <data name="TripDetails_Note_Label" xml:space="preserve"><value>Merknad</value></data>
+  <data name="TripDetails_PaymentMethod_Label" xml:space="preserve"><value>Betalingsmetode</value></data>
+  <data name="TripDetails_PickupPoints_Label" xml:space="preserve"><value>Hentesteder</value></data>
+  <data name="TripDetails_Passengers" xml:space="preserve"><value>Passasjerer</value></data>
+  <data name="TripDetails_NoBookings" xml:space="preserve"><value>Ingen bestillinger ennå for denne turen.</value></data>
+  <data name="TripDetails_PassengerName" xml:space="preserve"><value>Passasjer</value></data>
+  <data name="TripDetails_SeatsBooked" xml:space="preserve"><value>Bestilte seter</value></data>
+  <data name="TripDetails_BookedAt" xml:space="preserve"><value>Bestilt den</value></data>
+  <data name="TripDetails_Total" xml:space="preserve"><value>Totalt</value></data>
+  <data name="TripDetails_DeleteTitle" xml:space="preserve"><value>Slett tur</value></data>
+  <data name="TripDetails_DeleteDesc" xml:space="preserve"><value>Sletter permanent denne turen. Passasjerer med bestillinger vil bli varslet på e-post.</value></data>
+  <data name="TripDetails_DeleteReason" xml:space="preserve"><value>Årsak til sletting (valgfritt)</value></data>
+  <data name="TripDetails_DeleteReasonHint" xml:space="preserve"><value>Sendes til passasjerer hvis oppgitt</value></data>
+  <data name="TripDetails_Deleting" xml:space="preserve"><value>Sletter...</value></data>
+  <data name="TripDetails_PickupRequired" xml:space="preserve"><value>Minst ett hentested er påkrevd.</value></data>
+
+  <!-- BrowseTrips -->
+  <data name="BrowseTrips_Title" xml:space="preserve"><value>Finn tilgjengelige turer</value></data>
+  <data name="BrowseTrips_From" xml:space="preserve"><value>Fra</value></data>
+  <data name="BrowseTrips_AllFrom" xml:space="preserve"><value>Alle avgangsbyer</value></data>
+  <data name="BrowseTrips_To" xml:space="preserve"><value>Til</value></data>
+  <data name="BrowseTrips_AllTo" xml:space="preserve"><value>Alle destinasjoner</value></data>
+  <data name="BrowseTrips_Clear" xml:space="preserve"><value>Tøm</value></data>
+  <data name="BrowseTrips_NoTrips" xml:space="preserve"><value>Ingen tilgjengelige turer samsvarer med filteret ditt.</value></data>
+  <data name="BrowseTrips_Driver" xml:space="preserve"><value>Sjåfør:</value></data>
+  <data name="BrowseTrips_Available" xml:space="preserve"><value>Ledig:</value></data>
+  <data name="BrowseTrips_Price" xml:space="preserve"><value>Pris:</value></data>
+  <data name="BrowseTrips_Plate" xml:space="preserve"><value>Skilt:</value></data>
+  <data name="BrowseTrips_BookTrip" xml:space="preserve"><value>Bestill tur</value></data>
+  <data name="BrowseTrips_From_Header" xml:space="preserve"><value>Fra</value></data>
+  <data name="BrowseTrips_To_Header" xml:space="preserve"><value>Til</value></data>
+  <data name="BrowseTrips_Departure" xml:space="preserve"><value>Avgang</value></data>
+  <data name="BrowseTrips_SeatsAvailable" xml:space="preserve"><value>Ledige seter</value></data>
+  <data name="BrowseTrips_PricePerSeat" xml:space="preserve"><value>Pris per sete</value></data>
+  <data name="BrowseTrips_NumberPlate" xml:space="preserve"><value>Registreringsnummer</value></data>
+  <data name="BrowseTrips_Status" xml:space="preserve"><value>Status</value></data>
+
+  <!-- PassengerTripDetails -->
+  <data name="PassTrip_Back" xml:space="preserve"><value>← Finn Turer</value></data>
+  <data name="PassTrip_Driver" xml:space="preserve"><value>Sjåfør:</value></data>
+  <data name="PassTrip_Departure" xml:space="preserve"><value>Avgang</value></data>
+  <data name="PassTrip_AvailableSeats" xml:space="preserve"><value>Ledige seter</value></data>
+  <data name="PassTrip_PricePerSeat" xml:space="preserve"><value>Pris per sete ({0})</value></data>
+  <data name="PassTrip_NumberPlate" xml:space="preserve"><value>Registreringsnummer</value></data>
+  <data name="PassTrip_PaymentMethod" xml:space="preserve"><value>Betalingsmetode</value></data>
+  <data name="PassTrip_Note" xml:space="preserve"><value>Merknad</value></data>
+  <data name="PassTrip_PickupPoints" xml:space="preserve"><value>Hentesteder</value></data>
+  <data name="PassTrip_Booked" xml:space="preserve"><value>Du har bestilt {0} sete(r) på denne turen.</value></data>
+  <data name="PassTrip_CancelBooking" xml:space="preserve"><value>Kanseller bestilling</value></data>
+  <data name="PassTrip_NumberOfSeats" xml:space="preserve"><value>Antall seter</value></data>
+  <data name="PassTrip_BookThisTrip" xml:space="preserve"><value>Bestill denne turen</value></data>
+  <data name="PassTrip_Booking" xml:space="preserve"><value>Bestiller…</value></data>
+  <data name="PassTrip_FullyBooked" xml:space="preserve"><value>Denne turen er fullt bestilt.</value></data>
+  <data name="PassTrip_BookingConfirmed" xml:space="preserve"><value>Bestilling bekreftet</value></data>
+  <data name="PassTrip_BookingConfirmed_Msg" xml:space="preserve"><value>Setet ditt er reservert. En bestillingsbekreftelse er sendt til deg på e-post.</value></data>
+  <data name="PassTrip_BookingCancelled" xml:space="preserve"><value>Bestilling kansellert</value></data>
+  <data name="PassTrip_BookingCancelled_Msg" xml:space="preserve"><value>Bestillingen din er kansellert. Omdirigerer til Finn Turer om {0}…</value></data>
+  <data name="PassTrip_CancelTitle" xml:space="preserve"><value>Kanseller bestilling</value></data>
+  <data name="PassTrip_CancelMsg" xml:space="preserve"><value>Er du sikker på at du vil kansellere bestillingen din? Setene vil frigjøres for andre passasjerer.</value></data>
+  <data name="PassTrip_Cancelling" xml:space="preserve"><value>Kansellerer...</value></data>
+
+  <!-- MyBookedTrips -->
+  <data name="MyBookedTrips_Title" xml:space="preserve"><value>Mine Bestillinger</value></data>
+  <data name="MyBookedTrips_NoBookings" xml:space="preserve"><value>Du har ikke bestilt noen turer ennå.</value></data>
+  <data name="MyBookedTrips_BrowseLink" xml:space="preserve"><value>Finn tilgjengelige turer</value></data>
+  <data name="MyBookedTrips_Driver" xml:space="preserve"><value>Sjåfør:</value></data>
+  <data name="MyBookedTrips_Price" xml:space="preserve"><value>Pris:</value></data>
+  <data name="MyBookedTrips_Seats" xml:space="preserve"><value>Seter:</value></data>
+  <data name="MyBookedTrips_Details" xml:space="preserve"><value>Detaljer</value></data>
+  <data name="MyBookedTrips_Driver_Header" xml:space="preserve"><value>Sjåfør</value></data>
+  <data name="MyBookedTrips_From" xml:space="preserve"><value>Fra</value></data>
+  <data name="MyBookedTrips_To" xml:space="preserve"><value>Til</value></data>
+  <data name="MyBookedTrips_Departure" xml:space="preserve"><value>Avgang</value></data>
+  <data name="MyBookedTrips_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="MyBookedTrips_PricePerSeat" xml:space="preserve"><value>Pris per sete</value></data>
+  <data name="MyBookedTrips_Seats_Header" xml:space="preserve"><value>Seter</value></data>
+
+  <!-- DriverProfile -->
+  <data name="DriverProfile_Driver" xml:space="preserve"><value>Sjåfør</value></data>
+  <data name="DriverProfile_MemberSince" xml:space="preserve"><value>Medlem siden {0}</value></data>
+  <data name="DriverProfile_Rating" xml:space="preserve"><value>Sjåførvurdering</value></data>
+  <data name="DriverProfile_NoRatings" xml:space="preserve"><value>Ingen vurderinger ennå.</value></data>
+  <data name="DriverProfile_Ratings" xml:space="preserve"><value>{0} vurdering(er)</value></data>
+  <data name="DriverProfile_NotFound" xml:space="preserve"><value>Sjåfør ikke funnet.</value></data>
+
+  <!-- RateTrip -->
+  <data name="RateTrip_Title" xml:space="preserve"><value>Vurder sjåføren din</value></data>
+  <data name="RateTrip_LinkUnavailable" xml:space="preserve"><value>Lenke ikke tilgjengelig</value></data>
+  <data name="RateTrip_GoToCheaper" xml:space="preserve"><value>Gå til GoCheaper</value></data>
+  <data name="RateTrip_AlreadyRated_Title" xml:space="preserve"><value>Allerede vurdert</value></data>
+  <data name="RateTrip_AlreadyRated_Msg" xml:space="preserve"><value>Du har allerede sendt inn en vurdering for denne turen. Takk!</value></data>
+  <data name="RateTrip_BrowseTrips" xml:space="preserve"><value>Finn Turer</value></data>
+  <data name="RateTrip_Heading" xml:space="preserve"><value>Vurder sjåføren din</value></data>
+  <data name="RateTrip_HowManyStars" xml:space="preserve"><value>Hvor mange stjerner til {0}?</value></data>
+  <data name="RateTrip_Comment" xml:space="preserve"><value>Kommentar</value></data>
+  <data name="RateTrip_CommentOptional" xml:space="preserve"><value>(valgfritt)</value></data>
+  <data name="RateTrip_CommentHint" xml:space="preserve"><value>Del noen ord om opplevelsen din...</value></data>
+  <data name="RateTrip_Submit" xml:space="preserve"><value>Send inn vurdering</value></data>
+  <data name="RateTrip_Submitting" xml:space="preserve"><value>Sender inn…</value></data>
+  <data name="RateTrip_Thanks_Title" xml:space="preserve"><value>Takk!</value></data>
+  <data name="RateTrip_Thanks_Msg" xml:space="preserve"><value>Vurderingen din av {0} er sendt inn. Det hjelper andre passasjerer med å ta informerte valg.</value></data>
+  <data name="RateTrip_Rating1" xml:space="preserve"><value>Dårlig</value></data>
+  <data name="RateTrip_Rating2" xml:space="preserve"><value>Under middels</value></data>
+  <data name="RateTrip_Rating3" xml:space="preserve"><value>Bra</value></data>
+  <data name="RateTrip_Rating4" xml:space="preserve"><value>Meget bra</value></data>
+  <data name="RateTrip_Rating5" xml:space="preserve"><value>Utmerket!</value></data>
+
+  <!-- Trip Status -->
+  <data name="Status_Pending" xml:space="preserve"><value>Kommende</value></data>
+  <data name="Status_Active" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="Status_Completed" xml:space="preserve"><value>Fullført</value></data>
+</root>

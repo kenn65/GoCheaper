@@ -11,7 +11,7 @@ namespace GoCheaper.Booking.Api.Features.BookTrip;
 
 public class BookTripHandler(BookingDbContext db, IProducer<string, string> producer, ILogger<BookTripHandler> logger)
 {
-    public async Task<IResult> HandleAsync(Guid tripId, BookTripRequest req, ClaimsPrincipal user, CancellationToken ct = default)
+    public async Task<IResult> HandleAsync(Guid tripId, BookTripRequest req, ClaimsPrincipal user, HttpContext? ctx = null, CancellationToken ct = default)
     {
         var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdStr, out var userId))
@@ -39,18 +39,19 @@ public class BookTripHandler(BookingDbContext db, IProducer<string, string> prod
         var passengerName  = user.FindFirst(ClaimTypes.Name)?.Value
                           ?? user.FindFirst("name")?.Value
                           ?? "Unknown";
-        var passengerEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? "";
-        var bookedAt       = DateTime.UtcNow;
+        var passengerEmail    = user.FindFirst(ClaimTypes.Email)?.Value ?? "";
+        var passengerLanguage = ctx?.Request.Headers["X-Language"].FirstOrDefault() ?? "en";
+        var bookedAt          = DateTime.UtcNow;
 
-        var driverEmail = trip.DriverEmail;
+        var driverSnapshot = await db.DriverSnapshots.FindAsync([trip.DriverId], ct);
+        var driverEmail    = trip.DriverEmail;
         if (string.IsNullOrEmpty(driverEmail))
-        {
-            var driverSnapshot = await db.DriverSnapshots.FindAsync([trip.DriverId], ct);
             driverEmail = driverSnapshot?.Email ?? "";
-        }
 
         if (string.IsNullOrEmpty(driverEmail))
             logger.LogError("BookTrip: DriverEmail is empty for trip {TripId} (DriverId {DriverId}) — driver notification will NOT be sent", trip.TripId, trip.DriverId);
+
+        var driverLanguage = driverSnapshot?.Language ?? "en";
 
         db.Bookings.Add(new PassengerBooking
         {
@@ -60,7 +61,8 @@ public class BookTripHandler(BookingDbContext db, IProducer<string, string> prod
             PassengerFullName = passengerName,
             PassengerEmail    = passengerEmail,
             SeatsCount        = req.SeatsCount,
-            BookedAt          = bookedAt
+            BookedAt          = bookedAt,
+            Language          = passengerLanguage
         });
 
         await db.SaveChangesAsync(ct);
@@ -84,7 +86,9 @@ public class BookTripHandler(BookingDbContext db, IProducer<string, string> prod
             DriverFullName:    trip.DriverFullName,
             SeatsCount:        req.SeatsCount,
             TotalPrice:        req.SeatsCount * trip.PricePerSeat,
-            BookedAt:          bookedAt), ct);
+            BookedAt:          bookedAt,
+            PassengerLanguage: passengerLanguage,
+            DriverLanguage:    driverLanguage), ct);
 
         return Results.NoContent();
     }
@@ -102,11 +106,16 @@ public class BookTripHandler(BookingDbContext db, IProducer<string, string> prod
 
         var trip = await db.TripSnapshots.FindAsync([tripId], ct);
 
+        DriverSnapshot? cancelDriverSnapshot = null;
         var driverEmail = trip?.DriverEmail ?? "";
-        if (string.IsNullOrEmpty(driverEmail))
+        if (trip is not null && string.IsNullOrEmpty(driverEmail))
         {
-            var driverSnapshot = trip is null ? null : await db.DriverSnapshots.FindAsync([trip.DriverId], ct);
-            driverEmail = driverSnapshot?.Email ?? "";
+            cancelDriverSnapshot = await db.DriverSnapshots.FindAsync([trip.DriverId], ct);
+            driverEmail = cancelDriverSnapshot?.Email ?? "";
+        }
+        else if (trip is not null)
+        {
+            cancelDriverSnapshot = await db.DriverSnapshots.FindAsync([trip.DriverId], ct);
         }
 
         var passengerEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? "";
@@ -129,7 +138,8 @@ public class BookTripHandler(BookingDbContext db, IProducer<string, string> prod
                 DriverEmail:       driverEmail,
                 DriverFullName:    trip.DriverFullName,
                 SeatsCount:        booking.SeatsCount,
-                CancelledAt:       cancelledAt), ct);
+                CancelledAt:       cancelledAt,
+                DriverLanguage:    cancelDriverSnapshot?.Language ?? "en"), ct);
         }
 
         return Results.NoContent();

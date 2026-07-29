@@ -29,7 +29,7 @@ public class BookingCancelledHandler(
             ["DepartureTime"]     = departure,
             ["SeatsCount"]        = @event.SeatsCount.ToString(),
             ["CancelledAt"]       = cancelledAt
-        });
+        }, @event.DriverLanguage);
 
         await emailSender.SendAsync(
             toEmail:     @event.DriverEmail,

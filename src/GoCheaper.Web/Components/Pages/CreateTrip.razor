@@ -6,6 +6,7 @@
 @inject TripsApiClient TripsClient
 @inject UserSession UserSession
 @inject NavigationManager Nav
+@inject IStringLocalizer<SharedResources> L
 
 <PageTitle>Create Trip - GoCheaper</PageTitle>
 
@@ -13,41 +14,41 @@
     @if (!UserSession.IsDriver)
     {
         <div class="alert alert-warning">
-            Only drivers can post trips.
-            <a href="/my-profile" class="alert-link">Update your profile</a> to become a driver.
+            @L["CreateTrip_DriverOnly"]
+            <a href="/my-profile" class="alert-link">@L["CreateTrip_UpdateProfile"]</a> @L["CreateTrip_DriverOnlyTo"]
         </div>
     }
     else
     {
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white py-3">
-                <h4 class="mb-0">Post a New Trip</h4>
+                <h4 class="mb-0">@L["CreateTrip_Title"]</h4>
             </div>
             <div class="card-body p-4">
         <EditForm Model="_model" OnValidSubmit="HandleSubmit">
             <DataAnnotationsValidator />
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">From</label>
-                <InputText class="form-control" @bind-Value="_model.From" placeholder="Departure city or address" />
+                <label class="form-label fw-semibold">@L["CreateTrip_From"]</label>
+                <InputText class="form-control" @bind-Value="_model.From" placeholder="@L["CreateTrip_FromHint"]" />
                 <ValidationMessage For="() => _model.From" />
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">To</label>
-                <InputText class="form-control" @bind-Value="_model.To" placeholder="Destination city or address" />
+                <label class="form-label fw-semibold">@L["CreateTrip_To"]</label>
+                <InputText class="form-control" @bind-Value="_model.To" placeholder="@L["CreateTrip_ToHint"]" />
                 <ValidationMessage For="() => _model.To" />
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">Total Seats</label>
+                <label class="form-label fw-semibold">@L["CreateTrip_TotalSeats"]</label>
                 <InputNumber class="form-control" @bind-Value="_model.TotalSeats" />
                 <ValidationMessage For="() => _model.TotalSeats" />
             </div>
 
             <div class="row mb-3">
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">Currency</label>
+                    <label class="form-label fw-semibold">@L["CreateTrip_Currency"]</label>
                     <InputSelect class="form-select" @bind-Value="_model.Currency">
                         <option value="DKK">DKK – Danish Krone</option>
                         <option value="NOK">NOK – Norwegian Krone</option>
@@ -55,38 +56,38 @@
                     </InputSelect>
                 </div>
                 <div class="col-md-8">
-                    <label class="form-label fw-semibold">Price per Seat (@_model.Currency)</label>
+                    <label class="form-label fw-semibold">@string.Format(L["CreateTrip_PricePerSeat"], _model.Currency)</label>
                     <InputNumber class="form-control" @bind-Value="_model.PricePerSeat" />
                     <ValidationMessage For="() => _model.PricePerSeat" />
                 </div>
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">Departure Date &amp; Time</label>
+                <label class="form-label fw-semibold">@L["CreateTrip_Departure"]</label>
                 <InputDate Type="InputDateType.DateTimeLocal" class="form-control" @bind-Value="_model.DepartureTime" />
                 <ValidationMessage For="() => _model.DepartureTime" />
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">Number Plate</label>
+                <label class="form-label fw-semibold">@L["CreateTrip_NumberPlate"]</label>
                 <InputText class="form-control" @bind-Value="_model.NumberPlate" placeholder="AB 12 345" />
                 <ValidationMessage For="() => _model.NumberPlate" />
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">Note (optional)</label>
+                <label class="form-label fw-semibold">@L["CreateTrip_Note"]</label>
                 <InputTextArea class="form-control" @bind-Value="_model.Note" rows="3"
-                               placeholder="e.g. Luggage space available, no smoking..." />
+                               placeholder="@L["CreateTrip_NoteHint"]" />
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">Payment Method (optional)</label>
+                <label class="form-label fw-semibold">@L["CreateTrip_PaymentMethod"]</label>
                 <InputText class="form-control" @bind-Value="_model.PaymentMethod"
-                           placeholder="e.g. Cash, MobilePay (DK), Vipps (NO), Swish (SE)" />
+                           placeholder="@L["CreateTrip_PaymentHint"]" />
             </div>
 
             <div class="mb-3">
-                <label class="form-label fw-semibold">Pickup Points</label>
+                <label class="form-label fw-semibold">@L["CreateTrip_PickupPoints"]</label>
                 @for (var i = 0; i < _pickupPoints.Count; i++)
                 {
                     var index = i;
@@ -94,15 +95,15 @@
                         <div class="d-flex align-items-center gap-2 mb-1">
                             <span class="badge bg-secondary">@(index + 1)</span>
                             <button type="button" class="btn btn-outline-danger btn-sm ms-auto"
-                                    @onclick="() => _pickupPoints.RemoveAt(index)">✕ Remove</button>
+                                    @onclick="() => _pickupPoints.RemoveAt(index)">@L["CreateTrip_Remove"]</button>
                         </div>
                         <input class="form-control" value="@_pickupPoints[index]"
                                @oninput="e => _pickupPoints[index] = e.Value?.ToString() ?? string.Empty"
-                               placeholder="Address or landmark" />
+                               placeholder="@L["CreateTrip_PickupHint"]" />
                     </div>
                 }
                 <button type="button" class="btn btn-outline-secondary btn-sm"
-                        @onclick="AddPickupPoint">+ Add Pickup Point</button>
+                        @onclick="AddPickupPoint">@L["CreateTrip_AddPickup"]</button>
                 @if (_pickupPointsError is not null)
                 {
                     <div class="text-danger small mt-1">@_pickupPointsError</div>
@@ -116,9 +117,9 @@
 
             <div class="d-flex gap-2 mt-4">
                 <button type="submit" class="btn btn-primary" disabled="@_submitting">
-                    @(_submitting ? "Posting..." : "Post Trip")
+                    @(_submitting ? L["CreateTrip_Posting"].Value : L["CreateTrip_Post"].Value)
                 </button>
-                <a href="/my-trips" class="btn btn-outline-secondary">Cancel</a>
+                <a href="/my-trips" class="btn btn-outline-secondary">@L["CreateTrip_Cancel"]</a>
             </div>
         </EditForm>
             </div>
@@ -143,7 +144,7 @@
         var validPickupPoints = _pickupPoints.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
         if (validPickupPoints.Count == 0)
         {
-            _pickupPointsError = "At least one pickup point is required.";
+            _pickupPointsError = L["CreateTrip_PickupRequired"];
             _submitting = false;
             return;
         }

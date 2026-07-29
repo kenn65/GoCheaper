@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <!-- Navigation -->
+  <data name="Nav_MyProfile" xml:space="preserve"><value>Min Profil</value></data>
+  <data name="Nav_MyTrips" xml:space="preserve"><value>Mina Resor</value></data>
+  <data name="Nav_BrowseTrips" xml:space="preserve"><value>Hitta Resor</value></data>
+  <data name="Nav_MyBookedTrips" xml:space="preserve"><value>Mina Bokningar</value></data>
+  <data name="Nav_SignIn" xml:space="preserve"><value>Logga in</value></data>
+  <data name="Nav_SignOut" xml:space="preserve"><value>Logga ut</value></data>
+
+  <!-- Footer / Layout -->
+  <data name="Footer_PrivacyPolicy" xml:space="preserve"><value>Integritetspolicy</value></data>
+  <data name="Footer_OpenSource" xml:space="preserve"><value>Öppen källkod</value></data>
+  <data name="Footer_NonProfit" xml:space="preserve"><value>ideell, gratis att använda</value></data>
+  <data name="Error_Unhandled" xml:space="preserve"><value>Ett oväntat fel har inträffat.</value></data>
+  <data name="Error_Reload" xml:space="preserve"><value>Ladda om</value></data>
+
+  <!-- Home (logged in) -->
+  <data name="Home_Hello" xml:space="preserve"><value>Hej, {0}!</value></data>
+  <data name="Home_Snapshot" xml:space="preserve"><value>Här är en överblick av din aktivitet.</value></data>
+  <data name="Home_AsDriver" xml:space="preserve"><value>Som förare</value></data>
+  <data name="Home_TripsPosted" xml:space="preserve"><value>Skapade resor</value></data>
+  <data name="Home_Passengers" xml:space="preserve"><value>Passagerare</value></data>
+  <data name="Home_SeatsOpen" xml:space="preserve"><value>Lediga platser</value></data>
+  <data name="Home_AsPassenger" xml:space="preserve"><value>Som passagerare</value></data>
+  <data name="Home_TripsBooked" xml:space="preserve"><value>Bokade resor</value></data>
+  <data name="Home_SeatsReserved" xml:space="preserve"><value>Reserverade platser</value></data>
+  <data name="Home_QuickAccess" xml:space="preserve"><value>Snabbåtkomst</value></data>
+  <data name="Home_MyTrips" xml:space="preserve"><value>Mina Resor</value></data>
+  <data name="Home_MyTrips_Desc" xml:space="preserve"><value>Hantera dina skapade resor och se passagerarnas bokningar.</value></data>
+  <data name="Home_ViewMyTrips" xml:space="preserve"><value>Se Mina Resor</value></data>
+  <data name="Home_PostTrip" xml:space="preserve"><value>Erbjud en Resa</value></data>
+  <data name="Home_PostTrip_Desc" xml:space="preserve"><value>Erbjud platser och dela dina resekostnader med andra.</value></data>
+  <data name="Home_CreateTrip" xml:space="preserve"><value>Skapa Resa</value></data>
+  <data name="Home_BrowseTrips" xml:space="preserve"><value>Hitta Resor</value></data>
+  <data name="Home_BrowseTrips_Desc" xml:space="preserve"><value>Hitta prisvärda resor till din destination.</value></data>
+  <data name="Home_MyBookings" xml:space="preserve"><value>Mina Bokningar</value></data>
+  <data name="Home_MyBookings_Desc" xml:space="preserve"><value>Se dina kommande bokade resor på ett ögonblick.</value></data>
+  <data name="Home_MyBookings_CTA" xml:space="preserve"><value>Mina Bokningar</value></data>
+
+  <!-- Home (not logged in) -->
+  <data name="Home_Hero_Sub1" xml:space="preserve"><value>Dela resan. Dela kostnaderna.</value></data>
+  <data name="Home_Hero_Sub2" xml:space="preserve"><value>En gratis, ideell samåkningsplattform för förare och passagerare.</value></data>
+  <data name="Home_GetStarted" xml:space="preserve"><value>Kom igång gratis</value></data>
+  <data name="Home_AlwaysFree" xml:space="preserve"><value>Alltid Gratis</value></data>
+  <data name="Home_AlwaysFree_Desc" xml:space="preserve"><value>Inga bokningsavgifter, ingen provision, inga dolda kostnader. Plattformen är helt gratis för både förare och passagerare.</value></data>
+  <data name="Home_NonProfit" xml:space="preserve"><value>Ideell</value></data>
+  <data name="Home_NonProfit_Desc" xml:space="preserve"><value>GoCheaper drivs för gemenskapen, inte för vinst. Inga investerare, inga annonser — bara människor som hjälper varandra att resa billigt.</value></data>
+  <data name="Home_PayAfter" xml:space="preserve"><value>Betala Efter Resan</value></data>
+  <data name="Home_PayAfter_Desc" xml:space="preserve"><value>Inga plattformsavgifter, ingen mellanhand. Föraren sätter priset i förväg — du betalar direkt vid ankomst: kontant, MobilePay (DK), Vipps (NO) eller Swish (SE).</value></data>
+  <data name="Home_HowItWorks" xml:space="preserve"><value>Så här fungerar det</value></data>
+  <data name="Home_Step1_Title" xml:space="preserve"><value>Förare skapar en resa</value></data>
+  <data name="Home_Step1_Desc" xml:space="preserve"><value>Ange rutt, avgångstid, lediga platser och pris per plats. Passagerare kan hitta din resa direkt.</value></data>
+  <data name="Home_Step2_Title" xml:space="preserve"><value>Passagerare bokar en plats</value></data>
+  <data name="Home_Step2_Desc" xml:space="preserve"><value>Bläddra bland tillgängliga resor, välj en som passar och boka på sekunder. Både förare och passagerare får en e-postbekräftelse.</value></data>
+  <data name="Home_Step3_Title" xml:space="preserve"><value>Res och betala vid ankomst</value></data>
+  <data name="Home_Step3_Desc" xml:space="preserve"><value>Möt upp vid hållplatsen, njut av resan och gör upp med föraren när du når din destination — kontant, MobilePay, Vipps eller Swish.</value></data>
+  <data name="Home_OpenSource" xml:space="preserve"><value>Öppen källkod och samhällsdriven</value></data>
+  <data name="Home_OpenSource_Desc1" xml:space="preserve"><value>GoCheaper är ett ideellt projekt byggt med .NET 10 och en passion för hållbart, prisvärt resande. Det finns inga aktieägare — bara bidragsgivare som tror att transport inte ska kosta en förmögenhet.</value></data>
+  <data name="Home_OpenSource_Desc2" xml:space="preserve"><value>Oavsett om du är utvecklare, designer eller bara någon med bra idéer spelar ditt bidrag roll. Kodbasen är öppen källkod och välkomnar pull requests, felrapporter och funktionsförslag.</value></data>
+  <data name="Home_ViewOnGitHub" xml:space="preserve"><value>Se på GitHub</value></data>
+  <data name="Home_SupportHosting" xml:space="preserve"><value>Stöd Driften</value></data>
+  <data name="Home_SupportHosting_Desc" xml:space="preserve"><value>GoCheaper är gratis och ideell, men hosting kostar. Om du tycker att plattformen är användbar hjälper ett litet frivilligt bidrag till att hålla servrarna igång — helt frivilligt och djupt uppskattat.</value></data>
+  <data name="Home_ThankyouHosting" xml:space="preserve"><value>Tack för att du håller GoCheaper vid liv! 🙏</value></data>
+  <data name="Home_ReadyToCheaper" xml:space="preserve"><value>Redo att resa billigare?</value></data>
+  <data name="Home_ReadyToCheaper_Sub" xml:space="preserve"><value>Gå med i gemenskapen av förare och passagerare som gör resandet mer prisvärt.</value></data>
+  <data name="Home_CreateFreeAccount" xml:space="preserve"><value>Skapa ett gratis konto</value></data>
+
+  <!-- Login -->
+  <data name="Login_Title" xml:space="preserve"><value>Logga in på GoCheaper</value></data>
+  <data name="Login_Email" xml:space="preserve"><value>E-postadress</value></data>
+  <data name="Login_Password" xml:space="preserve"><value>Lösenord</value></data>
+  <data name="Login_Continue" xml:space="preserve"><value>Fortsätt</value></data>
+  <data name="Login_Sending" xml:space="preserve"><value>Skickar kod…</value></data>
+  <data name="Login_NoAccount" xml:space="preserve"><value>Har du inget konto?</value></data>
+  <data name="Login_SignUp" xml:space="preserve"><value>Registrera dig</value></data>
+  <data name="Login_ForgotPassword" xml:space="preserve"><value>Glömt lösenordet?</value></data>
+  <data name="Login_CodeSentTitle" xml:space="preserve"><value>Inloggningskod skickad</value></data>
+  <data name="Login_CodeSentMsg" xml:space="preserve"><value>Vi har skickat en 6-siffrig inloggningskod till din e-post. Klicka OK för att ange den.</value></data>
+
+  <!-- Register -->
+  <data name="Register_Title" xml:space="preserve"><value>Skapa ditt GoCheaper-konto</value></data>
+  <data name="Register_Subtitle" xml:space="preserve"><value>Du kompletterar din profil efter första inloggningen</value></data>
+  <data name="Register_Email" xml:space="preserve"><value>E-postadress</value></data>
+  <data name="Register_Password" xml:space="preserve"><value>Lösenord</value></data>
+  <data name="Register_PasswordHint" xml:space="preserve"><value>Min. 8 tecken · 1 versal · 2 siffror</value></data>
+  <data name="Register_ConfirmPassword" xml:space="preserve"><value>Bekräfta lösenord</value></data>
+  <data name="Register_ConfirmHint" xml:space="preserve"><value>Upprepa lösenord</value></data>
+  <data name="Register_PrivacyAgree" xml:space="preserve"><value>Jag har läst och godkänner</value></data>
+  <data name="Register_PrivacyPolicy" xml:space="preserve"><value>Integritetspolicyn</value></data>
+  <data name="Register_Create" xml:space="preserve"><value>Skapa konto</value></data>
+  <data name="Register_Creating" xml:space="preserve"><value>Skapar konto…</value></data>
+  <data name="Register_Success_Title" xml:space="preserve"><value>Konto skapat!</value></data>
+  <data name="Register_Success_Welcome" xml:space="preserve"><value>Välkommen till GoCheaper!</value></data>
+  <data name="Register_Success_Check" xml:space="preserve"><value>En verifieringslänk skickas till {0}. Kontrollera din inkorg för att aktivera ditt konto.</value></data>
+  <data name="Register_Redirecting" xml:space="preserve"><value>Omdirigerar till startsidan om {0}…</value></data>
+  <data name="Register_MustAgreePrivacy" xml:space="preserve"><value>Du måste godkänna integritetspolicyn för att skapa ett konto.</value></data>
+
+  <!-- VerifyCode -->
+  <data name="VerifyCode_Title" xml:space="preserve"><value>Kontrollera din e-post</value></data>
+  <data name="VerifyCode_Subtitle" xml:space="preserve"><value>Vi skickade en 6-siffrig kod till {0}</value></data>
+  <data name="VerifyCode_Expires" xml:space="preserve"><value>Ange koden nedan. Den upphör om 5 minuter.</value></data>
+  <data name="VerifyCode_Label" xml:space="preserve"><value>6-siffrig kod</value></data>
+  <data name="VerifyCode_Verifying" xml:space="preserve"><value>Verifierar…</value></data>
+  <data name="VerifyCode_VerifyBtn" xml:space="preserve"><value>Verifiera och logga in</value></data>
+  <data name="VerifyCode_DidntReceive" xml:space="preserve"><value>Fick du den inte?</value></data>
+  <data name="VerifyCode_RequestNew" xml:space="preserve"><value>Begär en ny kod</value></data>
+
+  <!-- VerifyEmail -->
+  <data name="VerifyEmail_Verifying" xml:space="preserve"><value>Verifierar din e-postadress…</value></data>
+  <data name="VerifyEmail_Success_Title" xml:space="preserve"><value>E-post verifierad!</value></data>
+  <data name="VerifyEmail_Success_Confirmed" xml:space="preserve"><value>e-postadress har bekräftats och ditt konto är nu aktivt.</value></data>
+  <data name="VerifyEmail_Hi" xml:space="preserve"><value>Hej {0} — din</value></data>
+  <data name="VerifyEmail_Your" xml:space="preserve"><value>Din</value></data>
+  <data name="VerifyEmail_Redirecting" xml:space="preserve"><value>Omdirigerar till inloggning om {0}…</value></data>
+  <data name="VerifyEmail_Failed_Title" xml:space="preserve"><value>Verifiering misslyckades</value></data>
+  <data name="VerifyEmail_Failed_Msg" xml:space="preserve"><value>Länken kan redan ha använts eller har gått ut. Kontakta support om du behöver ett nytt verifieringsmejl.</value></data>
+  <data name="VerifyEmail_Invalid_Title" xml:space="preserve"><value>Ogiltig länk</value></data>
+  <data name="VerifyEmail_Invalid_Msg" xml:space="preserve"><value>Den här verifieringslänken saknar nödvändig information. Använd länken från ditt verifieringsmejl.</value></data>
+
+  <!-- ForgotPassword -->
+  <data name="ForgotPassword_Title" xml:space="preserve"><value>Återställ ditt lösenord</value></data>
+  <data name="ForgotPassword_Desc" xml:space="preserve"><value>Ange din e-postadress så skickar vi en länk för att återställa lösenordet.</value></data>
+  <data name="ForgotPassword_Email" xml:space="preserve"><value>E-postadress</value></data>
+  <data name="ForgotPassword_Send" xml:space="preserve"><value>Skicka återställningslänk</value></data>
+  <data name="ForgotPassword_Sending" xml:space="preserve"><value>Skickar…</value></data>
+  <data name="ForgotPassword_BackToSignIn" xml:space="preserve"><value>Tillbaka till inloggning</value></data>
+  <data name="ForgotPassword_Success" xml:space="preserve"><value>Om den e-postadressen är registrerad har vi skickat en återställningslänk till din inkorg. Kontrollera din e-post.</value></data>
+
+  <!-- ResetPassword -->
+  <data name="ResetPassword_Title" xml:space="preserve"><value>Välj ett nytt lösenord</value></data>
+  <data name="ResetPassword_NewPassword" xml:space="preserve"><value>Nytt lösenord</value></data>
+  <data name="ResetPassword_ConfirmPassword" xml:space="preserve"><value>Bekräfta nytt lösenord</value></data>
+  <data name="ResetPassword_Save" xml:space="preserve"><value>Återställ lösenord</value></data>
+  <data name="ResetPassword_Saving" xml:space="preserve"><value>Sparar…</value></data>
+  <data name="ResetPassword_BackToSignIn" xml:space="preserve"><value>Tillbaka till inloggning</value></data>
+  <data name="ResetPassword_Invalid_Title" xml:space="preserve"><value>Ogiltig återställningslänk</value></data>
+  <data name="ResetPassword_Invalid_Desc" xml:space="preserve"><value>Den här återställningslänken är ogiltig eller saknar nödvändig information. Använd länken från ditt återställningsmejl.</value></data>
+  <data name="ResetPassword_RequestNew" xml:space="preserve"><value>Begär ny länk</value></data>
+  <data name="ResetPassword_Success_Title" xml:space="preserve"><value>Lösenord återställt!</value></data>
+  <data name="ResetPassword_Success_Desc" xml:space="preserve"><value>Ditt lösenord har ändrats. Du kan nu logga in med ditt nya lösenord.</value></data>
+  <data name="ResetPassword_Redirecting" xml:space="preserve"><value>Omdirigerar till inloggning om {0}…</value></data>
+
+  <!-- CompleteProfile -->
+  <data name="CompleteProfile_Title" xml:space="preserve"><value>Komplettera din profil</value></data>
+  <data name="CompleteProfile_Subtitle" xml:space="preserve"><value>Bara några detaljer, så är du redo</value></data>
+  <data name="CompleteProfile_FirstName" xml:space="preserve"><value>Förnamn</value></data>
+  <data name="CompleteProfile_LastName" xml:space="preserve"><value>Efternamn</value></data>
+  <data name="CompleteProfile_AccountType" xml:space="preserve"><value>Kontotyp</value></data>
+  <data name="CompleteProfile_Driver" xml:space="preserve"><value>Förare</value></data>
+  <data name="CompleteProfile_DriverOffer" xml:space="preserve"><value>Jag vill erbjuda resor</value></data>
+  <data name="CompleteProfile_Passenger" xml:space="preserve"><value>Passagerare</value></data>
+  <data name="CompleteProfile_PassengerBook" xml:space="preserve"><value>Jag vill boka resor</value></data>
+  <data name="CompleteProfile_CanSelectBoth" xml:space="preserve"><value>Du kan välja båda.</value></data>
+  <data name="CompleteProfile_MobilePhone" xml:space="preserve"><value>Mobiltelefon</value></data>
+  <data name="CompleteProfile_ProfilePicture" xml:space="preserve"><value>Profilbild</value></data>
+  <data name="CompleteProfile_ImageHint" xml:space="preserve"><value>JPEG eller PNG, max 5 MB.</value></data>
+  <data name="CompleteProfile_Continue" xml:space="preserve"><value>Fortsätt</value></data>
+  <data name="CompleteProfile_Saving" xml:space="preserve"><value>Sparar…</value></data>
+  <data name="CompleteProfile_FirstNameRequired" xml:space="preserve"><value>Förnamn krävs.</value></data>
+  <data name="CompleteProfile_LastNameRequired" xml:space="preserve"><value>Efternamn krävs.</value></data>
+  <data name="CompleteProfile_RoleRequired" xml:space="preserve"><value>Välj minst en kontotyp.</value></data>
+  <data name="CompleteProfile_MobileRequired" xml:space="preserve"><value>Mobiltelefon krävs för förare.</value></data>
+  <data name="CompleteProfile_PictureRequired" xml:space="preserve"><value>En profilbild krävs för förare.</value></data>
+  <data name="CompleteProfile_ImageTooLarge" xml:space="preserve"><value>Bilden måste vara mindre än 5 MB.</value></data>
+  <data name="CompleteProfile_ImageReadError" xml:space="preserve"><value>Kunde inte läsa bilden. Prova en annan fil.</value></data>
+
+  <!-- MyProfile -->
+  <data name="MyProfile_Title" xml:space="preserve"><value>Min Profil</value></data>
+  <data name="MyProfile_Verified" xml:space="preserve"><value>Verifierad</value></data>
+  <data name="MyProfile_Unverified" xml:space="preserve"><value>Ej verifierad</value></data>
+  <data name="MyProfile_MemberSince" xml:space="preserve"><value>Medlem sedan {0}</value></data>
+  <data name="MyProfile_AccountInfo" xml:space="preserve"><value>Kontoinformation</value></data>
+  <data name="MyProfile_MobilePhone" xml:space="preserve"><value>Mobiltelefon</value></data>
+  <data name="MyProfile_AccountType" xml:space="preserve"><value>Kontotyp</value></data>
+  <data name="MyProfile_DriverAndPassenger" xml:space="preserve"><value>Förare och passagerare</value></data>
+  <data name="MyProfile_Driver" xml:space="preserve"><value>Förare</value></data>
+  <data name="MyProfile_Passenger" xml:space="preserve"><value>Passagerare</value></data>
+  <data name="MyProfile_EditProfile" xml:space="preserve"><value>Redigera profil</value></data>
+  <data name="MyProfile_MobilePhone_Optional" xml:space="preserve"><value>(valfritt för passagerare)</value></data>
+  <data name="MyProfile_DriverOffer" xml:space="preserve"><value>Jag vill erbjuda resor</value></data>
+  <data name="MyProfile_PassengerBook" xml:space="preserve"><value>Jag vill boka resor</value></data>
+  <data name="MyProfile_ProfilePicture" xml:space="preserve"><value>Profilbild</value></data>
+  <data name="MyProfile_ProfilePicture_Optional" xml:space="preserve"><value>(valfritt för passagerare)</value></data>
+  <data name="MyProfile_PictureSelected" xml:space="preserve"><value>{0} vald</value></data>
+  <data name="MyProfile_ImageHint" xml:space="preserve"><value>JPEG eller PNG, max 5 MB. Lämna tom för att behålla nuvarande bild.</value></data>
+  <data name="MyProfile_SaveChanges" xml:space="preserve"><value>Spara ändringar</value></data>
+  <data name="MyProfile_Saving" xml:space="preserve"><value>Sparar…</value></data>
+  <data name="MyProfile_SaveSuccess_Title" xml:space="preserve"><value>Profil uppdaterad</value></data>
+  <data name="MyProfile_SaveSuccess_Msg" xml:space="preserve"><value>Dina profiländringar har sparats.</value></data>
+  <data name="MyProfile_YourData" xml:space="preserve"><value>Dina data</value></data>
+  <data name="MyProfile_YourData_Desc" xml:space="preserve"><value>Visa eller ladda ned alla personuppgifter GoCheaper har om dig — din profil, resor och bokningar. Du kan spara det som PDF eller ladda ned en rå JSON-fil.</value></data>
+  <data name="MyProfile_ExportData" xml:space="preserve"><value>Visa och exportera mina data</value></data>
+  <data name="MyProfile_DangerZone" xml:space="preserve"><value>Farozon</value></data>
+  <data name="MyProfile_Delete_Desc" xml:space="preserve"><value>Tar bort ditt konto och alla associerade data permanent: dina skapade resor (passagerare meddelas) och alla dina bokningar (förare meddelas). Detta kan inte ångras.</value></data>
+  <data name="MyProfile_DeleteBtn" xml:space="preserve"><value>Ta bort mitt konto</value></data>
+  <data name="MyProfile_Delete_Title" xml:space="preserve"><value>Ta bort konto</value></data>
+  <data name="MyProfile_Delete_Confirm" xml:space="preserve"><value>Detta tar bort ditt konto och alla associerade data permanent. Detta kan inte ångras.</value></data>
+  <data name="MyProfile_TypeDelete" xml:space="preserve"><value>Skriv DELETE för att bekräfta</value></data>
+  <data name="MyProfile_Deleting" xml:space="preserve"><value>Tar bort...</value></data>
+  <data name="MyProfile_RoleError" xml:space="preserve"><value>Minst en av rollerna Förare eller Passagerare måste förbli vald.</value></data>
+  <data name="MyProfile_MobileRequired" xml:space="preserve"><value>Mobiltelefon krävs för förare.</value></data>
+  <data name="MyProfile_PictureRequired" xml:space="preserve"><value>En profilbild krävs för förare.</value></data>
+  <data name="MyProfile_ImageTooLarge" xml:space="preserve"><value>Bilden måste vara mindre än 5 MB.</value></data>
+  <data name="MyProfile_ImageReadError" xml:space="preserve"><value>Kunde inte läsa bilden. Prova en annan fil.</value></data>
+
+  <!-- MyTrips -->
+  <data name="MyTrips_Title" xml:space="preserve"><value>Mina Resor</value></data>
+  <data name="MyTrips_NewTrip" xml:space="preserve"><value>+ Ny Resa</value></data>
+  <data name="MyTrips_NoTrips" xml:space="preserve"><value>Du har inte lagt upp några resor ännu.</value></data>
+  <data name="MyTrips_PostFirst" xml:space="preserve"><value>Lägg upp din första resa.</value></data>
+  <data name="MyTrips_SeatsBooked" xml:space="preserve"><value>Bokade platser:</value></data>
+  <data name="MyTrips_Price" xml:space="preserve"><value>Pris:</value></data>
+  <data name="MyTrips_Details" xml:space="preserve"><value>Detaljer</value></data>
+  <data name="MyTrips_Driver" xml:space="preserve"><value>Förare</value></data>
+  <data name="MyTrips_From" xml:space="preserve"><value>Från</value></data>
+  <data name="MyTrips_To" xml:space="preserve"><value>Till</value></data>
+  <data name="MyTrips_Departure" xml:space="preserve"><value>Avgång</value></data>
+  <data name="MyTrips_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="MyTrips_SeatsBookedTotal" xml:space="preserve"><value>Platser (bokade / totalt)</value></data>
+  <data name="MyTrips_PricePerSeat" xml:space="preserve"><value>Pris per plats</value></data>
+
+  <!-- CreateTrip -->
+  <data name="CreateTrip_Title" xml:space="preserve"><value>Lägg upp en ny resa</value></data>
+  <data name="CreateTrip_DriverOnly" xml:space="preserve"><value>Endast förare kan lägga upp resor.</value></data>
+  <data name="CreateTrip_UpdateProfile" xml:space="preserve"><value>Uppdatera din profil</value></data>
+  <data name="CreateTrip_DriverOnlyTo" xml:space="preserve"><value>för att bli förare.</value></data>
+  <data name="CreateTrip_From" xml:space="preserve"><value>Från</value></data>
+  <data name="CreateTrip_FromHint" xml:space="preserve"><value>Avgångsort eller adress</value></data>
+  <data name="CreateTrip_To" xml:space="preserve"><value>Till</value></data>
+  <data name="CreateTrip_ToHint" xml:space="preserve"><value>Destination eller adress</value></data>
+  <data name="CreateTrip_TotalSeats" xml:space="preserve"><value>Totalt antal platser</value></data>
+  <data name="CreateTrip_Currency" xml:space="preserve"><value>Valuta</value></data>
+  <data name="CreateTrip_PricePerSeat" xml:space="preserve"><value>Pris per plats ({0})</value></data>
+  <data name="CreateTrip_Departure" xml:space="preserve"><value>Avgångsdatum och -tid</value></data>
+  <data name="CreateTrip_NumberPlate" xml:space="preserve"><value>Registreringsnummer</value></data>
+  <data name="CreateTrip_Note" xml:space="preserve"><value>Anteckning (valfritt)</value></data>
+  <data name="CreateTrip_NoteHint" xml:space="preserve"><value>t.ex. Bagageutrymme finns, rökfri resa...</value></data>
+  <data name="CreateTrip_PaymentMethod" xml:space="preserve"><value>Betalningsmetod (valfritt)</value></data>
+  <data name="CreateTrip_PaymentHint" xml:space="preserve"><value>t.ex. Kontant, MobilePay (DK), Vipps (NO), Swish (SE)</value></data>
+  <data name="CreateTrip_PickupPoints" xml:space="preserve"><value>Hållplatser</value></data>
+  <data name="CreateTrip_PickupHint" xml:space="preserve"><value>Adress eller landmärke</value></data>
+  <data name="CreateTrip_AddPickup" xml:space="preserve"><value>+ Lägg till hållplats</value></data>
+  <data name="CreateTrip_Remove" xml:space="preserve"><value>✕ Ta bort</value></data>
+  <data name="CreateTrip_Post" xml:space="preserve"><value>Lägg upp resa</value></data>
+  <data name="CreateTrip_Posting" xml:space="preserve"><value>Lägger upp...</value></data>
+  <data name="CreateTrip_Cancel" xml:space="preserve"><value>Avbryt</value></data>
+  <data name="CreateTrip_FromRequired" xml:space="preserve"><value>Från krävs.</value></data>
+  <data name="CreateTrip_ToRequired" xml:space="preserve"><value>Till krävs.</value></data>
+  <data name="CreateTrip_SeatsRange" xml:space="preserve"><value>Antal platser måste vara mellan 1 och 50.</value></data>
+  <data name="CreateTrip_PriceMin" xml:space="preserve"><value>Priset per plats måste vara minst 1.</value></data>
+  <data name="CreateTrip_DepartureRequired" xml:space="preserve"><value>Avgångsdatum och -tid krävs.</value></data>
+  <data name="CreateTrip_NumberPlateRequired" xml:space="preserve"><value>Registreringsnummer krävs.</value></data>
+  <data name="CreateTrip_PickupRequired" xml:space="preserve"><value>Minst en hållplats krävs.</value></data>
+
+  <!-- TripDetails (driver) -->
+  <data name="TripDetails_Back" xml:space="preserve"><value>← Mina Resor</value></data>
+  <data name="TripDetails_EditTitle" xml:space="preserve"><value>Redigera resa</value></data>
+  <data name="TripDetails_Cancel" xml:space="preserve"><value>Avbryt</value></data>
+  <data name="TripDetails_HasBookings" xml:space="preserve"><value>Den här resan har {0} bokning(ar). Endast anteckning, hållplatser, betalningsmetod och registreringsnummer kan redigeras.</value></data>
+  <data name="TripDetails_From" xml:space="preserve"><value>Från</value></data>
+  <data name="TripDetails_To" xml:space="preserve"><value>Till</value></data>
+  <data name="TripDetails_TotalSeats" xml:space="preserve"><value>Totalt antal platser</value></data>
+  <data name="TripDetails_Currency" xml:space="preserve"><value>Valuta</value></data>
+  <data name="TripDetails_PricePerSeat" xml:space="preserve"><value>Pris per plats ({0})</value></data>
+  <data name="TripDetails_Departure" xml:space="preserve"><value>Avgångsdatum och -tid</value></data>
+  <data name="TripDetails_NumberPlate" xml:space="preserve"><value>Registreringsnummer</value></data>
+  <data name="TripDetails_Note" xml:space="preserve"><value>Anteckning</value></data>
+  <data name="TripDetails_PaymentMethod" xml:space="preserve"><value>Betalningsmetod</value></data>
+  <data name="TripDetails_PickupPoints" xml:space="preserve"><value>Hållplatser</value></data>
+  <data name="TripDetails_AddPickup" xml:space="preserve"><value>+ Lägg till hållplats</value></data>
+  <data name="TripDetails_Remove" xml:space="preserve"><value>✕ Ta bort</value></data>
+  <data name="TripDetails_Saving" xml:space="preserve"><value>Sparar...</value></data>
+  <data name="TripDetails_SaveChanges" xml:space="preserve"><value>Spara ändringar</value></data>
+  <data name="TripDetails_EditBtn" xml:space="preserve"><value>Redigera resa</value></data>
+  <data name="TripDetails_DeleteBtn" xml:space="preserve"><value>Ta bort resa</value></data>
+  <data name="TripDetails_CannotEdit" xml:space="preserve"><value>Kan inte redigera eller ta bort — passagerare är bokade</value></data>
+  <data name="TripDetails_Driver" xml:space="preserve"><value>Förare:</value></data>
+  <data name="TripDetails_Departure_Label" xml:space="preserve"><value>Avgång</value></data>
+  <data name="TripDetails_Seats" xml:space="preserve"><value>Platser</value></data>
+  <data name="TripDetails_SeatsInfo" xml:space="preserve"><value>{0} bokade / {1} totalt</value></data>
+  <data name="TripDetails_SeatsAvail" xml:space="preserve"><value>({0} lediga)</value></data>
+  <data name="TripDetails_PriceLabel" xml:space="preserve"><value>Pris per plats ({0})</value></data>
+  <data name="TripDetails_NumberPlate_Label" xml:space="preserve"><value>Registreringsnummer</value></data>
+  <data name="TripDetails_Note_Label" xml:space="preserve"><value>Anteckning</value></data>
+  <data name="TripDetails_PaymentMethod_Label" xml:space="preserve"><value>Betalningsmetod</value></data>
+  <data name="TripDetails_PickupPoints_Label" xml:space="preserve"><value>Hållplatser</value></data>
+  <data name="TripDetails_Passengers" xml:space="preserve"><value>Passagerare</value></data>
+  <data name="TripDetails_NoBookings" xml:space="preserve"><value>Inga bokningar ännu för den här resan.</value></data>
+  <data name="TripDetails_PassengerName" xml:space="preserve"><value>Passagerare</value></data>
+  <data name="TripDetails_SeatsBooked" xml:space="preserve"><value>Bokade platser</value></data>
+  <data name="TripDetails_BookedAt" xml:space="preserve"><value>Bokad den</value></data>
+  <data name="TripDetails_Total" xml:space="preserve"><value>Totalt</value></data>
+  <data name="TripDetails_DeleteTitle" xml:space="preserve"><value>Ta bort resa</value></data>
+  <data name="TripDetails_DeleteDesc" xml:space="preserve"><value>Tar bort den här resan permanent. Passagerare med bokningar meddelas via e-post.</value></data>
+  <data name="TripDetails_DeleteReason" xml:space="preserve"><value>Anledning till borttagning (valfritt)</value></data>
+  <data name="TripDetails_DeleteReasonHint" xml:space="preserve"><value>Skickas till passagerare om angett</value></data>
+  <data name="TripDetails_Deleting" xml:space="preserve"><value>Tar bort...</value></data>
+  <data name="TripDetails_PickupRequired" xml:space="preserve"><value>Minst en hållplats krävs.</value></data>
+
+  <!-- BrowseTrips -->
+  <data name="BrowseTrips_Title" xml:space="preserve"><value>Hitta tillgängliga resor</value></data>
+  <data name="BrowseTrips_From" xml:space="preserve"><value>Från</value></data>
+  <data name="BrowseTrips_AllFrom" xml:space="preserve"><value>Alla avgångsorter</value></data>
+  <data name="BrowseTrips_To" xml:space="preserve"><value>Till</value></data>
+  <data name="BrowseTrips_AllTo" xml:space="preserve"><value>Alla destinationer</value></data>
+  <data name="BrowseTrips_Clear" xml:space="preserve"><value>Rensa</value></data>
+  <data name="BrowseTrips_NoTrips" xml:space="preserve"><value>Inga tillgängliga resor matchar ditt filter.</value></data>
+  <data name="BrowseTrips_Driver" xml:space="preserve"><value>Förare:</value></data>
+  <data name="BrowseTrips_Available" xml:space="preserve"><value>Tillgänglig:</value></data>
+  <data name="BrowseTrips_Price" xml:space="preserve"><value>Pris:</value></data>
+  <data name="BrowseTrips_Plate" xml:space="preserve"><value>Skylt:</value></data>
+  <data name="BrowseTrips_BookTrip" xml:space="preserve"><value>Boka resa</value></data>
+  <data name="BrowseTrips_From_Header" xml:space="preserve"><value>Från</value></data>
+  <data name="BrowseTrips_To_Header" xml:space="preserve"><value>Till</value></data>
+  <data name="BrowseTrips_Departure" xml:space="preserve"><value>Avgång</value></data>
+  <data name="BrowseTrips_SeatsAvailable" xml:space="preserve"><value>Lediga platser</value></data>
+  <data name="BrowseTrips_PricePerSeat" xml:space="preserve"><value>Pris per plats</value></data>
+  <data name="BrowseTrips_NumberPlate" xml:space="preserve"><value>Registreringsnummer</value></data>
+  <data name="BrowseTrips_Status" xml:space="preserve"><value>Status</value></data>
+
+  <!-- PassengerTripDetails -->
+  <data name="PassTrip_Back" xml:space="preserve"><value>← Hitta Resor</value></data>
+  <data name="PassTrip_Driver" xml:space="preserve"><value>Förare:</value></data>
+  <data name="PassTrip_Departure" xml:space="preserve"><value>Avgång</value></data>
+  <data name="PassTrip_AvailableSeats" xml:space="preserve"><value>Lediga platser</value></data>
+  <data name="PassTrip_PricePerSeat" xml:space="preserve"><value>Pris per plats ({0})</value></data>
+  <data name="PassTrip_NumberPlate" xml:space="preserve"><value>Registreringsnummer</value></data>
+  <data name="PassTrip_PaymentMethod" xml:space="preserve"><value>Betalningsmetod</value></data>
+  <data name="PassTrip_Note" xml:space="preserve"><value>Anteckning</value></data>
+  <data name="PassTrip_PickupPoints" xml:space="preserve"><value>Hållplatser</value></data>
+  <data name="PassTrip_Booked" xml:space="preserve"><value>Du har bokat {0} plats(er) på den här resan.</value></data>
+  <data name="PassTrip_CancelBooking" xml:space="preserve"><value>Avboka</value></data>
+  <data name="PassTrip_NumberOfSeats" xml:space="preserve"><value>Antal platser</value></data>
+  <data name="PassTrip_BookThisTrip" xml:space="preserve"><value>Boka den här resan</value></data>
+  <data name="PassTrip_Booking" xml:space="preserve"><value>Bokar…</value></data>
+  <data name="PassTrip_FullyBooked" xml:space="preserve"><value>Den här resan är fullbokad.</value></data>
+  <data name="PassTrip_BookingConfirmed" xml:space="preserve"><value>Bokning bekräftad</value></data>
+  <data name="PassTrip_BookingConfirmed_Msg" xml:space="preserve"><value>Din plats är reserverad. En bokningsbekräftelse har skickats till dig via e-post.</value></data>
+  <data name="PassTrip_BookingCancelled" xml:space="preserve"><value>Bokning avbokad</value></data>
+  <data name="PassTrip_BookingCancelled_Msg" xml:space="preserve"><value>Din bokning har avbokats. Omdirigerar till Hitta Resor om {0}…</value></data>
+  <data name="PassTrip_CancelTitle" xml:space="preserve"><value>Avboka</value></data>
+  <data name="PassTrip_CancelMsg" xml:space="preserve"><value>Är du säker på att du vill avboka? Platserna frigörs för andra passagerare.</value></data>
+  <data name="PassTrip_Cancelling" xml:space="preserve"><value>Avbokar...</value></data>
+
+  <!-- MyBookedTrips -->
+  <data name="MyBookedTrips_Title" xml:space="preserve"><value>Mina Bokningar</value></data>
+  <data name="MyBookedTrips_NoBookings" xml:space="preserve"><value>Du har inte bokat några resor ännu.</value></data>
+  <data name="MyBookedTrips_BrowseLink" xml:space="preserve"><value>Hitta tillgängliga resor</value></data>
+  <data name="MyBookedTrips_Driver" xml:space="preserve"><value>Förare:</value></data>
+  <data name="MyBookedTrips_Price" xml:space="preserve"><value>Pris:</value></data>
+  <data name="MyBookedTrips_Seats" xml:space="preserve"><value>Platser:</value></data>
+  <data name="MyBookedTrips_Details" xml:space="preserve"><value>Detaljer</value></data>
+  <data name="MyBookedTrips_Driver_Header" xml:space="preserve"><value>Förare</value></data>
+  <data name="MyBookedTrips_From" xml:space="preserve"><value>Från</value></data>
+  <data name="MyBookedTrips_To" xml:space="preserve"><value>Till</value></data>
+  <data name="MyBookedTrips_Departure" xml:space="preserve"><value>Avgång</value></data>
+  <data name="MyBookedTrips_Status" xml:space="preserve"><value>Status</value></data>
+  <data name="MyBookedTrips_PricePerSeat" xml:space="preserve"><value>Pris per plats</value></data>
+  <data name="MyBookedTrips_Seats_Header" xml:space="preserve"><value>Platser</value></data>
+
+  <!-- DriverProfile -->
+  <data name="DriverProfile_Driver" xml:space="preserve"><value>Förare</value></data>
+  <data name="DriverProfile_MemberSince" xml:space="preserve"><value>Medlem sedan {0}</value></data>
+  <data name="DriverProfile_Rating" xml:space="preserve"><value>Föraromdöme</value></data>
+  <data name="DriverProfile_NoRatings" xml:space="preserve"><value>Inga omdömen ännu.</value></data>
+  <data name="DriverProfile_Ratings" xml:space="preserve"><value>{0} omdöme(n)</value></data>
+  <data name="DriverProfile_NotFound" xml:space="preserve"><value>Förare hittades inte.</value></data>
+
+  <!-- RateTrip -->
+  <data name="RateTrip_Title" xml:space="preserve"><value>Betygsätt din förare</value></data>
+  <data name="RateTrip_LinkUnavailable" xml:space="preserve"><value>Länk ej tillgänglig</value></data>
+  <data name="RateTrip_GoToCheaper" xml:space="preserve"><value>Gå till GoCheaper</value></data>
+  <data name="RateTrip_AlreadyRated_Title" xml:space="preserve"><value>Redan betygsatt</value></data>
+  <data name="RateTrip_AlreadyRated_Msg" xml:space="preserve"><value>Du har redan skickat in ett betyg för den här resan. Tack!</value></data>
+  <data name="RateTrip_BrowseTrips" xml:space="preserve"><value>Hitta Resor</value></data>
+  <data name="RateTrip_Heading" xml:space="preserve"><value>Betygsätt din förare</value></data>
+  <data name="RateTrip_HowManyStars" xml:space="preserve"><value>Hur många stjärnor till {0}?</value></data>
+  <data name="RateTrip_Comment" xml:space="preserve"><value>Kommentar</value></data>
+  <data name="RateTrip_CommentOptional" xml:space="preserve"><value>(valfritt)</value></data>
+  <data name="RateTrip_CommentHint" xml:space="preserve"><value>Dela några ord om din upplevelse...</value></data>
+  <data name="RateTrip_Submit" xml:space="preserve"><value>Skicka betyg</value></data>
+  <data name="RateTrip_Submitting" xml:space="preserve"><value>Skickar…</value></data>
+  <data name="RateTrip_Thanks_Title" xml:space="preserve"><value>Tack!</value></data>
+  <data name="RateTrip_Thanks_Msg" xml:space="preserve"><value>Ditt betyg för {0} har skickats. Det hjälper andra passagerare att göra välgrundade val.</value></data>
+  <data name="RateTrip_Rating1" xml:space="preserve"><value>Dålig</value></data>
+  <data name="RateTrip_Rating2" xml:space="preserve"><value>Under medel</value></data>
+  <data name="RateTrip_Rating3" xml:space="preserve"><value>Bra</value></data>
+  <data name="RateTrip_Rating4" xml:space="preserve"><value>Mycket bra</value></data>
+  <data name="RateTrip_Rating5" xml:space="preserve"><value>Utmärkt!</value></data>
+
+  <!-- Trip Status -->
+  <data name="Status_Pending" xml:space="preserve"><value>Kommande</value></data>
+  <data name="Status_Active" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="Status_Completed" xml:space="preserve"><value>Avslutad</value></data>
+</root>

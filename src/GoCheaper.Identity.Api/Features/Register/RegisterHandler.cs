@@ -38,6 +38,7 @@ public class RegisterHandler(
             IsDriver               = false,
             IsPassenger            = false,
             IsProfileComplete      = false,
+            PreferredLanguage      = req.Language,
             EmailVerificationToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
         };
 
@@ -49,7 +50,8 @@ public class RegisterHandler(
         logger.LogInformation("User registered: {Email}", user.Email);
 
         await PublishAsync(KafkaTopics.UserRegistered, user.Id.ToString(),
-            new UserRegisteredEvent(user.Id, user.FirstName, user.LastName, user.Email, user.EmailVerificationToken!));
+            new UserRegisteredEvent(user.Id, user.FirstName, user.LastName, user.Email,
+                user.EmailVerificationToken!, user.PreferredLanguage ?? "en"));
 
         return Results.Created($"/api/auth/users/{user.Id}", user.ToResponse());
     }

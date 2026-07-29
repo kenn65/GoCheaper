@@ -9,4 +9,5 @@ public record TripRatingRequestedEvent(
     string    From,
     string    To,
     DateTime? DepartureTime,
-    Guid      RatingToken);
+    Guid      RatingToken,
+    string    PassengerLanguage = "en");
