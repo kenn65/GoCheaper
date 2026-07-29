@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using GoCheaper.Web.Models;
+using Microsoft.JSInterop;
 
 namespace GoCheaper.Web.Services;
 
@@ -37,9 +38,39 @@ public class IdentityApiClient(
     IConfiguration configuration,
     UserSession userSession,
     AuthCookieService authCookieService,
-    CultureContext cultureContext)
+    CultureContext cultureContext,
+    IJSRuntime js)
 {
     private readonly string _apiKey = configuration["ApiKey:IdentityApi"] ?? "";
+
+    // Reads language from browser at call time — more reliable than CultureContext
+    // which depends on circuit-startup mechanisms that can silently return "en".
+    // Fast path: if CultureContext already has a non-English value, use it directly.
+    private async Task<string> ResolveLanguageAsync()
+    {
+        if (cultureContext.Culture != "en") return cultureContext.Culture;
+        try
+        {
+            var lang = await js.InvokeAsync<string>("eval",
+                "(function(){" +
+                "var c=document.cookie.split(';').map(function(s){return s.trim();}).find(function(s){return s.startsWith('.AspNetCore.Culture=');});" +
+                "if(c){var v=decodeURIComponent(c.substring('.AspNetCore.Culture='.length));var m=v.match(/uic=([^|]+)/);if(m)return m[1];}" +
+                "return navigator.language||'en';" +
+                "})()");
+            var culture = lang.StartsWith("da") ? "da"
+                : (lang.StartsWith("nb") || lang.StartsWith("no")) ? "nb"
+                : lang.StartsWith("sv") ? "sv"
+                : null;
+            if (culture != null)
+            {
+                cultureContext.Culture = culture;
+                return culture;
+            }
+        }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+        return "en";
+    }
 
     private HttpClient CreateClient() => httpClientFactory.CreateClient("identity-api");
 
@@ -73,7 +104,7 @@ public class IdentityApiClient(
 
     public async Task<RegisterResult> RegisterAsync(RegisterModel model)
     {
-        var lang = cultureContext.Culture;
+        var lang = await ResolveLanguageAsync();
         var payload = new { model.Email, model.Password, Language = lang };
 
         using var request = BuildRequest(HttpMethod.Post, "/api/auth/register");
@@ -125,8 +156,9 @@ public class IdentityApiClient(
 
     public async Task<LoginResult> LoginAsync(string email, string password)
     {
+        var lang = await ResolveLanguageAsync();
         using var request = BuildRequest(HttpMethod.Post, "/api/auth/login");
-        request.Headers.TryAddWithoutValidation("X-Language", cultureContext.Culture);
+        request.Headers.TryAddWithoutValidation("X-Language", lang);
         request.Content = JsonContent.Create(new { email, password });
 
         HttpResponseMessage response;
@@ -252,8 +284,9 @@ public class IdentityApiClient(
 
     public async Task<(bool Success, string? Error)> ForgotPasswordAsync(string email)
     {
+        var lang = await ResolveLanguageAsync();
         using var request = BuildRequest(HttpMethod.Post, "/api/auth/forgot-password");
-        request.Headers.TryAddWithoutValidation("X-Language", cultureContext.Culture);
+        request.Headers.TryAddWithoutValidation("X-Language", lang);
         request.Content = JsonContent.Create(new { email });
 
         HttpResponseMessage response;

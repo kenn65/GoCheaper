@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using Microsoft.JSInterop;
 
 namespace GoCheaper.Web.Services;
 
@@ -75,9 +76,36 @@ public class BookingApiClient(
     UserSession userSession,
     AuthCookieService authCookieService,
     IdentityApiClient identityApiClient,
-    CultureContext cultureContext)
+    CultureContext cultureContext,
+    IJSRuntime js)
 {
     private readonly string _apiKey = configuration["ApiKey:BookingApi"] ?? "";
+
+    private async Task<string> ResolveLanguageAsync()
+    {
+        if (cultureContext.Culture != "en") return cultureContext.Culture;
+        try
+        {
+            var lang = await js.InvokeAsync<string>("eval",
+                "(function(){" +
+                "var c=document.cookie.split(';').map(function(s){return s.trim();}).find(function(s){return s.startsWith('.AspNetCore.Culture=');});" +
+                "if(c){var v=decodeURIComponent(c.substring('.AspNetCore.Culture='.length));var m=v.match(/uic=([^|]+)/);if(m)return m[1];}" +
+                "return navigator.language||'en';" +
+                "})()");
+            var culture = lang.StartsWith("da") ? "da"
+                : (lang.StartsWith("nb") || lang.StartsWith("no")) ? "nb"
+                : lang.StartsWith("sv") ? "sv"
+                : null;
+            if (culture != null)
+            {
+                cultureContext.Culture = culture;
+                return culture;
+            }
+        }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+        return "en";
+    }
 
     private HttpClient CreateClient() => httpClientFactory.CreateClient("booking-api");
 
@@ -169,8 +197,9 @@ public class BookingApiClient(
     public async Task<BookingActionResult> BookTripAsync(Guid tripId, int seatsCount = 1)
     {
         await EnsureFreshTokenAsync();
+        var lang = await ResolveLanguageAsync();
         using var request = BuildRequest(HttpMethod.Post, $"/api/bookings/trips/{tripId}/book");
-        request.Headers.TryAddWithoutValidation("X-Language", cultureContext.Culture);
+        request.Headers.TryAddWithoutValidation("X-Language", lang);
         request.Content = JsonContent.Create(new { SeatsCount = seatsCount });
 
         HttpResponseMessage response;
