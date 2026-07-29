@@ -1,12 +1,11 @@
 @using GoCheaper.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Localization
 @using System.Globalization
 @inject UserSession UserSession
 @inject NavigationManager Nav
 @inject PersistentComponentState ApplicationState
 @inject CultureContext CultureCtx
-@inject IHttpContextAccessor HttpContextAccessor
+@inject IJSRuntime JS
 @implements IDisposable
 
 <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
@@ -23,37 +22,20 @@
 @code {
     [CascadingParameter] private Task<AuthenticationState>? AuthState { get; set; }
 
+    private PersistingComponentStateSubscription _cultureSub;
+
     protected override async Task OnInitializedAsync()
     {
-        // Primary: read the culture that RequestLocalizationMiddleware resolved for the
-        // original HTTP request. IHttpContextAccessor.HttpContext in Blazor Server holds
-        // that initial request context for the lifetime of the circuit, so this is
-        // reliable regardless of whether PersistentComponentState transfers correctly.
-        var resolvedCulture = HttpContextAccessor.HttpContext
-            ?.Features.Get<IRequestCultureFeature>()
-            ?.RequestCulture.UICulture.Name;
+        // Routes.razor IS the interactive component, so its RegisterOnPersisting callback
+        // reliably fires during SSR when the component transitions to interactive mode.
+        // App.razor is SSR-only and its PersistCulture never fires — only this component's does.
+        _cultureSub = ApplicationState.RegisterOnPersisting(PersistCulture);
 
-        // Fallback: PersistentComponentState written by App.razor.PersistCulture during SSR.
-        if (string.IsNullOrEmpty(resolvedCulture) || resolvedCulture == "en")
+        // Restore culture this component persisted during SSR phase.
+        if (ApplicationState.TryTakeFromJson<string>("routes-culture", out var saved)
+            && !string.IsNullOrEmpty(saved))
         {
-            if (ApplicationState.TryTakeFromJson<string>("culture", out var saved)
-                && !string.IsNullOrEmpty(saved))
-            {
-                resolvedCulture = saved;
-            }
-        }
-        else
-        {
-            // Still consume the key so it doesn't linger in PersistentComponentState.
-            ApplicationState.TryTakeFromJson<string>("culture", out _);
-        }
-
-        if (!string.IsNullOrEmpty(resolvedCulture))
-        {
-            var ci = CultureInfo.GetCultureInfo(resolvedCulture);
-            CultureInfo.CurrentCulture   = ci;
-            CultureInfo.CurrentUICulture = ci;
-            CultureCtx.Culture = resolvedCulture;
+            ApplyCulture(saved);
         }
 
         Nav.LocationChanged += OnLocationChanged;
@@ -64,6 +46,58 @@
             UserSession.LoadFromClaims(state.User);
             RedirectIfIncomplete(Nav.Uri);
         }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Safety net: if OnInitializedAsync didn't set the culture (PersistentComponentState
+        // didn't transfer), read it from the browser — the AspNetCore.Culture cookie (not
+        // HttpOnly) and navigator.language are both accessible from JS.
+        if (CultureCtx.Culture != "en") return;
+
+        try
+        {
+            var lang = await JS.InvokeAsync<string>("eval",
+                "(function(){" +
+                "var c=document.cookie.split(';').map(function(s){return s.trim();}).find(function(s){return s.startsWith('.AspNetCore.Culture=');});" +
+                "if(c){var v=decodeURIComponent(c.substring('.AspNetCore.Culture='.length));var m=v.match(/uic=([^|]+)/);if(m)return m[1];}" +
+                "return navigator.language||'';" +
+                "})()");
+
+            if (!string.IsNullOrEmpty(lang) && lang != "en")
+            {
+                var culture = lang.StartsWith("da") ? "da"
+                    : (lang.StartsWith("nb") || lang.StartsWith("no")) ? "nb"
+                    : lang.StartsWith("sv") ? "sv"
+                    : null;
+
+                if (culture != null)
+                    ApplyCulture(culture);
+            }
+        }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+    }
+
+    // Fires during SSR phase when rendering is serialized for the circuit transition.
+    private Task PersistCulture()
+    {
+        ApplicationState.PersistAsJson("routes-culture", CultureInfo.CurrentUICulture.Name);
+        return Task.CompletedTask;
+    }
+
+    private void ApplyCulture(string cultureName)
+    {
+        try
+        {
+            var ci = CultureInfo.GetCultureInfo(cultureName);
+            CultureInfo.CurrentCulture   = ci;
+            CultureInfo.CurrentUICulture = ci;
+            CultureCtx.Culture = cultureName;
+        }
+        catch (CultureNotFoundException) { }
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
@@ -78,5 +112,8 @@
     }
 
     public void Dispose()
-        => Nav.LocationChanged -= OnLocationChanged;
+    {
+        _cultureSub.Dispose();
+        Nav.LocationChanged -= OnLocationChanged;
+    }
 }

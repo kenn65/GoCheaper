@@ -45,7 +45,12 @@ public class LoginHandler(
         user.AuthCodeExpiry = DateTime.UtcNow.AddMinutes(5);
         await db.SaveChangesAsync(ct);
 
-        var language = requestLanguage ?? user.PreferredLanguage ?? "en";
+        // Non-English X-Language header wins (it came from the user's active session).
+        // An "en" header may be a CultureContext fallback, so prefer the stored preference.
+        var language = (requestLanguage is not null && requestLanguage != "en" ? requestLanguage : null)
+                       ?? user.PreferredLanguage
+                       ?? requestLanguage
+                       ?? "en";
         await PublishAsync(KafkaTopics.AuthCodeRequested, user.Id.ToString(),
             new AuthCodeRequestedEvent(user.Id, user.FirstName, user.LastName, user.Email, code, language));
 

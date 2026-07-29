@@ -29,7 +29,11 @@ public class ForgotPasswordHandler(
             user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
             await db.SaveChangesAsync(ct);
 
-            var language = requestLanguage ?? user.PreferredLanguage ?? "en";
+            // Non-English X-Language wins; "en" may be a CultureContext fallback so prefer stored preference.
+            var language = (requestLanguage is not null && requestLanguage != "en" ? requestLanguage : null)
+                           ?? user.PreferredLanguage
+                           ?? requestLanguage
+                           ?? "en";
             await PublishAsync(KafkaTopics.ForgotPasswordRequested, user.Id.ToString(),
                 new ForgotPasswordRequestedEvent(user.Id, user.FirstName, user.LastName, user.Email,
                     user.PasswordResetToken, language));
