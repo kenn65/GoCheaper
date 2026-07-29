@@ -51,6 +51,18 @@ public class LoginHandler(
                        ?? user.PreferredLanguage
                        ?? requestLanguage
                        ?? "en";
+
+        // Keep PreferredLanguage up to date on every login so downstream DriverSnapshot
+        // entries stay in sync. Also corrects existing users whose stored preference was
+        // "en" due to the previous CSP/eval bug at registration time.
+        if (requestLanguage is not null && requestLanguage != "en" && user.PreferredLanguage != requestLanguage)
+        {
+            user.PreferredLanguage = requestLanguage;
+            await db.SaveChangesAsync(ct);
+            await PublishAsync(KafkaTopics.UserProfileUpdated, user.Id.ToString(),
+                new UserProfileUpdatedEvent(user.Id, $"{user.FirstName} {user.LastName}", user.Email, requestLanguage));
+        }
+
         await PublishAsync(KafkaTopics.AuthCodeRequested, user.Id.ToString(),
             new AuthCodeRequestedEvent(user.Id, user.FirstName, user.LastName, user.Email, code, language));
 
