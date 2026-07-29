@@ -86,6 +86,7 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddScoped<UserSession>();
 builder.Services.AddScoped<AuthCookieService>();
+builder.Services.AddScoped<CultureContext>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddLocalization();

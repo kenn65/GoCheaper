@@ -4,6 +4,7 @@
 @inject UserSession UserSession
 @inject NavigationManager Nav
 @inject PersistentComponentState ApplicationState
+@inject CultureContext CultureCtx
 @implements IDisposable
 
 <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
@@ -30,6 +31,7 @@
             var ci = CultureInfo.GetCultureInfo(savedCulture);
             CultureInfo.CurrentCulture   = ci;
             CultureInfo.CurrentUICulture = ci;
+            CultureCtx.Culture = savedCulture;
         }
 
         Nav.LocationChanged += OnLocationChanged;

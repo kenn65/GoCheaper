@@ -17,19 +17,27 @@ public class TemplateRenderer
     {
         if (!string.IsNullOrEmpty(language) && language != "en")
         {
-            var localizedName = $"GoCheaper.Notification.Api.Templates.{templateName}.{language}.html";
-            var localizedStream = Assembly.GetManifestResourceStream(localizedName);
-            if (localizedStream is not null)
+            // Try exact match (e.g. "da")
+            var stream = TryGetStream(templateName, language);
+            if (stream is not null) { using var r = new StreamReader(stream); return r.ReadToEnd(); }
+
+            // Try base language (e.g. "da" from "da-DK")
+            var baseLang = language.Split('-')[0];
+            if (baseLang != language)
             {
-                using var r = new StreamReader(localizedStream);
-                return r.ReadToEnd();
+                stream = TryGetStream(templateName, baseLang);
+                if (stream is not null) { using var r = new StreamReader(stream); return r.ReadToEnd(); }
             }
         }
 
         var defaultName = $"GoCheaper.Notification.Api.Templates.{templateName}.html";
-        using var stream = Assembly.GetManifestResourceStream(defaultName)
+        using var defaultStream = Assembly.GetManifestResourceStream(defaultName)
             ?? throw new InvalidOperationException($"Email template '{defaultName}' not found in assembly.");
-        using var reader = new StreamReader(stream);
+        using var reader = new StreamReader(defaultStream);
         return reader.ReadToEnd();
     }
+
+    private static Stream? TryGetStream(string templateName, string lang)
+        => Assembly.GetManifestResourceStream(
+               $"GoCheaper.Notification.Api.Templates.{templateName}.{lang}.html");
 }

@@ -74,7 +74,8 @@ public class BookingApiClient(
     IConfiguration configuration,
     UserSession userSession,
     AuthCookieService authCookieService,
-    IdentityApiClient identityApiClient)
+    IdentityApiClient identityApiClient,
+    CultureContext cultureContext)
 {
     private readonly string _apiKey = configuration["ApiKey:BookingApi"] ?? "";
 
@@ -169,7 +170,7 @@ public class BookingApiClient(
     {
         await EnsureFreshTokenAsync();
         using var request = BuildRequest(HttpMethod.Post, $"/api/bookings/trips/{tripId}/book");
-        request.Headers.TryAddWithoutValidation("X-Language", System.Globalization.CultureInfo.CurrentUICulture.Name);
+        request.Headers.TryAddWithoutValidation("X-Language", cultureContext.Culture);
         request.Content = JsonContent.Create(new { SeatsCount = seatsCount });
 
         HttpResponseMessage response;

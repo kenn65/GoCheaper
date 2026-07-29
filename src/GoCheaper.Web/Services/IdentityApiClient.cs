@@ -36,7 +36,8 @@ public class IdentityApiClient(
     IHttpClientFactory httpClientFactory,
     IConfiguration configuration,
     UserSession userSession,
-    AuthCookieService authCookieService)
+    AuthCookieService authCookieService,
+    CultureContext cultureContext)
 {
     private readonly string _apiKey = configuration["ApiKey:IdentityApi"] ?? "";
 
@@ -72,7 +73,7 @@ public class IdentityApiClient(
 
     public async Task<RegisterResult> RegisterAsync(RegisterModel model)
     {
-        var lang = System.Globalization.CultureInfo.CurrentUICulture.Name;
+        var lang = cultureContext.Culture;
         var payload = new { model.Email, model.Password, Language = lang };
 
         using var request = BuildRequest(HttpMethod.Post, "/api/auth/register");
@@ -125,7 +126,7 @@ public class IdentityApiClient(
     public async Task<LoginResult> LoginAsync(string email, string password)
     {
         using var request = BuildRequest(HttpMethod.Post, "/api/auth/login");
-        request.Headers.TryAddWithoutValidation("X-Language", System.Globalization.CultureInfo.CurrentUICulture.Name);
+        request.Headers.TryAddWithoutValidation("X-Language", cultureContext.Culture);
         request.Content = JsonContent.Create(new { email, password });
 
         HttpResponseMessage response;
@@ -252,7 +253,7 @@ public class IdentityApiClient(
     public async Task<(bool Success, string? Error)> ForgotPasswordAsync(string email)
     {
         using var request = BuildRequest(HttpMethod.Post, "/api/auth/forgot-password");
-        request.Headers.TryAddWithoutValidation("X-Language", System.Globalization.CultureInfo.CurrentUICulture.Name);
+        request.Headers.TryAddWithoutValidation("X-Language", cultureContext.Culture);
         request.Content = JsonContent.Create(new { email });
 
         HttpResponseMessage response;
