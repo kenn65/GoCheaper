@@ -15,7 +15,15 @@ public class GeoLanguageCultureProvider(GeoLanguageService geoLanguageService) :
             return null;
 
         var lang = await geoLanguageService.GetLanguageAsync(ip);
-        return lang is null ? null : new ProviderCultureResult(lang);
+        if (lang is null) return null;
+
+        // Persist the detected language as a cookie so future requests skip the geo lookup
+        httpContext.Response.Cookies.Append(
+            CookieRequestCultureProvider.DefaultCookieName,
+            CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(lang)),
+            new CookieOptions { Expires = DateTimeOffset.UtcNow.AddYears(1), SameSite = SameSiteMode.Lax, IsEssential = true });
+
+        return new ProviderCultureResult(lang);
     }
 
     private static string? GetClientIp(HttpContext ctx)
