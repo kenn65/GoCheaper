@@ -88,7 +88,7 @@ builder.Services.AddScoped<UserSession>();
 builder.Services.AddScoped<AuthCookieService>();
 builder.Services.AddMemoryCache();
 
-builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+builder.Services.AddLocalization();
 
 var app = builder.Build();
 

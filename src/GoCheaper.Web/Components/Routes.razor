@@ -1,7 +1,9 @@
 @using GoCheaper.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Globalization
 @inject UserSession UserSession
 @inject NavigationManager Nav
+@inject PersistentComponentState ApplicationState
 @implements IDisposable
 
 <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
@@ -20,6 +22,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Restore the culture that was captured during SSR (where middleware set it from the cookie).
+        // Blazor Interactive Server circuits don't inherit HTTP middleware cultures.
+        if (ApplicationState.TryTakeFromJson<string>("culture", out var savedCulture)
+            && !string.IsNullOrEmpty(savedCulture))
+        {
+            var ci = CultureInfo.GetCultureInfo(savedCulture);
+            CultureInfo.CurrentCulture   = ci;
+            CultureInfo.CurrentUICulture = ci;
+        }
+
         Nav.LocationChanged += OnLocationChanged;
 
         if (AuthState is not null)

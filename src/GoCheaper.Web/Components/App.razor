@@ -1,4 +1,8 @@
-﻿<!DOCTYPE html>
+﻿@inject PersistentComponentState ApplicationState
+@implements IDisposable
+@using System.Globalization
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -23,3 +27,18 @@
 </body>
 
 </html>
+
+@code {
+    PersistingComponentStateSubscription _sub;
+
+    protected override void OnInitialized()
+        => _sub = ApplicationState.RegisterOnPersisting(PersistCulture);
+
+    Task PersistCulture()
+    {
+        ApplicationState.PersistAsJson("culture", CultureInfo.CurrentUICulture.Name);
+        return Task.CompletedTask;
+    }
+
+    public void Dispose() => _sub.Dispose();
+}
