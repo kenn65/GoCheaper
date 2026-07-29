@@ -378,6 +378,8 @@ All handlers skip sending (with a warning log) if the target email address is em
 - All language fields default to `"en"` so old Kafka messages without the field deserialize safely.
 - **Do not translate `GoCheaper`** (brand name) or `{{Token}}` placeholder names in template files — only translate visible user-facing text.
 
+**X-Language header pattern for Identity.Api email-triggering handlers:** `LoginHandler`, `ForgotPasswordHandler`, and `RegisterHandler` all read the `X-Language` request header as the primary language source, falling back to `user.PreferredLanguage` then `"en"`. The Web client sends this header on every call that triggers a transactional email (`LoginAsync`, `ForgotPasswordAsync`, `RegisterAsync` in `IdentityApiClient`). The endpoint lambdas in `AuthEndpoints.cs` pass `HttpContext ctx` to each handler so the header is accessible.
+
 **Email logo:** All templates embed the logo as a base64-encoded PNG `<img>` data URI (`data:image/png;base64,...`). Do **not** use inline SVG — Outlook.com strips SVG from emails.
 
 **Email gradient gotcha — Outlook strips CSS gradients:** Never use `background:linear-gradient(...)` on any element in email templates — not on `<a>` tags and not on `<td>` header cells. Outlook ignores it entirely, leaving white backgrounds with invisible white text. All header `<td>` elements must use a solid `background-color`. Always wrap CTA `<a>` buttons in a `<td bgcolor="#xxxxxx">` (HTML attribute, not CSS) with a matching solid `background-color` on the link itself:
@@ -434,6 +436,10 @@ The Web project acts as a **BFF (Backend for Frontend)**. Tokens never reach the
 **`/auth/signout` POST endpoint:** Clears the `gc_auth` cookie.
 
 **`/auth/verify-redirect` GET endpoint:** Signs out any existing session and does a clean server-side redirect to `/`. Ensures the home page always loads fresh and anonymous after email verification, bypassing Blazor circuit state entirely — avoids a broken logged-in state if a previously active session's cookie was present when the verification email link was opened.
+
+**`/culture` GET endpoint:** Sets the `AspNetCore.Culture` cookie (1-year, `SameSite=Lax`) and redirects back to the caller. If the user is authenticated, also PATCHes `user.PreferredLanguage` in Identity.Api so the language follows them across devices. The language switcher in the navbar calls this endpoint.
+
+**Language detection (new visitors):** `GeoLanguageService` + `GeoLanguageCultureProvider` (`Services/`) implement IP-based language detection for visitors with no culture cookie. The provider calls `https://ipapi.co/{ip}/country_code/` (2-second timeout, 24-hour memory cache) and maps DK→`da`, NO→`nb`, SE→`sv`. Private/loopback IPs are skipped. When geo detection succeeds it **also writes the `AspNetCore.Culture` cookie** so the lookup only runs once per visitor. Provider order in `Program.cs`: (1) query string, (2) cookie, (3) IP geo, (4) `Accept-Language` header.
 
 **`AuthCookieService` (Scoped, `IAsyncDisposable`):** Lazy-loads `wwwroot/js/auth.js` as an ES module via `IJSRuntime`. All JS interop calls catch `JSDisconnectedException` (including `DisposeAsync`) because the circuit may be disconnecting during navigation. Methods: `UpdateTokensAsync`, `UpdateRolesAsync`, `SetProfileCompletedAsync(fullName, isDriver, isPassenger)`, `SignOutAsync`. All methods that call `signIn` pass `is_profile_complete` from `UserSession.IsProfileComplete` (or `"true"` for `SetProfileCompletedAsync`).
 
