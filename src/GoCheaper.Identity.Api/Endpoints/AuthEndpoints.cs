@@ -19,7 +19,7 @@ public static class AuthEndpoints
         var group = app.MapGroup("/api/auth");
 
         group.MapPost("/register",
-            (RegisterRequest req, RegisterHandler h, CancellationToken ct) => h.HandleAsync(req, ct))
+            (RegisterRequest req, HttpContext ctx, RegisterHandler h, CancellationToken ct) => h.HandleAsync(req, ctx, ct))
             .RequireAuthorization("ApiKeyOnly")
             .WithName("Register")
             .WithSummary("Create a new user account")

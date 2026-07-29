@@ -72,9 +72,11 @@ public class IdentityApiClient(
 
     public async Task<RegisterResult> RegisterAsync(RegisterModel model)
     {
-        var payload = new { model.Email, model.Password, Language = System.Globalization.CultureInfo.CurrentUICulture.Name };
+        var lang = System.Globalization.CultureInfo.CurrentUICulture.Name;
+        var payload = new { model.Email, model.Password, Language = lang };
 
         using var request = BuildRequest(HttpMethod.Post, "/api/auth/register");
+        request.Headers.TryAddWithoutValidation("X-Language", lang);
         request.Content = JsonContent.Create(payload);
 
         HttpResponseMessage response;

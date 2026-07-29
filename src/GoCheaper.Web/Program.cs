@@ -90,6 +90,12 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddLocalization();
 
+builder.Services.AddHttpClient("geo", client =>
+{
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("GoCheaper/1.0");
+});
+builder.Services.AddSingleton<GeoLanguageService>();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -101,10 +107,17 @@ app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages:
 app.UseHttpsRedirection();
 
 var supportedCultures = new[] { "en", "da", "nb", "sv" };
-app.UseRequestLocalization(new RequestLocalizationOptions()
+var locOptions = new RequestLocalizationOptions()
     .SetDefaultCulture("en")
     .AddSupportedCultures(supportedCultures)
-    .AddSupportedUICultures(supportedCultures));
+    .AddSupportedUICultures(supportedCultures);
+
+// Insert IP-based geo detection after the cookie provider (index 2), before Accept-Language.
+// Only runs when no language cookie is set (new visitors).
+locOptions.RequestCultureProviders.Insert(2,
+    new GeoLanguageCultureProvider(app.Services.GetRequiredService<GeoLanguageService>()));
+
+app.UseRequestLocalization(locOptions);
 
 app.UseAuthentication();
 app.UseAuthorization();

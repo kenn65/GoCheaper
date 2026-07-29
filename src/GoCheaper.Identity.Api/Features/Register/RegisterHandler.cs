@@ -16,8 +16,10 @@ public class RegisterHandler(
     IProducer<string, string> producer,
     ILogger<RegisterHandler> logger)
 {
-    public async Task<IResult> HandleAsync(RegisterRequest req, CancellationToken ct = default)
+    public async Task<IResult> HandleAsync(RegisterRequest req, HttpContext? ctx = null, CancellationToken ct = default)
     {
+        var language = ctx?.Request.Headers["X-Language"].FirstOrDefault() ?? req.Language ?? "en";
+
         if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Password))
             return Results.BadRequest("Email and password are required.");
 
@@ -38,7 +40,7 @@ public class RegisterHandler(
             IsDriver               = false,
             IsPassenger            = false,
             IsProfileComplete      = false,
-            PreferredLanguage      = req.Language,
+            PreferredLanguage      = language,
             EmailVerificationToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
         };
 
@@ -51,7 +53,7 @@ public class RegisterHandler(
 
         await PublishAsync(KafkaTopics.UserRegistered, user.Id.ToString(),
             new UserRegisteredEvent(user.Id, user.FirstName, user.LastName, user.Email,
-                user.EmailVerificationToken!, user.PreferredLanguage ?? "en"));
+                user.EmailVerificationToken!, language));
 
         return Results.Created($"/api/auth/users/{user.Id}", user.ToResponse());
     }
