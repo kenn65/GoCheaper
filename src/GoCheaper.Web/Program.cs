@@ -121,6 +121,31 @@ locOptions.RequestCultureProviders.Insert(2,
 
 app.UseRequestLocalization(locOptions);
 
+// After RequestLocalizationMiddleware resolves the culture (e.g. from Accept-Language header),
+// write the culture cookie if it is not already set and the resolved culture is non-English.
+// This makes the culture readable via document.cookie in JS and persists it for future requests,
+// so the Blazor circuit can reliably pick it up without depending solely on PersistentComponentState.
+app.Use(async (ctx, next) =>
+{
+    if (!ctx.Request.Cookies.ContainsKey(CookieRequestCultureProvider.DefaultCookieName))
+    {
+        var resolved = ctx.Features.Get<IRequestCultureFeature>()?.RequestCulture.UICulture.Name;
+        if (!string.IsNullOrEmpty(resolved) && resolved != "en")
+        {
+            ctx.Response.Cookies.Append(
+                CookieRequestCultureProvider.DefaultCookieName,
+                CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(resolved)),
+                new CookieOptions
+                {
+                    Expires     = DateTimeOffset.UtcNow.AddYears(1),
+                    IsEssential = true,
+                    SameSite    = SameSiteMode.Lax
+                });
+        }
+    }
+    await next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -24,8 +24,18 @@
 
     private PersistingComponentStateSubscription _cultureSub;
 
+    // Captured at OnInitializedAsync start — guaranteed to be set by RequestLocalizationMiddleware
+    // on the request thread. PersistCulture fires in a serialization callback that may run in a
+    // different async context where CultureInfo.CurrentUICulture is reset to the default, so we
+    // capture early and use the stored value instead of reading it in the callback.
+    private string _capturedCulture = "en";
+
     protected override async Task OnInitializedAsync()
     {
+        // Capture FIRST — this is the only place where CurrentUICulture is reliably "da" (or
+        // whatever RequestLocalizationMiddleware resolved from the cookie / Accept-Language header).
+        _capturedCulture = CultureInfo.CurrentUICulture.Name;
+
         // Routes.razor IS the interactive component, so its RegisterOnPersisting callback
         // reliably fires during SSR when the component transitions to interactive mode.
         // App.razor is SSR-only and its PersistCulture never fires — only this component's does.
@@ -82,9 +92,11 @@
     }
 
     // Fires during SSR phase when rendering is serialized for the circuit transition.
+    // Uses _capturedCulture (set at OnInitializedAsync start) rather than CurrentUICulture
+    // here, because the callback may run in a different async context where the culture is reset.
     private Task PersistCulture()
     {
-        ApplicationState.PersistAsJson("routes-culture", CultureInfo.CurrentUICulture.Name);
+        ApplicationState.PersistAsJson("routes-culture", _capturedCulture);
         return Task.CompletedTask;
     }
 
