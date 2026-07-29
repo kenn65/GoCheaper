@@ -84,6 +84,7 @@ builder.Services.AddAuthorization(options =>
 });
 builder.Services.AddCascadingAuthenticationState();
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<UserSession>();
 builder.Services.AddScoped<AuthCookieService>();
 builder.Services.AddScoped<CultureContext>();

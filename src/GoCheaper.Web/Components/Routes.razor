@@ -1,10 +1,12 @@
 @using GoCheaper.Web.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Localization
 @using System.Globalization
 @inject UserSession UserSession
 @inject NavigationManager Nav
 @inject PersistentComponentState ApplicationState
 @inject CultureContext CultureCtx
+@inject IHttpContextAccessor HttpContextAccessor
 @implements IDisposable
 
 <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
@@ -23,15 +25,35 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Restore the culture that was captured during SSR (where middleware set it from the cookie).
-        // Blazor Interactive Server circuits don't inherit HTTP middleware cultures.
-        if (ApplicationState.TryTakeFromJson<string>("culture", out var savedCulture)
-            && !string.IsNullOrEmpty(savedCulture))
+        // Primary: read the culture that RequestLocalizationMiddleware resolved for the
+        // original HTTP request. IHttpContextAccessor.HttpContext in Blazor Server holds
+        // that initial request context for the lifetime of the circuit, so this is
+        // reliable regardless of whether PersistentComponentState transfers correctly.
+        var resolvedCulture = HttpContextAccessor.HttpContext
+            ?.Features.Get<IRequestCultureFeature>()
+            ?.RequestCulture.UICulture.Name;
+
+        // Fallback: PersistentComponentState written by App.razor.PersistCulture during SSR.
+        if (string.IsNullOrEmpty(resolvedCulture) || resolvedCulture == "en")
         {
-            var ci = CultureInfo.GetCultureInfo(savedCulture);
+            if (ApplicationState.TryTakeFromJson<string>("culture", out var saved)
+                && !string.IsNullOrEmpty(saved))
+            {
+                resolvedCulture = saved;
+            }
+        }
+        else
+        {
+            // Still consume the key so it doesn't linger in PersistentComponentState.
+            ApplicationState.TryTakeFromJson<string>("culture", out _);
+        }
+
+        if (!string.IsNullOrEmpty(resolvedCulture))
+        {
+            var ci = CultureInfo.GetCultureInfo(resolvedCulture);
             CultureInfo.CurrentCulture   = ci;
             CultureInfo.CurrentUICulture = ci;
-            CultureCtx.Culture = savedCulture;
+            CultureCtx.Culture = resolvedCulture;
         }
 
         Nav.LocationChanged += OnLocationChanged;
