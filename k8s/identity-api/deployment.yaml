@@ -38,15 +38,13 @@ spec:
               name: gocheaper-secrets
               key: conn-identitydb
         readinessProbe:
-          httpGet:
-            path: /health
+          tcpSocket:
             port: 8080
           initialDelaySeconds: 20
           periodSeconds: 10
           failureThreshold: 6
         livenessProbe:
-          httpGet:
-            path: /health
+          tcpSocket:
             port: 8080
           initialDelaySeconds: 40
           periodSeconds: 30
