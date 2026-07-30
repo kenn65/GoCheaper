@@ -48,7 +48,7 @@ if (-not $SkipBuild) {
         Push-Location $repoRoot
         dotnet publish $svc.Project `
             /t:PublishContainer `
-            /p:ContainerImageName="$acrLogin/$($svc.Name)" `
+            /p:ContainerRepository="$($svc.Name)" `
             /p:ContainerImageTag="$Tag" `
             /p:ContainerRegistry="$acrLogin"
         Pop-Location
