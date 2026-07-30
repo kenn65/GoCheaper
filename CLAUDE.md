@@ -584,7 +584,7 @@ k8s/
     statefulset.yaml          # SQL Server 2022 Developer, Azure Disk PVC 10Gi
     service.yaml              # ClusterIP 'sqlserver' → port 1433
   kafka/
-    statefulset.yaml          # Bitnami Kafka 3.9, KRaft mode, Azure Disk PVC 8Gi
+    statefulset.yaml          # apache/kafka (KRaft mode), Azure Disk PVC 8Gi
     service.yaml              # Headless 'kafka-headless' (pod DNS) + ClusterIP 'kafka' → 9092
   identity-api/
   notification-api/
@@ -602,10 +602,12 @@ No code changes needed — Aspire's `IServiceEndpointResolver` reads these env v
 
 **Deploy workflow (first time):**
 1. `.\scripts\setup-aks.ps1` — creates resource group, ACR, AKS cluster, attaches ACR, installs NGINX ingress controller (~5 min)
-2. Copy `k8s/secrets.template.yaml` → `k8s/secrets.yaml`; fill in all values (or run `.\scripts\create-secrets.ps1` which reads from `AppHost/appsettings.Development.json` automatically)
-3. `.\scripts\deploy.ps1` — builds images with `dotnet publish /t:PublishContainer`, pushes to ACR, applies all manifests, waits for rollouts
-4. Get the ingress public IP: `kubectl get svc ingress-nginx-controller -n ingress-nginx`
-5. Update `WebApp__BaseUrl` in `k8s/configmap.yaml` to `http://<ingress-ip>` and re-apply: `kubectl apply -f k8s/configmap.yaml && kubectl rollout restart deployment/notification-api -n gocheaper`
+2. Import Kafka into ACR (Bitnami removed their images from Docker Hub; use the official Apache image): `az acr import --name gocheaperregistry --source docker.io/apache/kafka:latest --image kafka:latest`
+3. Run `.\scripts\create-secrets.ps1` — reads from `AppHost/appsettings.Development.json` automatically; prompts for SQL SA password (make one up, e.g. `GoCheaper2024!`)
+4. `.\scripts\deploy.ps1` — builds images with `dotnet publish /t:PublishContainer`, pushes to ACR, applies all manifests, waits for rollouts
+5. Enable real client IP preservation (required for geo-language detection): `kubectl patch svc ingress-nginx-controller -n ingress-nginx -p '{\"spec\":{\"externalTrafficPolicy\":\"Local\"}}'`
+6. Get the ingress public IP: `kubectl get svc ingress-nginx-controller -n ingress-nginx`
+7. Update `WebApp__BaseUrl` in `k8s/configmap.yaml` to `http://<ingress-ip>` and re-apply: `kubectl apply -f k8s/configmap.yaml && kubectl rollout restart deployment/notification-api -n gocheaper`
 
 **Subsequent deploys:**
 ```powershell
@@ -615,7 +617,17 @@ No code changes needed — Aspire's `IServiceEndpointResolver` reads these env v
 
 **SQL Server connection strings:** Full connection strings are stored as separate Secret keys (`conn-identitydb`, `conn-tripsdb`, `conn-bookingdb`, `conn-webdb`) pointing to `sqlserver.gocheaper.svc.cluster.local,1433`. The `create-secrets.ps1` script builds these automatically.
 
-**Kafka — KRaft single-replica:** Kafka runs in KRaft mode (no ZooKeeper). The StatefulSet is fixed at 1 replica. `CONTROLLER_QUORUM_VOTERS` uses the pod's stable DNS name via the headless service (`kafka-0.kafka-headless.gocheaper.svc.cluster.local:9093`). Multiple replicas would cause KRaft controllers to fight over state and lose all topic metadata — keep replicas at 1.
+**Kafka — KRaft single-replica:** Kafka runs in KRaft mode (no ZooKeeper) using the official `apache/kafka` image (imported into ACR). The StatefulSet is fixed at 1 replica. `CONTROLLER_QUORUM_VOTERS` uses the pod's stable DNS name via the headless service (`kafka-0.kafka-headless.gocheaper.svc.cluster.local:9093`). Multiple replicas would cause KRaft controllers to fight over state and lose all topic metadata — keep replicas at 1. Bitnami Kafka images were removed from Docker Hub in 2024 — do not use `bitnami/kafka`.
+
+**Health probes use `tcpSocket`, not `httpGet`:** `MapDefaultEndpoints()` in `ServiceDefaults` only registers the `/health` endpoint when `ASPNETCORE_ENVIRONMENT == Development`. In `AzureTest`, `/health` returns 404 and HTTP liveness probes kill the pods. All deployments use `tcpSocket` probes on port 8080 instead.
+
+**SQL Server runs as root (`runAsUser: 0`):** SQL Server 2022 non-root mode cannot create `/.system` on the container root filesystem. `fsGroup` alone does not fix this — the container must run as root.
+
+**Real client IP for geo-language detection:** By default, NGINX ingress uses `externalTrafficPolicy: Cluster`, which causes Azure LB to SNAT traffic so NGINX only sees the internal node IP. `GeoLanguageCultureProvider` detects this as a private IP and skips geo-detection. Fix once after cluster setup: `kubectl patch svc ingress-nginx-controller -n ingress-nginx -p '{\"spec\":{\"externalTrafficPolicy\":\"Local\"}}'`
+
+**`dotnet publish` container image name:** Use `/p:ContainerRepository="service-name"` (not `ContainerImageName`) with `/p:ContainerRegistry="registry.azurecr.io"`. Using `ContainerImageName` with the full ACR-prefixed path pushes images to a double-prefixed repository (`registry.azurecr.io/registry.azurecr.io/service-name`) that K8s cannot find.
+
+**PowerShell JSON escaping for `kubectl patch`:** Use escaped quotes: `'{\"spec\":{\"externalTrafficPolicy\":\"Local\"}}'` — PowerShell mangles single-quoted JSON with unescaped double quotes.
 
 **Accessing live databases for debugging:** Use `kubectl port-forward` to connect SSMS locally:
 ```powershell
