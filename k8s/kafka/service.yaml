@@ -1,0 +1,29 @@
+# Headless service — required by the StatefulSet for pod DNS (kafka-0.kafka-headless....)
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-headless
+  namespace: gocheaper
+spec:
+  clusterIP: None
+  selector:
+    app: kafka
+  ports:
+  - port: 9092
+    name: client
+  - port: 9093
+    name: controller
+---
+# ClusterIP service — used by all application services as bootstrap server (kafka:9092)
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: gocheaper
+spec:
+  selector:
+    app: kafka
+  ports:
+  - port: 9092
+    targetPort: 9092
+    name: client

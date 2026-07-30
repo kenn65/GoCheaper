@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 
 # Local development secrets
 appsettings.Development.json
+
+# Kubernetes secrets file (contains plaintext passwords — never commit)
+k8s/secrets.yaml

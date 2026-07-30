@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-api
+  namespace: gocheaper
+spec:
+  selector:
+    app: notification-api
+  ports:
+  - port: 80
+    targetPort: 8080

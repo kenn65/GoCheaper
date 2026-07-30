@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: gocheaper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: gocheaperregistry.azurecr.io/web:latest
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: gocheaper-config
+        env:
+        # Aspire service discovery — resolves https+http://identity-api etc. in HttpClient config
+        - name: services__identity-api__http__0
+          value: "http://identity-api"
+        - name: services__trips-api__http__0
+          value: "http://trips-api"
+        - name: services__booking-api__http__0
+          value: "http://booking-api"
+        - name: ApiKey__IdentityApi
+          valueFrom:
+            secretKeyRef:
+              name: gocheaper-secrets
+              key: identity-api-key
+        - name: ApiKey__TripsApi
+          valueFrom:
+            secretKeyRef:
+              name: gocheaper-secrets
+              key: trips-api-key
+        - name: ApiKey__BookingApi
+          valueFrom:
+            secretKeyRef:
+              name: gocheaper-secrets
+              key: booking-api-key
+        - name: ConnectionStrings__webdb
+          valueFrom:
+            secretKeyRef:
+              name: gocheaper-secrets
+              key: conn-webdb
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 40
+          periodSeconds: 30
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

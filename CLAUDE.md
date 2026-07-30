@@ -554,68 +554,76 @@ All list pages (MyTrips, MyBookedTrips, BrowseTrips) render a **Bootstrap card l
 - **`OperationCanceledException` disconnects the circuit** — Polly's resilience handler cancels timed-out requests with `OperationCanceledException` (or `TaskCanceledException`), which does NOT inherit from `HttpRequestException`. If an API client method only catches `HttpRequestException`, a timeout propagates uncaught through the Blazor event handler and disconnects the SignalR circuit. The component resets silently — the user sees "nothing happens." Rule: every API client method must explicitly `catch (OperationCanceledException)`, and every Blazor event handler that calls external services must have an outer `catch (Exception)` as a final safety net.
 - **Edit Trip form must match Create Trip layout** — Currency (col-md-4) and Price per Seat (col-md-8) must stay side by side on one row; Total Seats on its own full-width row above. The price label reads `Price per Seat (@_edit.Currency)` and updates dynamically. If these are separated, one form looks different from the other and the currency label becomes stale.
 - **`bool?` nullable booleans in Razor** — `UpdateProfileModel.IsDriver` and `IsPassenger` are `bool?` (PATCH semantics: `null` = not supplied). In Razor, `@if (model.IsDriver)` fails CS0266 because `bool?` is not implicitly `bool`. Always use `model.IsDriver == true` / `model.IsDriver != true` comparisons. Checkbox `checked` attribute: `checked="@(model.IsDriver == true)"`. Validation guards: `if (model.IsDriver == true && ...)`.
-- **Sticky sessions required in Azure Container Apps** — Blazor Server keeps all circuit state (component state, `UserSession`, etc.) on the specific server instance that owns the SignalR connection. Aspire 13.x does NOT configure `stickySessionsAffinity: sticky` on the web container app. Without it, ACA may route a WebSocket frame to a different replica that has no circuit — button clicks appear to do nothing, registrations succeed in the DB but the success card never appears. Fix by running `scripts/post-deploy-azure.ps1` after every deploy (it calls `az containerapp ingress sticky-sessions set --affinity sticky`).
+- **Sticky sessions required for Blazor Server** — Blazor Server keeps all circuit state server-side, bound to one SignalR connection. NGINX ingress is configured with `nginx.ingress.kubernetes.io/affinity: cookie` (cookie name `BLAZOR_STICKY`) so all WebSocket frames route to the same pod. Without this, button clicks appear to do nothing, registrations succeed in the DB but the success card never appears.
 
 ---
 
-### Deployment (Azure Container Apps)
+### Deployment (Azure Kubernetes Service)
 
-**Build configuration:** `AzureTest` is defined in `GoCheaper.slnx`. The azd environment is named `AzureTest` (stored in `src/GoCheaper.AppHost/.azure/AzureTest/`). Resource group: `rg-GoCheaper`.
+All Kubernetes manifests live in `k8s/`. SQL Server and Kafka run as StatefulSets inside the cluster — no external managed services needed.
 
-**Recommended region: `swedencentral` (Stockholm).** West Europe has recurring Container Apps capacity issues (`ManagedEnvironmentCapacityHeavyUsageError`). North Europe restricts Azure SQL free-tier provisioning. Sweden Central is the closest reliable region to Copenhagen.
+**Resource group:** `GoCheaper` | **Cluster:** `GoCheaper-Cluster` | **ACR:** `gocheaperregistry` | **Region:** `swedencentral`
 
-**`appsettings.AzureTest.json`** exists for all five service projects (not AppHost). These files are committed to git and contain only non-sensitive values (JWT issuer/audience, SMTP host/port/from-name, logging levels). Secrets never go in these files.
+> **ACR naming constraint:** Azure Container Registry names must be lowercase alphanumeric only. The logical name "GoCheaper-Registry" maps to `gocheaperregistry` (no hyphens).
 
-**Configuration layering in Azure:**
+**`appsettings.AzureTest.json`** exists for all five service projects. These files are committed to git and contain only non-sensitive values (JWT issuer/audience, SMTP host/port/from-name, logging levels). `ASPNETCORE_ENVIRONMENT=AzureTest` is set in `k8s/configmap.yaml` so existing `appsettings.AzureTest.json` files are loaded without code changes.
+
+**Configuration layering in K8s:**
 ```
-appsettings.json  →  appsettings.AzureTest.json  →  env vars injected by Aspire parameters
+appsettings.json  →  appsettings.AzureTest.json  →  env vars from ConfigMap + Secret
 ```
 
-**Deploy workflow:**
-1. `azd provision` — creates all Azure infrastructure interactively (prompts for all parameter values). Copy values from `AppHost/appsettings.Development.json`. There is no `sql-password` or `aspnet-environment` parameter.
-2. `azd deploy` — builds Docker images, pushes to ACR, deploys all container apps. If individual services were skipped, deploy them explicitly: `azd deploy --service web` etc.
-3. Run `.\scripts\post-deploy-azure.ps1` (see below).
-4. Set `WebApp__BaseUrl` on `notification-api` (see below).
+**K8s manifest structure:**
+```
+k8s/
+  namespace.yaml              # gocheaper namespace
+  configmap.yaml              # non-sensitive shared config (ASPNETCORE_ENVIRONMENT, TZ, kafka bootstrap, SMTP host/port)
+  secrets.template.yaml       # template — copy to secrets.yaml (git-ignored), fill in values
+  ingress.yaml                # NGINX ingress with sticky-session cookies for Blazor Server
+  sqlserver/
+    statefulset.yaml          # SQL Server 2022 Developer, Azure Disk PVC 10Gi
+    service.yaml              # ClusterIP 'sqlserver' → port 1433
+  kafka/
+    statefulset.yaml          # Bitnami Kafka 3.9, KRaft mode, Azure Disk PVC 8Gi
+    service.yaml              # Headless 'kafka-headless' (pod DNS) + ClusterIP 'kafka' → 9092
+  identity-api/
+  notification-api/
+  trips-api/
+  booking-api/
+  web/                        # includes Aspire service-discovery env vars
+```
 
-The Visual Studio Aspire publish wizard shows "missing required inputs" and is unreliable for this project — use `azd provision` + `azd deploy` instead.
+**Aspire service discovery in K8s:** The Web project uses `https+http://identity-api` URIs configured by Aspire. In K8s, these resolve via env vars set in `k8s/web/deployment.yaml`:
+```yaml
+- name: services__identity-api__http__0
+  value: "http://identity-api"
+```
+No code changes needed — Aspire's `IServiceEndpointResolver` reads these env vars automatically.
 
-**AcrPull role — manual assignment may be needed:** If `azd deploy` fails with "unable to pull image using Managed identity", the AcrPull role assignment from `azd provision` hasn't propagated yet. Fix:
+**Deploy workflow (first time):**
+1. `.\scripts\setup-aks.ps1` — creates resource group, ACR, AKS cluster, attaches ACR, installs NGINX ingress controller (~5 min)
+2. Copy `k8s/secrets.template.yaml` → `k8s/secrets.yaml`; fill in all values (or run `.\scripts\create-secrets.ps1` which reads from `AppHost/appsettings.Development.json` automatically)
+3. `.\scripts\deploy.ps1` — builds images with `dotnet publish /t:PublishContainer`, pushes to ACR, applies all manifests, waits for rollouts
+4. Get the ingress public IP: `kubectl get svc ingress-nginx-controller -n ingress-nginx`
+5. Update `WebApp__BaseUrl` in `k8s/configmap.yaml` to `http://<ingress-ip>` and re-apply: `kubectl apply -f k8s/configmap.yaml && kubectl rollout restart deployment/notification-api -n gocheaper`
+
+**Subsequent deploys:**
 ```powershell
-$acrId = az acr show --name <acr-name> --resource-group rg-GoCheaper --query id -o tsv
-$miId  = az identity show --name <mi-name> --resource-group rg-GoCheaper --query principalId -o tsv
-az role assignment create --role AcrPull --assignee $miId --scope $acrId
+.\scripts\deploy.ps1              # rebuild all + apply manifests
+.\scripts\deploy.ps1 -SkipBuild  # re-apply manifests only (no image rebuild)
 ```
-Wait 1–2 minutes, then retry `azd deploy`.
 
-**After first deploy:** The `web` Container App URL is only known after deployment. Set `WebApp__BaseUrl` immediately on `notification-api` so email links (verification, password reset, rating) point to the correct URL: Azure Portal → `notification-api` → **Application → Containers** → **Edit and deploy** → click the container → **Environment variables** → add `WebApp__BaseUrl = https://web.xxx.swedencentral.azurecontainerapps.io`. Also update `WebApp:BaseUrl` in `src/GoCheaper.Notification.Api/appsettings.AzureTest.json` for future deploys.
+**SQL Server connection strings:** Full connection strings are stored as separate Secret keys (`conn-identitydb`, `conn-tripsdb`, `conn-bookingdb`, `conn-webdb`) pointing to `sqlserver.gocheaper.svc.cluster.local,1433`. The `create-secrets.ps1` script builds these automatically.
 
-**Accessing Azure SQL for debugging:** To run queries against the live databases (e.g. delete test users), first make your Azure account a SQL admin: Azure Portal → SQL Server → **Microsoft Entra ID** → **Set admin** → select your account → Save. Then open Azure Portal → SQL Database → **Query editor (preview)** → click **Continue as [your account]** (Entra authentication, no password). If prompted about your IP, click the "Allowlist IP" link in the error box. Alternatively use SSMS: server `sql-xxx.database.windows.net`, Authentication: **Azure Active Directory - Interactive**.
+**Kafka — KRaft single-replica:** Kafka runs in KRaft mode (no ZooKeeper). The StatefulSet is fixed at 1 replica. `CONTROLLER_QUORUM_VOTERS` uses the pod's stable DNS name via the headless service (`kafka-0.kafka-headless.gocheaper.svc.cluster.local:9093`). Multiple replicas would cause KRaft controllers to fight over state and lose all topic metadata — keep replicas at 1.
 
-**Network:** Only `web` has external ingress. All four API services are internal — reachable only within the Container Apps environment via Aspire service discovery.
-
-**ACA cold starts (scale-to-zero):** Azure Container Apps scales containers to zero replicas after a few minutes of inactivity. The first request after the container has been stopped triggers a cold start — all five services must restart before the request can be served, which takes 30–90 seconds. Fix: after every deploy run `scripts/post-deploy-azure.ps1`, which sets `min-replicas 1` on all five application services. With `min-replicas 1`, ACA keeps at least one warm instance running at all times. `min-replicas` cannot be baked into `AppHost.cs` via `PublishAsAzureContainerApp` — that API requires `AddAzureContainerAppEnvironment` which conflicts with the VS publish wizard and breaks manifest generation. The post-deploy script is the only supported approach with the wizard.
-
-**Timezone fix — all services:** All five services set `TZ=Europe/Copenhagen` via `.WithEnvironment("TZ", "Europe/Copenhagen")` in `AppHost.cs`. Azure Container Apps runs Linux containers in UTC; without this, `DateTime.Now` returns UTC time. DepartureTime is stored as Danish local time (as entered by users), so all comparisons in `TripStatus.Compute` and `TripRatingEmailService` must use the same timezone. On Windows local dev, `TZ` is ignored — no impact.
-
-**Kafka in Azure — single-replica requirement:** Kafka runs in KRaft mode (no ZooKeeper). ACA's default `maxReplicas: 10` causes autoscaling to multiple Kafka instances; multiple KRaft controllers fight over state and crash each other, losing all topic metadata.
-
-**Blazor Server sticky sessions:** Blazor Server keeps circuit state server-side and requires the same server instance for the lifetime of a SignalR connection. Aspire 13.x does not configure `stickySessionsAffinity: sticky` for the web container app, so ACA may route WebSocket frames to different replicas — button clicks appear to do nothing, state updates never reach the browser.
-
-After **every** deploy, run `scripts/post-deploy-azure.ps1` to apply three fixes:
-1. Sets `stickySessionsAffinity: sticky` on the `web` container app (Blazor Server requirement)
-2. Sets `maxReplicas: 1` on the `kafka` container app (KRaft single-replica requirement)
-3. Sets `minReplicas: 1` on all five application services to prevent cold-start delays
-
+**Accessing live databases for debugging:** Use `kubectl port-forward` to connect SSMS locally:
 ```powershell
-.\scripts\post-deploy-azure.ps1         # defaults to rg-GoCheaper
-# or for a different resource group:
-.\scripts\post-deploy-azure.ps1 -ResourceGroup "rg-MyEnv"
+kubectl port-forward svc/sqlserver 1433:1433 -n gocheaper
+# Then connect SSMS to: localhost,1433 / sa / <your-sa-password>
 ```
-Message history is not persisted across Kafka restarts — acceptable for the test environment.
 
-**Azure SQL + Managed Identity:** `Microsoft.Data.SqlClient 7.0.1` does not ship `Azure.Identity` as a dependency. Add `Azure.Identity` directly to each API project and register a custom `ManagedIdentitySqlAuthProvider : SqlAuthenticationProvider` using `DefaultAzureCredential` before `var builder`. Call `SqlAuthenticationProvider.SetProvider(SqlAuthenticationMethod.ActiveDirectoryDefault, new ManagedIdentitySqlAuthProvider())` at the top of `Program.cs`. Do **not** use `Microsoft.Data.SqlClient.Extensions.Azure` — it requires `Extensions.Abstractions [7.0.2, 8.0.0)` which is incompatible with SqlClient 7.0.1's `Extensions.Abstractions 1.0.0` and causes `AmbiguousMatchException`.
-
-**`KafkaTopicInitializer` retry pattern:** In Azure Container Apps, Kafka may not be fully ready when services start even after `.WaitFor(kafka)`. `KafkaTopicInitializer.StartAsync` must catch **all** exceptions (not just `CreateTopicsException`) and retry with a 5-second delay until topics are created. The `adminClient` must be re-created inside each retry loop iteration. `ServiceDefaults` raises `HostOptions.StartupTimeout` to 3 minutes to give the retry loop time to succeed. Consumers registered after `KafkaTopicInitializer` in `Program.cs` won't start until `StartAsync` returns, guaranteeing topics exist before first consume.
+**`KafkaTopicInitializer` retry pattern:** Kafka may not be ready when services start. `KafkaTopicInitializer.StartAsync` catches all exceptions, re-creates `adminClient` on every retry, and loops with 5-second delays. `ServiceDefaults` raises `HostOptions.StartupTimeout` to 3 minutes. Consumers start only after `StartAsync` returns, guaranteeing topics exist.
 
 ---
 
@@ -630,5 +638,5 @@ Message history is not persisted across Kafka restarts — acceptable for the te
 7. Follow the `Auth/`, `Data/`, `Features/`, `Endpoints/` layout from Identity.Api
 8. To publish Kafka events, add `builder.AddKafkaProducer<string, string>("kafka")` and reference `GoCheaper.Contracts`
 9. Endpoints requiring a logged-in user: `.RequireAuthorization("ApiKeyAndJwt")`
-10. If the service uses SQL Server: add `Azure.Identity` NuGet package and add the `ManagedIdentitySqlAuthProvider` class + `SqlAuthenticationProvider.SetProvider(...)` call before `var builder` in `Program.cs` — see the Azure SQL + Managed Identity note in the Deployment section
+10. If the service uses SQL Server: add a `ConnectionStrings__<dbname>` entry to `k8s/secrets.template.yaml` and `k8s/configmap.yaml`; the `create-secrets.ps1` script must also be updated to build that connection string
 11. If the service uses Kafka: add `KafkaTopicInitializer` as the first `IHostedService` registration with the catch-all retry pattern — see the `KafkaTopicInitializer` retry pattern note in the Deployment section

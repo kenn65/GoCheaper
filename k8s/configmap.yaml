@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gocheaper-config
+  namespace: gocheaper
+data:
+  ASPNETCORE_ENVIRONMENT: "AzureTest"
+  ASPNETCORE_URLS: "http://+:8080"
+  TZ: "Europe/Copenhagen"
+  ConnectionStrings__kafka: "kafka:9092"
+  Smtp__Host: "smtp.gmail.com"
+  Smtp__Port: "587"
+  Smtp__FromName: "GoCheaper"
+  # Set this after the ingress/DNS is configured — the FQDN users will hit
+  WebApp__BaseUrl: "https://REPLACE_WITH_YOUR_DOMAIN"

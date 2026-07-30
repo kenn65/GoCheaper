@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity-api
+  namespace: gocheaper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identity-api
+  template:
+    metadata:
+      labels:
+        app: identity-api
+    spec:
+      containers:
+      - name: identity-api
+        image: gocheaperregistry.azurecr.io/identity-api:latest
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: gocheaper-config
+        env:
+        - name: Jwt__Key
+          valueFrom:
+            secretKeyRef:
+              name: gocheaper-secrets
+              key: jwt-key
+        - name: ApiKey__Value
+          valueFrom:
+            secretKeyRef:
+              name: gocheaper-secrets
+              key: identity-api-key
+        - name: ConnectionStrings__identitydb
+          valueFrom:
+            secretKeyRef:
+              name: gocheaper-secrets
+              key: conn-identitydb
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          failureThreshold: 6
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 40
+          periodSeconds: 30
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
