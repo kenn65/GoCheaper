@@ -4,7 +4,6 @@ metadata:
   name: gocheaper-ingress
   namespace: gocheaper
   annotations:
-    # NGINX ingress controller
     kubernetes.io/ingress.class: "nginx"
     # Sticky sessions for Blazor Server SignalR
     nginx.ingress.kubernetes.io/affinity: "cookie"
@@ -18,10 +17,29 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
     # Enable WebSocket upgrade
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    # TLS / Let's Encrypt
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
+  tls:
+  - hosts:
+    - gocheaper.dk
+    - www.gocheaper.dk
+    secretName: gocheaper-tls
   rules:
-  - http:
+  - host: gocheaper.dk
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 80
+  - host: www.gocheaper.dk
+    http:
       paths:
       - path: /
         pathType: Prefix

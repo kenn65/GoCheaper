@@ -12,4 +12,4 @@ data:
   Smtp__Port: "587"
   Smtp__FromName: "GoCheaper"
   # Set this after the ingress/DNS is configured — the FQDN users will hit
-  WebApp__BaseUrl: "http://4.166.102.88"
+  WebApp__BaseUrl: "https://gocheaper.dk"
